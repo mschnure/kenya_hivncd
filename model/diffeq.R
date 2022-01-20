@@ -4,7 +4,13 @@
 library(odeintr)
 
 
-compute.dx <- function(time, y, parameters)
+##---------------------------------------##
+##-- THE COMPUTE DIFFERENTIAL FUNCTION --##
+##---------------------------------------##
+
+compute.dx <- function(time,
+                       y, #the vector-form model state at this time
+                       parameters)
 {
     ##---------------------------------##
     ##-- GET TIME-VARYING PARAMETERS --##
@@ -13,82 +19,87 @@ compute.dx <- function(time, y, parameters)
     pp = compute.time.varying.parameters(parameters, time)
     # now pp is a list
     
-    ##---------------------------##
-    ##-- PULL THE MODEL STATE  --##
-    ##---------------------------##
+    ##----------------------------##
+    ##-- PARSE THE MODEL STATE  --##
+    ##----------------------------##
     
-    state.dim.names = list(age=parameters$AGES,
-                           sex=parameters$SEXES,
-                           risk=parameters$RISKS,
-                           subpopulation=parameters$SUBPOPULATIONS,
-                           hiv.status=parameters$HIV.STATUS)
-    state.dim = sapply(state.dim.names, length)
-    state.length = prod(state.dim)
-    
-    state = array(y[1:state.length],
-                  dim=state.dim,
-                  dimnames = state.dim.names)
+    state #indexed [age, sex, subgroup, hiv-status]
+    incidence #indexed [age, sex, subgroup]
+    diagnoses #indexed [age, sex, subgroup]
+    hiv.mortality #indexed [age, sex, subgroup]
+    nonhiv.mortality #indexed [age, sex, subgroup]
     
     ##----------------------##
     ##-- SET UP DX ARRAYS --##
     ##----------------------##
     
-    dx.state = array(0, dim=state.dim, dimnames=state.dim.names)
+    dx.state #indexed [age, sex, subgroup, hiv-status]
+    dx.incidence
+    dx.diagnoses
+    dx.hiv.mortality
+    dx.nonhiv.mortality
     
-    incidence.dim.names = list(age=parameters$AGES,
-                               sex=parameters$SEXES,
-                               risk=parameters$RISKS,
-                               subpopulation=parameters$SUBPOPULATIONS)
-    dx.incidence = array(0, dim=sapply(incidence.dim.names, length), dimnames=incidence.dim.names)
+    ##----------------------------------##
+    ##-- COMPUTE THE CHANGES IN STATE --##
+    ##----------------------------------##
     
-    dx.nonhiv.mortality = array(0, dim=state.dim, dimnames=state.dim.names)
+    #-- CHANGES in AGE --#
     
-    hiv.mortality.dim.names = list(age=parameters$AGES,
-                                   sex=parameters$SEXES,
-                                   risk=parameters$RISKS,
-                                   subpopulation=parameters$SUBPOPULATIONS,
-                                   hiv.status=setdiff(parameters$HIV.STATUS, 'uninfected'))
-    dx.hiv.mortality = array(0, dim=state.dim, dimnames=state.dim.names)
+    #births
+    dx.state[1,,,] = births
     
-    ##------------------------------------------##
-    ##-- COMPUTE THE CHANGES IN STATE/TALLIES --##
-    ##------------------------------------------##
+    #aging
+    ageing = state * pp$AGEING.RATE #indexed [age, sex, subgroup, hiv-status]
+    dx.state = dx.state - ageing
+    dx.state[-1,,,] = dx.state[-1,,,] + ageing[-n.ages,,,]
     
-    #-- CHANGES BY AGE --#
+    dx.nonhiv.mortality[n.ages,,,] = dx.nonhiv.mortality[n.ages,,,] + ageing[n.ages,,,]
     
-    #-- CHANGES IN SEX --#
+    #-- MORTALITY --#
+    
+    #-- CHANGES in SEX --#
     # (assuming sex is immutable)
     
-    #-- CHANGES IN RISK --#
+    #-- CHANGES in SUB-GROUP --#
     # (we are ignoring this for now)
     
-    #-- CHANGES IN SUBPOPULATION --#
-    # (we are ignoring this for now)
+    #-- CHANGES in HIV STATUS --#
+    
+    diagnosed = pp$testing.rates * dx.state[,,,'undiagnosed']
+    dx.state[,,,'undiagnosed'] = dx.state[,,,'undiagnosed'] - diagnosed
+    dx.state[,,,'diagnosed_unsuppressed'] = dx.state[,,,'diagnosed_unsuppressed'] + diagnosed
+    dx.diagnoses = dx.diagnosed + diagnosed
+    
+    #@melissa - fill in here
     
     #-- NEW INFECTIONS --#
+    # SAVED FOR LATER #
+    
+    incidence = 10
     
     
-    number.of.infections.in.to = sum_over_all_strata_from { infections.from.from.to.to }
-    
-    #we need an array force of infection to each stratum of [age,sex,risk,subpop,hiv.status]
-    for (a.to in parameters$AGES)
+    if (1==2)
     {
-        for (s.to in parameters$SEXES)
+        #we need an array force of infection to each stratum of [age,sex,risk,subpop,hiv.status]
+        for (a.to in parameters$AGES)
         {
-            for (r.to in parameters$RISKS)
+            for (s.to in parameters$SEXES)
             {
-                for (p.to in parameters$SUBPOPULATIONS)
+                for (r.to in parameters$RISKS)
                 {
-                    for (a.from in parameters$AGES)
+                    for (p.to in parameters$SUBPOPULATIONS)
                     {
-                        for (s.from in parameters$SEXES)
+                        for (a.from in parameters$AGES)
                         {
-                            for (r.from in parameters$RISKS)
+                            for (s.from in parameters$SEXES)
                             {
-                                for (p.from in parameters$SUBPOPULATIONS)
+                                for (r.from in parameters$RISKS)
                                 {
-                                    dx.incidence[a.to, s.to, r.to, p.to] = dx.incidence[a.to, s.to, r.to, p.to] +
-                                        proportion.of.tos.partners.in.from * transmission.rate * prevalence.of.infections.in.from
+                                    for (p.from in parameters$SUBPOPULATIONS)
+                                    {
+                                        dx.incidence[a.to, s.to, r.to, p.to] = dx.incidence[a.to, s.to, r.to, p.to] +
+                                            proportion.of.tos.partners.in.from * transmission.rate * prevalence.of.infections.in.from
+                                    }
                                 }
                             }
                         }
@@ -98,36 +109,33 @@ compute.dx <- function(time, y, parameters)
         }
     }
     
-    #-- DIAGNOSES --#
-    
-    #-- SUPPRESSION/UNSUPPRESSION --#
-    
-    #-- HIV MORTALITY --#
-    dx.hiv.mortality = state[,,,,c('undiagnosed','diagnosed.unsuppressed','diagnosed.suppressed')] * pp$hiv.mortality
-    dx.state[,,,,c('undiagnosed','diagnosed.unsuppressed','diagnosed.suppressed')] = dx.state[,,,,c('undiagnosed','diagnosed.unsuppressed','diagnosed.suppressed')] - dx.hiv.mortality
-    
-    #-- NON-HIV MORALITY --#
-    dx.nonhiv.mortality = state * pp$general.mortality.rate
-    dx.state = dx.state - dx.nonhiv.mortality
-    
     ##------------------------------##
     ##-- PACKAGE IT UP AND RETURN --##
     ##------------------------------##
     
     #return a vector of length = length(y) that represents the change in each element in y
-    c(as.numeric(dx.state),
-      as.numeric(dx.incidence),
-      as.numeric(dx.nonhiv.mortality),
-      as.numeric(dx.hiv.mortality))
+    
+    #flatten out all our arrays
 }
 
 run.model <- function(parameters,
-                      start.state)
+                      start.state,
+                      start.year,
+                      end.year)
 {
-        #This is just a stub
-        odeintr::integrate_sys(sys=function(x,t){model.dx.Rcpp(time=t,y=x,parameters=parameters)},
-                               init=init,
-                               start=start.year,
-                               duration=end.year+1-start.year,
-                               step_size=1)
+    #This is just a stub
+    ode.results = odeintr::integrate_sys(sys=function(x,t){model.dx.Rcpp(time=t,y=x,parameters=parameters)},
+                                         init=init,
+                                         start=start.year,
+                                         duration=end.year+1-start.year,
+                                         step_size=1)
+    
+    # We need to process the results
+    process.ode.results(ode.results)
+}
+
+# break out the epi data we want
+process.ode.results <- function(ode.results)
+{
+    ode.results #for now
 }
