@@ -23,21 +23,47 @@ compute.dx <- function(time,
     ##-- PARSE THE MODEL STATE  --##
     ##----------------------------##
     
-    state #indexed [age, sex, subgroup, hiv-status]
-    incidence #indexed [age, sex, subgroup]
-    diagnoses #indexed [age, sex, subgroup]
-    hiv.mortality #indexed [age, sex, subgroup]
-    nonhiv.mortality #indexed [age, sex, subgroup]
+    state.dim.names = list(age=parameters$AGES, 
+                           sex=parameters$SEXES,
+                           subgroup=parameters$SUBGROUPS,
+                           hiv.status=parameters$HIV.STATUS)
+    
+    incidence.dim.names = list(age=parameters$AGES, 
+                               sex=parameters$SEXES,
+                               subgroup=parameters$SUBGROUPS)
+    
+    n.ages=length(parameters$AGES)
+    
+    state.length = prod(sapply(state.dim.names, length))
+    
+    state = array(y[1:state.length], 
+                  dim = sapply(state.dim.names, length), 
+                  dimnames = state.dim.names) #indexed [age, sex, subgroup, hiv-status]
+    
+    #incidence #indexed [age, sex, subgroup]
+    #diagnoses #indexed [age, sex, subgroup]
+    #hiv.mortality #indexed [age, sex, subgroup]
+    #nonhiv.mortality #indexed [age, sex, subgroup]
     
     ##----------------------##
     ##-- SET UP DX ARRAYS --##
     ##----------------------##
     
-    dx.state #indexed [age, sex, subgroup, hiv-status]
-    dx.incidence
-    dx.diagnoses
-    dx.hiv.mortality
-    dx.nonhiv.mortality
+    dx.state = array(0, 
+                     dim = sapply(state.dim.names, length), 
+                     dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
+    dx.incidence = array(0, 
+                         dim = sapply(incidence.dim.names, length), 
+                         dimnames = incidence.dim.names)#indexed [age, sex, subgroup]
+    dx.diagnoses = array(0, 
+                         dim = sapply(incidence.dim.names, length), 
+                         dimnames = incidence.dim.names)#indexed [age, sex, subgroup]
+    dx.hiv.mortality = array(0, 
+                               dim = sapply(state.dim.names, length), 
+                               dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
+    dx.nonhiv.mortality = array(0, 
+                                dim = sapply(state.dim.names, length), 
+                                dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
     
     ##----------------------------------##
     ##-- COMPUTE THE CHANGES IN STATE --##
@@ -45,8 +71,12 @@ compute.dx <- function(time,
     
     #-- CHANGES in AGE --#
     
+    births = state * pp$FERTILITY.RATE
+    births = apply(births, 3, sum)
+    
     #births
-    dx.state[1,,,] = births
+    dx.state[1,'male',,'hiv.negative'] = births*pp$MALE.BIRTHS
+    dx.state[1,'female',,'hiv.negative'] = births*(1-pp$MALE.BIRTHS)
     
     #aging
     ageing = state * pp$AGEING.RATE #indexed [age, sex, subgroup, hiv-status]
@@ -56,6 +86,15 @@ compute.dx <- function(time,
     dx.nonhiv.mortality[n.ages,,,] = dx.nonhiv.mortality[n.ages,,,] + ageing[n.ages,,,]
     
     #-- MORTALITY --#
+    # hiv mortality 
+    hiv.mortality = state * pp$HIV.MORTALITY.RATE #indexed [age, sex, subgroup, hiv-status]
+    dx.state = dx.state - hiv.mortality
+    dx.hiv.mortality = dx.hiv.mortality + hiv.mortality
+    
+    # non hiv mortality
+    non.hiv.mortality = state * pp$NON.HIV.MORTALITY.RATE #indexed [age, sex, subgroup, hiv-status]
+    dx.state = dx.state - non.hiv.mortality
+    dx.non.hiv.mortality = dx.non.hiv.mortality + non.hiv.mortality
     
     #-- CHANGES in SEX --#
     # (assuming sex is immutable)
@@ -65,17 +104,34 @@ compute.dx <- function(time,
     
     #-- CHANGES in HIV STATUS --#
     
-    diagnosed = pp$testing.rates * dx.state[,,,'undiagnosed']
+    #-- DIAGNOSES --#
+    diagnosed = pp$TESTING.RATES * state[,,,'undiagnosed']
     dx.state[,,,'undiagnosed'] = dx.state[,,,'undiagnosed'] - diagnosed
-    dx.state[,,,'diagnosed_unsuppressed'] = dx.state[,,,'diagnosed_unsuppressed'] + diagnosed
+    dx.state[,,,'diagnosed_unengaged'] = dx.state[,,,'diagnosed_unengaged'] + diagnosed
     dx.diagnoses = dx.diagnosed + diagnosed
-    
-    #@melissa - fill in here
-    
+
     #-- NEW INFECTIONS --#
-    # SAVED FOR LATER #
+    incidence = 10     # Using this for now
+    dx.state[,,,'hiv_negative'] = dx.state[,,,'hiv_negative'] - incidence
+    dx.state[,,,'undiagnosed'] = dx.state[,,,'undiagnosed'] + incidence
+    dx.incidence = dx.incidence + incidence
     
-    incidence = 10
+    #-- ENGAGEMENT --#
+    engaged = pp$ENGAGEMENT.RATES * state[,,,'diagnosed_unengaged']
+    dx.state[,,,'diagnosed_unengaged'] = dx.state[,,,'diagnosed_unengaged'] - engaged
+    dx.state[,,,'engaged_unsuppressed'] = dx.state[,,,'engaged_unsuppressed'] + engaged
+    
+    #-- SUPPRESSION --#
+    suppressed = pp$SUPPRESSION.RATES * state[,,,'engaged_unsuppressed']
+    dx.state[,,,'engaged_unsuppressed'] = dx.state[,,,'engaged_unsuppressed'] - suppressed
+    dx.state[,,,'engaged_suppressed'] = dx.state[,,,'engaged_suppressed'] + suppressed
+    
+    #-- DISENGAGED FROM UNSUPPRESSED --#
+    
+    #-- DISENGAGED FROM SUPPRESSED --#
+    
+    #-- UNSUPPRESSION --#
+    
     
     
     if (1==2)
@@ -114,6 +170,8 @@ compute.dx <- function(time,
     ##------------------------------##
     
     #return a vector of length = length(y) that represents the change in each element in y
+    c(as.numeric(dx.state), as.numeric(dx.incidence), as.numeric(dx.diagnoses), as.numeric(dx.hiv.mortality), as.numeric(dx.non.hiv.mortality))
+    
     
     #flatten out all our arrays
 }
