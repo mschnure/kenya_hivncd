@@ -127,10 +127,13 @@ compute.dx <- function(time,
     dx.state[,,,'engaged_suppressed'] = dx.state[,,,'engaged_suppressed'] + suppressed
     
     #-- DISENGAGED FROM UNSUPPRESSED --#
+    #@melissa
     
     #-- DISENGAGED FROM SUPPRESSED --#
+    #@melissa
     
     #-- UNSUPPRESSION --#
+    #@melissa
     
     
     
@@ -174,6 +177,21 @@ compute.dx <- function(time,
     
     
     #flatten out all our arrays
+}
+
+set.up.initial.diffeq.vector <- function(initial.state,
+                                         parameters)
+{
+    state.length #@melissa
+    incidence.length #@melissa
+    
+    total.length = 3 * state.length + #state plus two mortality arrays
+        2 * incidence.length #incidence plus new diagnoses
+    
+    rv = numeric(total.length)
+    rv[1:state.length] = as.numeric(state)
+    
+    rv
 }
 
 run.model <- function(parameters,
