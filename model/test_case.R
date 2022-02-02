@@ -17,6 +17,8 @@ initial.state = array(10,
                       dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
 
 # Run it
-compute.dx(time=2010,
-           y=set.up.initial.diffeq.vector(initial.state, parameters),
-           parameters)
+sim = run.model(parameters=parameters,
+              initial.state=initial.state,
+              start.year=1970,
+              end.year=2020)
+

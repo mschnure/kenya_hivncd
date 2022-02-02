@@ -43,7 +43,7 @@ compute.dx <- function(time,
     #incidence #indexed [age, sex, subgroup]
     #diagnoses #indexed [age, sex, subgroup]
     #hiv.mortality #indexed [age, sex, subgroup]
-    #nonhiv.mortality #indexed [age, sex, subgroup]
+    #non.hiv.mortality #indexed [age, sex, subgroup]
     
     ##----------------------##
     ##-- SET UP DX ARRAYS --##
@@ -61,7 +61,7 @@ compute.dx <- function(time,
     dx.hiv.mortality = array(0, 
                                dim = sapply(state.dim.names, length), 
                                dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
-    dx.nonhiv.mortality = array(0, 
+    dx.non.hiv.mortality = array(0, 
                                 dim = sapply(state.dim.names, length), 
                                 dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
     
@@ -75,15 +75,15 @@ compute.dx <- function(time,
     births = apply(births, 3, sum)
     
     #births
-    dx.state[1,'male',,'hiv.negative'] = births*pp$MALE.BIRTHS
-    dx.state[1,'female',,'hiv.negative'] = births*(1-pp$MALE.BIRTHS)
-    
+    dx.state[1,'male',,'hiv_negative'] = births*pp$MALE.BIRTHS
+    dx.state[1,'female',,'hiv_negative'] = births*(1-pp$MALE.BIRTHS)
+
     #aging
-    ageing = state * pp$AGEING.RATE #indexed [age, sex, subgroup, hiv-status]
-    dx.state = dx.state - ageing
-    dx.state[-1,,,] = dx.state[-1,,,] + ageing[-n.ages,,,]
+    aging = state * pp$AGING.RATE #indexed [age, sex, subgroup, hiv-status]
+    dx.state = dx.state - aging
+    dx.state[-1,,,] = dx.state[-1,,,] + aging[-n.ages,,,]
     
-    dx.nonhiv.mortality[n.ages,,,] = dx.nonhiv.mortality[n.ages,,,] + ageing[n.ages,,,]
+    dx.non.hiv.mortality[n.ages,,,] = dx.non.hiv.mortality[n.ages,,,] + aging[n.ages,,,]
     
     #-- MORTALITY --#
     # hiv mortality 
@@ -103,37 +103,43 @@ compute.dx <- function(time,
     # (we are ignoring this for now)
     
     #-- CHANGES in HIV STATUS --#
-    
+
     #-- DIAGNOSES --#
-    diagnosed = pp$TESTING.RATES * state[,,,'undiagnosed']
-    dx.state[,,,'undiagnosed'] = dx.state[,,,'undiagnosed'] - diagnosed
-    dx.state[,,,'diagnosed_unengaged'] = dx.state[,,,'diagnosed_unengaged'] + diagnosed
-    dx.diagnoses = dx.diagnosed + diagnosed
+    diagnosed = pp$TESTING.RATES * as.numeric(state[,,,'undiagnosed'])
+    dx.state[,,,'undiagnosed'] = as.numeric(dx.state[,,,'undiagnosed']) - diagnosed
+    dx.state[,,,'diagnosed_unengaged'] = as.numeric(dx.state[,,,'diagnosed_unengaged']) + diagnosed
+    dx.diagnoses = dx.diagnoses + diagnosed
 
     #-- NEW INFECTIONS --#
     incidence = 10     # Using this for now
-    dx.state[,,,'hiv_negative'] = dx.state[,,,'hiv_negative'] - incidence
-    dx.state[,,,'undiagnosed'] = dx.state[,,,'undiagnosed'] + incidence
+    dx.state[,,,'hiv_negative'] = as.numeric(dx.state[,,,'hiv_negative']) - incidence
+    dx.state[,,,'undiagnosed'] = as.numeric(dx.state[,,,'undiagnosed']) + incidence
     dx.incidence = dx.incidence + incidence
     
     #-- ENGAGEMENT --#
-    engaged = pp$ENGAGEMENT.RATES * state[,,,'diagnosed_unengaged']
-    dx.state[,,,'diagnosed_unengaged'] = dx.state[,,,'diagnosed_unengaged'] - engaged
-    dx.state[,,,'engaged_unsuppressed'] = dx.state[,,,'engaged_unsuppressed'] + engaged
-    
-    #-- SUPPRESSION --#
-    suppressed = pp$SUPPRESSION.RATES * state[,,,'engaged_unsuppressed']
-    dx.state[,,,'engaged_unsuppressed'] = dx.state[,,,'engaged_unsuppressed'] - suppressed
-    dx.state[,,,'engaged_suppressed'] = dx.state[,,,'engaged_suppressed'] + suppressed
+    engaged = pp$ENGAGEMENT.RATES * as.numeric(state[,,,'diagnosed_unengaged'])
+    dx.state[,,,'diagnosed_unengaged'] = as.numeric(dx.state[,,,'diagnosed_unengaged']) - engaged
+    dx.state[,,,'engaged_unsuppressed'] = as.numeric(dx.state[,,,'engaged_unsuppressed']) + engaged
     
     #-- DISENGAGED FROM UNSUPPRESSED --#
-    #@melissa
+    disengaged.unsuppressed = pp$UNSUPPRESSED.DISENGAGEMENT.RATES * as.numeric(state[,,,'engaged_unsuppressed'])
+    dx.state[,,,'engaged_unsuppressed'] = as.numeric(dx.state[,,,'engaged_unsuppressed']) - disengaged.unsuppressed
+    dx.state[,,,'diagnosed_unengaged'] = as.numeric(dx.state[,,,'diagnosed_unengaged']) + disengaged.unsuppressed
     
     #-- DISENGAGED FROM SUPPRESSED --#
-    #@melissa
+    disengaged.suppressed = pp$SUPPRESSED.DISENGAGEMENT.RATES * as.numeric(state[,,,'engaged_suppressed'])
+    dx.state[,,,'engaged_suppressed'] = as.numeric(dx.state[,,,'engaged_suppressed']) - disengaged.suppressed
+    dx.state[,,,'diagnosed_unengaged'] = as.numeric(dx.state[,,,'diagnosed_unengaged']) + disengaged.suppressed
+    
+    #-- SUPPRESSION --#
+    suppressed = pp$SUPPRESSION.RATES * as.numeric(state[,,,'engaged_unsuppressed'])
+    dx.state[,,,'engaged_unsuppressed'] = as.numeric(dx.state[,,,'engaged_unsuppressed']) - suppressed
+    dx.state[,,,'engaged_suppressed'] = as.numeric(dx.state[,,,'engaged_suppressed']) + suppressed
     
     #-- UNSUPPRESSION --#
-    #@melissa
+    unsuppressed = pp$UNSUPPRESSION.RATES * as.numeric(state[,,,'engaged_suppressed'])
+    dx.state[,,,'engaged_suppressed'] = as.numeric(dx.state[,,,'engaged_suppressed']) - unsuppressed
+    dx.state[,,,'engaged_unsuppressed'] = as.numeric(dx.state[,,,'engaged_unsuppressed']) + unsuppressed
     
     
     
@@ -182,26 +188,26 @@ compute.dx <- function(time,
 set.up.initial.diffeq.vector <- function(initial.state,
                                          parameters)
 {
-    state.length #@melissa
-    incidence.length #@melissa
+    state.length = length(parameters$AGES)*length(parameters$SEXES)*length(parameters$SUBGROUPS)*length(parameters$HIV.STATUS)
+    incidence.length = length(parameters$AGES)*length(parameters$SEXES)*length(parameters$SUBGROUPS)
     
     total.length = 3 * state.length + #state plus two mortality arrays
         2 * incidence.length #incidence plus new diagnoses
     
     rv = numeric(total.length)
-    rv[1:state.length] = as.numeric(state)
+    rv[1:state.length] = as.numeric(initial.state)
     
     rv
 }
 
 run.model <- function(parameters,
-                      start.state,
+                      initial.state,
                       start.year,
                       end.year)
 {
     #This is just a stub
-    ode.results = odeintr::integrate_sys(sys=function(x,t){model.dx.Rcpp(time=t,y=x,parameters=parameters)},
-                                         init=init,
+    ode.results = odeintr::integrate_sys(sys=function(x,t){compute.dx(time=t,y=x,parameters=parameters)},
+                                         init=set.up.initial.diffeq.vector(initial.state, parameters),
                                          start=start.year,
                                          duration=end.year+1-start.year,
                                          step_size=1)
@@ -211,7 +217,69 @@ run.model <- function(parameters,
 }
 
 # break out the epi data we want
-process.ode.results <- function(ode.results)
+process.ode.results <- function(ode.results,
+                                parameters,
+                                start.year,
+                                end.year,
+                                keep.years)
 {
-    ode.results #for now
+    dimnames(ode.results)[[1]]=(start.year-1):end.year
+    
+    keep.years=as.character(keep.years)
+    
+    state.dim.names = list(year=keep.years,
+                           age=parameters$AGES, 
+                           sex=parameters$SEXES,
+                           subgroup=parameters$SUBGROUPS,
+                           hiv.status=parameters$HIV.STATUS)
+    
+    incidence.dim.names = list(year=keep.years,
+                               age=parameters$AGES, 
+                               sex=parameters$SEXES,
+                               subgroup=parameters$SUBGROUPS)
+    
+    state.length = length(parameters$AGES)*length(parameters$SEXES)*length(parameters$SUBGROUPS)*length(parameters$HIV.STATUS)
+    incidence.length = length(parameters$AGES)*length(parameters$SEXES)*length(parameters$SUBGROUPS)
+    
+    rv=list(years=as.numeric(keep.years),
+            AGES=parameters$AGES,
+            SEXES=parameters$SEXES,
+            SUBGROUPS=parameters$SUBGROUPS,
+            HIV.STATUS=parameters$HIV.STATUS,
+            HIV.STATES=parameters$HIV.STATES,
+            DIAGNOSED.STATES=parameters$DIAGNOSED.STATES,
+            ENGAGED.STATES=parameters$ENGAGED.STATES
+            )
+    
+    index=0
+    
+    rv$population=array(ode.results[keep.years,index+1:state.length],
+                        dim = sapply(state.dim.names,length),
+                        dimnames = state.dim.names)
+    index=index+state.length
+    
+    rv$incidence=array(ode.results[keep.years,index+1:incidence.length],
+                        dim = sapply(incidence.dim.names,length),
+                        dimnames = incidence.dim.names)
+    index=index+incidence.length
+    
+    rv$diagnoses=array(ode.results[keep.years,index+1:incidence.length],
+                       dim = sapply(incidence.dim.names,length),
+                       dimnames = incidence.dim.names)
+    index=index+incidence.length
+    
+    rv$hiv.mortality=array(ode.results[keep.years,index+1:incidence.length],
+                       dim = sapply(incidence.dim.names,length),
+                       dimnames = incidence.dim.names)
+    index=index+incidence.length
+    
+    rv$non.hiv.mortality=array(ode.results[keep.years,index+1:state.length], #@melissa check this part but I think it's right
+                       dim = sapply(state.dim.names,length),
+                       dimnames = state.dim.names)
+    index=index+state.length
+    
+    
+    class(rv)="hiv_simulation"
+    
+    rv
 }

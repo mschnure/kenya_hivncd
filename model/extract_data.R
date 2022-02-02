@@ -1,29 +1,125 @@
 
-# From jheem package 
-extract.incidence <- function(sim,
-                              years= NULL, 
-                              ages = NULL, 
-                              races = NULL, 
-                              subpopulations = NULL, 
-                              sexes = NULL, 
-                              risks = NULL, 
-                              non.hiv.subsets = NULL, 
-                              continuum = NULL, 
-                              cd4s = NULL, 
-                              hiv.subsets = NULL, 
-                              keep.dimensions = NULL, 
-                              include.hiv.positive.in.denominator = T, 
-                              per.population = 1e+05, 
-                              use.cdc.categorizations = F)
+
+extract.population <- function(sim,
+                               years= sim$years, 
+                               ages = sim$AGES, 
+                               subgroups = sim$SUBGROUPS, 
+                               sexes = sim$SEXES, 
+                               hiv.status = sim$HIV.STATUS,
+                               keep.dimensions = 'year')
 {
+        do.extract.4D(sim=sim,
+                      arr=sim$population,
+                      years= years, 
+                      ages = ages, 
+                      subgroups = subgroups, 
+                      sexes = sexes, 
+                      hiv.status = hiv.status,
+                      keep.dimensions=keep.dimensions)
+                    
+          }
+
+extract.incidence <- function(sim,
+                              years= sim$years, 
+                              ages = sim$AGES, 
+                              subgroups = sim$SUBGROUPS, 
+                              sexes = sim$SEXES, 
+                              keep.dimensions = 'year')
+{
+        do.extract.3D(sim=sim,
+                      arr=sim$incidence,
+                      years= years, 
+                      ages = ages, 
+                      subgroups = subgroups, 
+                      sexes = sexes, 
+                      keep.dimensions=keep.dimensions)
+}
+
+extract.prevalence <- function(sim,
+                               years= sim$years, 
+                               ages = sim$AGES, 
+                               subgroups = sim$SUBGROUPS, 
+                               sexes = sim$SEXES, 
+                               keep.dimensions = 'year')
+{
+        extract.population(sim=sim,
+                           years=years,
+                           ages=ages,
+                           subgroups=subgroups,
+                           sexes=sexes,
+                           keep.dimensions = keep.dimensions,
+                           hiv.status = sim$HIV.STATES)
         
 }
 
-extract.new.diagnoses
-extract.prevalence
+extract.new.diagnoses <- function(sim,
+                                  years= sim$years, 
+                                  ages = sim$AGES, 
+                                  subgroups = sim$SUBGROUPS, 
+                                  sexes = sim$SEXES, 
+                                  keep.dimensions = 'year')
+{
+        do.extract.3D(sim=sim,
+                      arr=sim$diagnoses,
+                      years= years, 
+                      ages = ages, 
+                      subgroups = subgroups, 
+                      sexes = sexes, 
+                      keep.dimensions=keep.dimensions)
+}
+
+
+
+
+
+
+do.extract.4D <- function(sim,
+                          arr,
+                          years= sim$years, 
+                          ages = sim$AGES, 
+                          subgroups = sim$SUBGROUPS, 
+                          sexes = sim$SEXES, 
+                          hiv.status = sim$HIV.STATUS,
+                          keep.dimensions='year')
+{
+        # subset array; apply statement to collapse array; dimnames; return
+        #return an array with dimensions keep.dimensions
+        
+        x = sim$arr[ages,sexes,subgroups,hiv.status]
+        
+        full.dim.names = list(year=keep.years,
+                         age=parameters$AGES, 
+                         sex=parameters$SEXES,
+                         subgroup=parameters$SUBGROUPS,
+                         hiv.status=parameters$HIV.STATUS)
+        
+        keep.dim.names = full.dim.names[keep.dimensions]
+
+        rv = array(sapply(x,sum),
+                dim=sapply(keep.dim.names, length),
+                dimnames=keep.dim.names
+        )
+        
+}
+
+
+
+do.extract.3D <- function(sim,
+                          arr,
+                          years= sim$years, 
+                          ages = sim$AGES, 
+                          subgroups = sim$SUBGROUPS, 
+                          sexes = sim$SEXES, 
+                          keep.dimensions='year')
+{
+        # subset array; apply statement to collapse array; dimnames; return
+        #return an array with dimensions keep.dimensions      
+}
+
+
+
+
 extract.awareness # package has extract.diagnosed.hiv
-
-
 # From post-processing file 
 extract.suppression <- function(sim,
                                 years=sim$years,
