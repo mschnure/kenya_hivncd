@@ -73,7 +73,7 @@ compute.dx <- function(time,
     n.ages=length(parameters$AGES)
     
     #-- BIRTH --#
-    births = state * pp$FERTILITY.RATE
+    births = state * pp$FERTILITY.RATES
     births = apply(births, 3, sum) #QQ: Why summing over subgroups? if subgroups are various locations, this works. But what if theyre set as HIV risk groups? what happens to MSM? 
     
     dx.state[1,'male',,'hiv_negative'] = births*pp$MALE.BIRTHS
@@ -81,7 +81,7 @@ compute.dx <- function(time,
     
     
     #-- AGING --#
-    aging = state * pp$AGING.RATE #indexed [age, sex, subgroup, hiv-status]
+    aging = state * pp$AGING.RATES #indexed [age, sex, subgroup, hiv-status]
     dx.state = dx.state - aging #aging out
     dx.state[-1,,,] = dx.state[-1,,,] + aging[-n.ages,,,]  #-1 skips the first row (people aging into next agegroup); -n.ages skips the last row (these individuals die out of model)
     
@@ -90,12 +90,12 @@ compute.dx <- function(time,
     
     #-- MORTALITY --#
     # hiv mortality 
-    hiv.mortality = state * pp$HIV.MORTALITY.RATE #indexed [age, sex, subgroup, hiv-status]
+    hiv.mortality = state * pp$HIV.MORTALITY.RATES #indexed [age, sex, subgroup, hiv-status]
     dx.state = dx.state - hiv.mortality
     dx.hiv.mortality = dx.hiv.mortality + hiv.mortality
     
     # non hiv mortality
-    non.hiv.mortality = state * pp$NON.HIV.MORTALITY.RATE #indexed [age, sex, subgroup, hiv-status]
+    non.hiv.mortality = state * pp$NON.HIV.MORTALITY.RATES #indexed [age, sex, subgroup, hiv-status]
     dx.state = dx.state - non.hiv.mortality
     dx.non.hiv.mortality = dx.non.hiv.mortality + non.hiv.mortality
     
