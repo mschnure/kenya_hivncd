@@ -1,5 +1,7 @@
 
-# sets up the constants
+
+
+#-- sets up the constants --#
 # age.cutoffs - the lower limit for each bracket
 create.model.parameters <- function(age.cutoffs=c(10,25,55),
                                    sexes = c('female','male'),
@@ -13,12 +15,6 @@ create.model.parameters <- function(age.cutoffs=c(10,25,55),
     parameters$SEXES = sexes 
     parameters$SUBGROUPS = subgroups
     
-    # hiv status
-    parameters$HIV.STATUS = c('hiv_negative','undiagnosed','diagnosed_unengaged','engaged_unsuppressed','engaged_suppressed')
-    parameters$HIV.STATES = c('undiagnosed','diagnosed_unengaged','engaged_unsuppressed','engaged_suppressed')
-    parameters$DIAGNOSED.STATES = c('diagnosed_unengaged','engaged_unsuppressed','engaged_suppressed')
-    parameters$ENGAGED.STATES = c('engaged_unsuppressed','engaged_suppressed')
-    
     # ages
     age.names = c(paste0(age.cutoffs[-length(age.cutoffs)], " to ", age.cutoffs[-1]),
                   paste0(age.cutoffs[length(age.cutoffs)], "+"))
@@ -26,17 +22,25 @@ create.model.parameters <- function(age.cutoffs=c(10,25,55),
     parameters$AGE.SPANS = c(age.cutoffs[-1] - age.cutoffs[-length(age.cutoffs)],
                              Inf)
     
+    # hiv status
+    parameters$HIV.STATUS = c('hiv_negative','undiagnosed','diagnosed_unengaged','engaged_unsuppressed','engaged_suppressed')
+    parameters$HIV.STATES = c('undiagnosed','diagnosed_unengaged','engaged_unsuppressed','engaged_suppressed') 
+    parameters$DIAGNOSED.STATES = c('diagnosed_unengaged','engaged_unsuppressed','engaged_suppressed')
+    parameters$ENGAGED.STATES = c('engaged_unsuppressed','engaged_suppressed')
+    
+    
     #- Return --#
-    parameters
+    parameters #QQ: dont we need to return(parameter)?
 }
 
 
+#-- Map all parameters --#
 map.model.parameters <- function(parameters,
-                                 sampled.parameters=c(birth.rate=0.01, 
-                                                      aging.rate=0.10,
-                                                      hiv.mortality.rate.suppressed=0.01, 
-                                                      hiv.mortality.rate.unsuppressed=0.02,
-                                                      non.hiv.mortality.rate=0.01, 
+                                 sampled.parameters=c(birth.rates=0.01, 
+                                                      aging.rates=0.10,
+                                                      hiv.mortality.rates.suppressed=0.01, 
+                                                      hiv.mortality.rates.unsuppressed=0.02,
+                                                      non.hiv.mortality.rates=0.01, 
                                                       testing.rates=1.5, 
                                                       engagement.rates=3,
                                                       unsuppressed.disengagement.rates=0.2,
@@ -52,15 +56,16 @@ map.model.parameters <- function(parameters,
                            subgroup=parameters$SUBGROUPS,
                            hiv.status=parameters$HIV.STATUS)
     
-    incidence.dim.names = list(age=parameters$AGES, 
+    trans.dim.names = list(age=parameters$AGES, 
                                sex=parameters$SEXES,
                                subgroup=parameters$SUBGROUPS)
     
-    #-- BIRTH RATE --#
-    
+    #-- BIRTH --# 
+    #QQ: Fertility vs birht rate in the model?
+    #QQ: why defining birth rate for all age/sex/subgroup/hivStatus? why not using a single birth rate?
     parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='FERTILITY.RATE',
-                                                  value = array(sampled.parameters['birth.rate'],
+                                                  parameter.name='FERTILITY.RATES',
+                                                  value = array(sampled.parameters['birth.rates'],
                                                                 dim=sapply(state.dim.names, length),
                                                                 dimnames=state.dim.names),
                                                   time = 2000)
@@ -73,29 +78,29 @@ map.model.parameters <- function(parameters,
     
     #-- AGING --#
     parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='AGING.RATE',
-                                                  value = array(sampled.parameters['aging.rate'],
+                                                  parameter.name='AGING.RATES',
+                                                  value = array(sampled.parameters['aging.rates'],
                                                                 dim=sapply(state.dim.names, length),
                                                                 dimnames=state.dim.names),
                                                   time = 2000)
     
     #-- MORTALITY --#
-    HIV.MORTALITY.RATE=array(0,
+    HIV.MORTALITY.RATES=array(0, #assume 0 for non-hiv states
                              dim=sapply(state.dim.names, length),
                              dimnames=state.dim.names)
     
-    HIV.MORTALITY.RATE[,,,'engaged_suppressed'] = sampled.parameters['hiv.mortality.rate.suppressed']
-    HIV.MORTALITY.RATE[,,,c('undiagnosed', 'diagnosed_unengaged', 'engaged_unsuppressed')] = sampled.parameters['hiv.mortality.rate.unsuppressed']
+    HIV.MORTALITY.RATES[,,,'engaged_suppressed'] = sampled.parameters['hiv.mortality.rates.suppressed']
+    HIV.MORTALITY.RATES[,,,c('undiagnosed', 'diagnosed_unengaged', 'engaged_unsuppressed')] = sampled.parameters['hiv.mortality.rates.unsuppressed']
     
     
     parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='HIV.MORTALITY.RATE',
-                                                  value = HIV.MORTALITY.RATE,
+                                                  parameter.name='HIV.MORTALITY.RATES',
+                                                  value = HIV.MORTALITY.RATES,
                                                   time = 2000)
     
     parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='NON.HIV.MORTALITY.RATE',
-                                                  value = array(sampled.parameters['non.hiv.mortality.rate'],
+                                                  parameter.name='NON.HIV.MORTALITY.RATES',
+                                                  value = array(sampled.parameters['non.hiv.mortality.rates'],
                                                                 dim=sapply(state.dim.names, length),
                                                                 dimnames=state.dim.names),
                                                   time = 2000) # will actually need age-specific mortality (will depend on age brackets)
@@ -104,8 +109,8 @@ map.model.parameters <- function(parameters,
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='TESTING.RATES',
                                                   value = array(sampled.parameters['testing.rates'],
-                                                                dim=sapply(incidence.dim.names, length),
-                                                                dimnames=incidence.dim.names),
+                                                                dim=sapply(trans.dim.names, length),
+                                                                dimnames=trans.dim.names),
                                                   time = 2000)
     
     #-- NEW INFECTIONS --#
@@ -114,8 +119,8 @@ map.model.parameters <- function(parameters,
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='ENGAGEMENT.RATES',
                                                   value = array(sampled.parameters['engagement.rates'],
-                                                                dim=sapply(incidence.dim.names, length),
-                                                                dimnames=incidence.dim.names),
+                                                                dim=sapply(trans.dim.names, length),
+                                                                dimnames=trans.dim.names),
                                                   time = 2000)
     
     parameters = add.time.varying.parameter.value(parameters,
@@ -128,23 +133,23 @@ map.model.parameters <- function(parameters,
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='SUPPRESSED.DISENGAGEMENT.RATES',
                                                   value = array(sampled.parameters['suppressed.disengagement.rates'],
-                                                                dim=sapply(incidence.dim.names, length),
-                                                                dimnames=incidence.dim.names),
+                                                                dim=sapply(trans.dim.names, length),
+                                                                dimnames=trans.dim.names),
                                                   time = 2000)
     
     #-- SUPPRESSION/UNSUPPRESSION --#
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='SUPPRESSION.RATES',
                                                   value = array(sampled.parameters['suppression.rates'],
-                                                                dim=sapply(incidence.dim.names, length),
-                                                                dimnames=incidence.dim.names),
+                                                                dim=sapply(trans.dim.names, length),
+                                                                dimnames=trans.dim.names),
                                                   time = 2000)
     
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='UNSUPPRESSION.RATES',
                                                   value = array(sampled.parameters['unsuppression.rates'],
-                                                                dim=sapply(incidence.dim.names, length),
-                                                                dimnames=incidence.dim.names),
+                                                                dim=sapply(trans.dim.names, length),
+                                                                dimnames=trans.dim.names),
                                                   time = 2000)
 
 
@@ -154,14 +159,18 @@ map.model.parameters <- function(parameters,
     # come up with a value for every thing in diffeq that is references pp$<whatever>
     # with the right dimensions
     
+    
     #-- RETURN --#
     
     parameters
 }
 
 
+#-- TIME VARYING PARAMETERS --#
+# parameters$time.varying.parameters: list of time varying parameters
+
 # This function adds a time point and value to the spline for a parameter
-# cannot have two times time same
+# cannot have multiple entries for the same time
 add.time.varying.parameter.value <- function(parameters,
                                              parameter.name,
                                              time,
@@ -182,7 +191,7 @@ add.time.varying.parameter.value <- function(parameters,
     
     # Append the new values
     param$times = c(param$times, time)
-    param$values = c(param$values, list(value))
+    param$values = c(param$values, list(value)) #QQ: why defining as a list?
     
     # Sort by time
     o = order(param$times)
@@ -195,29 +204,30 @@ add.time.varying.parameter.value <- function(parameters,
 }
 
 
+# This function computes the parameter value at a sepecific time
 compute.time.varying.parameters <- function(parameters, time)
 {
     lapply(parameters$time.varying.parameters, function(params){
         # params is a list with two components
         # $times - a vector of times
         # $values - a list of values
-        #  assume these are ordered
+        # assume these are ordered
         
         n.times = length(params$times)
         
         if (time <= params$times[1])
-            params$values[[1]]
+            params$values[[1]] #return first value
         else if (time >= params$times[n.times])
-            params$values[[n.times]]
-        else #we need to interpolate
-        {
-            index1 = (1:n.times)[params$times<=time]
-            index1 = index1[length(index1)]
-            index2 = index1 + 1
+            params$values[[n.times]] #return last value
+        else 
+        {#we need to interpolate (linearly)
+            index1 = (1:n.times)[params$times<=time] 
+            index1 = index1[length(index1)] #find the index of last 'time' entry which is <= selected time
+            index2 = index1 + 1 #the index of the first 'time' entry which is > selected time
             
             if (time==params$times[index1])
-                params$values[[index1]]
-            else
+                params$values[[index1]] #return the value
+            else #linear interpolation:
             {
                 time1 = params$times[index1]
                 time2 = params$times[index2]
@@ -226,10 +236,9 @@ compute.time.varying.parameters <- function(parameters, time)
                 value2 = params$values[[index2]]
                 
                 slope = (value2 - value1) / (time2 - time1)
-                value1 + slope * (time - time1)
+                value1 + slope * (time - time1) #final value that is returned
             }
         }
         
-        # Goal: Linearly interpolate
     })
 }
