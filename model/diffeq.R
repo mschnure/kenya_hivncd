@@ -7,7 +7,8 @@ library(odeintr)
 ##---------------------------------------##
 ##-- THE COMPUTE DIFFERENTIAL FUNCTION --##
 ##---------------------------------------##
-
+# This function is called at every itteration
+# y is 1-D aray including the model state and main transitions that we are interested in (incidence, diagnosis, hiv/non-hiv mortality)
 compute.dx <- function(time,
                        y, #the vector-form model state at this time
                        parameters)
@@ -22,28 +23,28 @@ compute.dx <- function(time,
     ##----------------------------##
     ##-- PARSE THE MODEL STATE  --##
     ##----------------------------##
+    #state #indexed [age, sex, subgroup, hiv-status]
+    #incidence #indexed [age, sex, subgroup]
+    #diagnoses #indexed [age, sex, subgroup]
+    #hiv.mortality #indexed [age, sex, subgroup, hiv-status]  
+    #non.hiv.mortality #indexed [age, sex, subgroup, hiv-status]
     
     state.dim.names = list(age=parameters$AGES, 
                            sex=parameters$SEXES,
                            subgroup=parameters$SUBGROUPS,
                            hiv.status=parameters$HIV.STATUS)
     
-    incidence.dim.names = list(age=parameters$AGES, 
-                               sex=parameters$SEXES,
-                               subgroup=parameters$SUBGROUPS)
-    
-    n.ages=length(parameters$AGES)
+    trans.dim.names = list(age=parameters$AGES, 
+                           sex=parameters$SEXES,
+                           subgroup=parameters$SUBGROUPS)
     
     state.length = prod(sapply(state.dim.names, length))
     
     state = array(y[1:state.length], 
                   dim = sapply(state.dim.names, length), 
-                  dimnames = state.dim.names) #indexed [age, sex, subgroup, hiv-status]
+                  dimnames = state.dim.names) 
+    # we dont need the stats, so we dont parse them here 
     
-    #incidence #indexed [age, sex, subgroup]
-    #diagnoses #indexed [age, sex, subgroup]
-    #hiv.mortality #indexed [age, sex, subgroup]
-    #non.hiv.mortality #indexed [age, sex, subgroup]
     
     ##----------------------##
     ##-- SET UP DX ARRAYS --##
@@ -53,37 +54,39 @@ compute.dx <- function(time,
                      dim = sapply(state.dim.names, length), 
                      dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
     dx.incidence = array(0, 
-                         dim = sapply(incidence.dim.names, length), 
-                         dimnames = incidence.dim.names)#indexed [age, sex, subgroup]
+                         dim = sapply(trans.dim.names, length), 
+                         dimnames = trans.dim.names)#indexed [age, sex, subgroup]
     dx.diagnoses = array(0, 
-                         dim = sapply(incidence.dim.names, length), 
-                         dimnames = incidence.dim.names)#indexed [age, sex, subgroup]
+                         dim = sapply(trans.dim.names, length), 
+                         dimnames = trans.dim.names)#indexed [age, sex, subgroup]
     dx.hiv.mortality = array(0, 
-                               dim = sapply(state.dim.names, length), 
-                               dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
+                             dim = sapply(state.dim.names, length), 
+                             dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
     dx.non.hiv.mortality = array(0, 
-                                dim = sapply(state.dim.names, length), 
-                                dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
+                                 dim = sapply(state.dim.names, length), 
+                                 dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
     
     ##----------------------------------##
     ##-- COMPUTE THE CHANGES IN STATE --##
     ##----------------------------------##
     
-    #-- CHANGES in AGE --#
+    n.ages=length(parameters$AGES)
     
+    #-- BIRTH --#
     births = state * pp$FERTILITY.RATE
-    births = apply(births, 3, sum)
+    births = apply(births, 3, sum) #QQ: Why summing over subgroups? if subgroups are various locations, this works. But what if theyre set as HIV risk groups? what happens to MSM? 
     
-    #births
     dx.state[1,'male',,'hiv_negative'] = births*pp$MALE.BIRTHS
     dx.state[1,'female',,'hiv_negative'] = births*(1-pp$MALE.BIRTHS)
-
-    #aging
+    
+    
+    #-- AGING --#
     aging = state * pp$AGING.RATE #indexed [age, sex, subgroup, hiv-status]
-    dx.state = dx.state - aging
-    dx.state[-1,,,] = dx.state[-1,,,] + aging[-n.ages,,,]
+    dx.state = dx.state - aging #aging out
+    dx.state[-1,,,] = dx.state[-1,,,] + aging[-n.ages,,,]  #-1 skips the first row (people aging into next agegroup); -n.ages skips the last row (these individuals die out of model)
     
     dx.non.hiv.mortality[n.ages,,,] = dx.non.hiv.mortality[n.ages,,,] + aging[n.ages,,,]
+    
     
     #-- MORTALITY --#
     # hiv mortality 
@@ -103,13 +106,13 @@ compute.dx <- function(time,
     # (we are ignoring this for now)
     
     #-- CHANGES in HIV STATUS --#
-
+    
     #-- DIAGNOSES --#
-    diagnosed = pp$TESTING.RATES * as.numeric(state[,,,'undiagnosed'])
+    diagnosed = pp$TESTING.RATES * as.numeric(state[,,,'undiagnosed'])  #QQ: why need as.numeric?
     dx.state[,,,'undiagnosed'] = as.numeric(dx.state[,,,'undiagnosed']) - diagnosed
     dx.state[,,,'diagnosed_unengaged'] = as.numeric(dx.state[,,,'diagnosed_unengaged']) + diagnosed
     dx.diagnoses = dx.diagnoses + diagnosed
-
+    
     #-- NEW INFECTIONS --#
     incidence = 10     # Using this for now
     dx.state[,,,'hiv_negative'] = as.numeric(dx.state[,,,'hiv_negative']) - incidence
@@ -142,30 +145,29 @@ compute.dx <- function(time,
     dx.state[,,,'engaged_unsuppressed'] = as.numeric(dx.state[,,,'engaged_unsuppressed']) + unsuppressed
     
     
+    #-- INCIDENCE --#
+    #we need an array force of infection to each stratum of [age,sex,subgroup,hiv.status]
     
-    if (1==2)
+    # x.to: strata that receives the new infection
+    # x.from: strata that transmits HIV
+    # for each 'x.to' strata, loop through all 'x.from' stratas and compute the new transmissions based on transmission rate, prevalence of HIV in the 'x.from' strata, and the proportion of partnerships between the two stratas
+    
+    if (1==2) #QQ: What's the logic here?
     {
-        #we need an array force of infection to each stratum of [age,sex,risk,subpop,hiv.status]
         for (a.to in parameters$AGES)
         {
             for (s.to in parameters$SEXES)
             {
-                for (r.to in parameters$RISKS)
+                for (r.to in parameters$SUBGROUPS)
                 {
-                    for (p.to in parameters$SUBPOPULATIONS)
+                    for (a.from in parameters$AGES)
                     {
-                        for (a.from in parameters$AGES)
+                        for (s.from in parameters$SEXES)
                         {
-                            for (s.from in parameters$SEXES)
+                            for (r.from in parameters$SUBGROUPS)
                             {
-                                for (r.from in parameters$RISKS)
-                                {
-                                    for (p.from in parameters$SUBPOPULATIONS)
-                                    {
-                                        dx.incidence[a.to, s.to, r.to, p.to] = dx.incidence[a.to, s.to, r.to, p.to] +
-                                            proportion.of.tos.partners.in.from * transmission.rate * prevalence.of.infections.in.from
-                                    }
-                                }
+                                dx.incidence[a.to, s.to, r.to] = dx.incidence[a.to, s.to, r.to] +
+                                    proportion.of.tos.partners.in.from * transmission.rate * prevalence.of.infections.in.from
                             }
                         }
                     }
@@ -174,31 +176,39 @@ compute.dx <- function(time,
         }
     }
     
+    
     ##------------------------------##
     ##-- PACKAGE IT UP AND RETURN --##
     ##------------------------------##
-    
-    #return a vector of length = length(y) that represents the change in each element in y
-    c(as.numeric(dx.state), as.numeric(dx.incidence), as.numeric(dx.diagnoses), as.numeric(dx.hiv.mortality), as.numeric(dx.non.hiv.mortality))
-    
-    
     #flatten out all our arrays
+    #return a vector of length = length(y) that represents the change in each element in y
+    c(as.numeric(dx.state),  #QQ: why as.numeric needed?
+      as.numeric(dx.incidence), 
+      as.numeric(dx.diagnoses), 
+      as.numeric(dx.hiv.mortality), 
+      as.numeric(dx.non.hiv.mortality))
+    
+    
 }
 
+
+#QQ: not sure what this function is doing
 set.up.initial.diffeq.vector <- function(initial.state,
                                          parameters)
 {
+    # y is 1-D aray including the model state and main transitions that we are interested in (incidence, diagnosis, hiv/non-hiv mortality)
     state.length = length(parameters$AGES)*length(parameters$SEXES)*length(parameters$SUBGROUPS)*length(parameters$HIV.STATUS)
-    incidence.length = length(parameters$AGES)*length(parameters$SEXES)*length(parameters$SUBGROUPS)
+    trans.length = length(parameters$AGES)*length(parameters$SEXES)*length(parameters$SUBGROUPS)
     
     total.length = 3 * state.length + #state plus two mortality arrays
-        2 * incidence.length #incidence plus new diagnoses
+        2 * trans.length #incidence plus new diagnoses
     
-    rv = numeric(total.length)
-    rv[1:state.length] = as.numeric(initial.state)
+    rv = numeric(total.length) #opens a 1-D vector of 0s to this length
+    rv[1:state.length] = as.numeric(initial.state) #QQ: If we had the initial state, why did we define rv? 
     
     rv
 }
+
 
 run.model <- function(parameters,
                       initial.state,
@@ -216,14 +226,20 @@ run.model <- function(parameters,
     process.ode.results(ode.results)
 }
 
-# break out the epi data we want
+
+## --break out the epi data we want-- ##
+# keep.years: ##is this an array of years to keep?
+
 process.ode.results <- function(ode.results,
                                 parameters,
                                 start.year,
                                 end.year,
                                 keep.years)
 {
-    dimnames(ode.results)[[1]]=(start.year-1):end.year
+    #QQ: what's the structure of the ode results?  
+    # ode.result is a 2-D array with rows representing time, and columns representing the outputs (vector y)
+    
+    dimnames(ode.results)[[1]]=(start.year-1):end.year  #QQ: first row corresponds to the initial state and not first year?
     
     keep.years=as.character(keep.years)
     
@@ -233,53 +249,59 @@ process.ode.results <- function(ode.results,
                            subgroup=parameters$SUBGROUPS,
                            hiv.status=parameters$HIV.STATUS)
     
-    incidence.dim.names = list(year=keep.years,
-                               age=parameters$AGES, 
-                               sex=parameters$SEXES,
-                               subgroup=parameters$SUBGROUPS)
+    trans.dim.names = list(year=keep.years,
+                           age=parameters$AGES, 
+                           sex=parameters$SEXES,
+                           subgroup=parameters$SUBGROUPS)
     
-    state.length = length(parameters$AGES)*length(parameters$SEXES)*length(parameters$SUBGROUPS)*length(parameters$HIV.STATUS)
-    incidence.length = length(parameters$AGES)*length(parameters$SEXES)*length(parameters$SUBGROUPS)
+    state.length = prod(sapply(state.dim.names,length))
+    trans.length = prod(sapply(trans.dim.names,length))
     
+    #QQ: what's the target structure for rv?
     rv=list(years=as.numeric(keep.years),
             AGES=parameters$AGES,
             SEXES=parameters$SEXES,
             SUBGROUPS=parameters$SUBGROUPS,
             HIV.STATUS=parameters$HIV.STATUS,
-            HIV.STATES=parameters$HIV.STATES,
-            DIAGNOSED.STATES=parameters$DIAGNOSED.STATES,
+            HIV.STATES=parameters$HIV.STATES, #QQ: should this be incidence? 
+            DIAGNOSED.STATES=parameters$DIAGNOSED.STATES, #QQ: what's DIAGNOSED.STATES?
             ENGAGED.STATES=parameters$ENGAGED.STATES
-            )
+    )
     
     index=0
     
+    #states
     rv$population=array(ode.results[keep.years,index+1:state.length],
                         dim = sapply(state.dim.names,length),
                         dimnames = state.dim.names)
     index=index+state.length
     
-    rv$incidence=array(ode.results[keep.years,index+1:incidence.length],
-                        dim = sapply(incidence.dim.names,length),
-                        dimnames = incidence.dim.names)
-    index=index+incidence.length
+    #incidence
+    rv$incidence=array(ode.results[keep.years,index+1:trans.length],
+                       dim = sapply(trans.dim.names,length),
+                       dimnames = trans.dim.names)
+    index=index+trans.length
     
-    rv$diagnoses=array(ode.results[keep.years,index+1:incidence.length],
-                       dim = sapply(incidence.dim.names,length),
-                       dimnames = incidence.dim.names)
-    index=index+incidence.length
+    #diagnosis
+    rv$diagnoses=array(ode.results[keep.years,index+1:trans.length],
+                       dim = sapply(trans.dim.names,length),
+                       dimnames = trans.dim.names)
+    index=index+trans.length
     
-    rv$hiv.mortality=array(ode.results[keep.years,index+1:incidence.length],
-                       dim = sapply(incidence.dim.names,length),
-                       dimnames = incidence.dim.names)
-    index=index+incidence.length
+    #hiv mortality
+    rv$hiv.mortality=array(ode.results[keep.years,index+1:state.length], #QQ: correct? 
+                           dim = sapply(state.dim.names,length),
+                           dimnames = state.dim.names)
+    index=index+state.length
     
+    #non.hiv mortality
     rv$non.hiv.mortality=array(ode.results[keep.years,index+1:state.length], #@melissa check this part but I think it's right
-                       dim = sapply(state.dim.names,length),
-                       dimnames = state.dim.names)
+                               dim = sapply(state.dim.names,length),
+                               dimnames = state.dim.names)
     index=index+state.length
     
     
-    class(rv)="hiv_simulation"
+    class(rv)="hiv_simulation" #QQ:What does this do?
     
-    rv
+    return(rv) #QQ: should we return it?
 }
