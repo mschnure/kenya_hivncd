@@ -22,5 +22,5 @@ initial.state = array(10,
 sim = run.model(parameters=parameters,
               initial.state=initial.state,
               start.year=1970,
-              end.year=2020)
-
+              end.year=2020,
+              keep.years=c(1970:2020))

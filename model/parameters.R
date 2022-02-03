@@ -1,7 +1,6 @@
+#-- sets up the parameter object with constant and time-varying parameters --#
 
 
-
-#-- sets up the constants --#
 # age.cutoffs - the lower limit for each bracket
 create.model.parameters <- function(age.cutoffs=c(10,25,55),
                                    sexes = c('female','male'),
@@ -126,8 +125,8 @@ map.model.parameters <- function(parameters,
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='UNSUPPRESSED.DISENGAGEMENT.RATES',
                                                   value = array(sampled.parameters['unsuppressed.disengagement.rates'],
-                                                                dim=sapply(incidence.dim.names, length),
-                                                                dimnames=incidence.dim.names),
+                                                                dim=sapply(trans.dim.names, length),
+                                                                dimnames=trans.dim.names),
                                                   time = 2000)
     
     parameters = add.time.varying.parameter.value(parameters,

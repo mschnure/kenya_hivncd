@@ -213,7 +213,8 @@ set.up.initial.diffeq.vector <- function(initial.state,
 run.model <- function(parameters,
                       initial.state,
                       start.year,
-                      end.year)
+                      end.year,
+                      keep.years)
 {
     #This is just a stub
     ode.results = odeintr::integrate_sys(sys=function(x,t){compute.dx(time=t,y=x,parameters=parameters)},
@@ -223,7 +224,7 @@ run.model <- function(parameters,
                                          step_size=1)
     
     # We need to process the results
-    process.ode.results(ode.results)
+    process.ode.results(ode.results,parameters,start.year,end.year,keep.years)
 }
 
 
@@ -254,8 +255,8 @@ process.ode.results <- function(ode.results,
                            sex=parameters$SEXES,
                            subgroup=parameters$SUBGROUPS)
     
-    state.length = prod(sapply(state.dim.names,length))
-    trans.length = prod(sapply(trans.dim.names,length))
+    state.length = length(parameters$AGES)* length(parameters$SEXES) * length(parameters$SUBGROUPS) * length(parameters$HIV.STATUS)
+    trans.length =  length(parameters$AGES)* length(parameters$SEXES) * length(parameters$SUBGROUPS)
     
     #QQ: what's the target structure for rv?
     rv=list(years=as.numeric(keep.years),
@@ -263,7 +264,7 @@ process.ode.results <- function(ode.results,
             SEXES=parameters$SEXES,
             SUBGROUPS=parameters$SUBGROUPS,
             HIV.STATUS=parameters$HIV.STATUS,
-            HIV.STATES=parameters$HIV.STATES, #QQ: should this be incidence? 
+            HIV.STATES=parameters$HIV.STATES, 
             DIAGNOSED.STATES=parameters$DIAGNOSED.STATES, #QQ: what's DIAGNOSED.STATES?
             ENGAGED.STATES=parameters$ENGAGED.STATES
     )
