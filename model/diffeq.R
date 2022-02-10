@@ -224,7 +224,11 @@ run.model <- function(parameters,
                                          step_size=1)
     
     # We need to process the results
-    process.ode.results(ode.results,parameters,start.year,end.year,keep.years)
+    process.ode.results(ode.results,
+                        parameters=parameters,
+                        start.year=start.year,
+                        end.year=end.year,
+                        keep.years=keep.years)
 }
 
 
@@ -237,11 +241,14 @@ process.ode.results <- function(ode.results,
                                 end.year,
                                 keep.years)
 {
-    #QQ: what's the structure of the ode results?  
+    
     # ode.result is a 2-D array with rows representing time, and columns representing the outputs (vector y)
     
-    dimnames(ode.results)[[1]]=(start.year-1):end.year  #QQ: first row corresponds to the initial state and not first year?
+    ode.results=as.matrix(ode.results)[,-1]
     
+    dimnames(ode.results)[[1]]=(start.year-1):end.year  
+    
+    previous.years=as.character(keep.years-1)
     keep.years=as.character(keep.years)
     
     state.dim.names = list(year=keep.years,
@@ -278,31 +285,31 @@ process.ode.results <- function(ode.results,
     index=index+state.length
     
     #incidence
-    rv$incidence=array(ode.results[keep.years,index+1:trans.length],
+    rv$incidence=array(ode.results[keep.years,index+1:trans.length]-ode.results[previous.years,index+1:trans.length],
                        dim = sapply(trans.dim.names,length),
                        dimnames = trans.dim.names)
     index=index+trans.length
     
     #diagnosis
-    rv$diagnoses=array(ode.results[keep.years,index+1:trans.length],
+    rv$diagnoses=array(ode.results[keep.years,index+1:trans.length]-ode.results[previous.years,index+1:trans.length],
                        dim = sapply(trans.dim.names,length),
                        dimnames = trans.dim.names)
     index=index+trans.length
     
     #hiv mortality
-    rv$hiv.mortality=array(ode.results[keep.years,index+1:state.length], #QQ: correct? 
+    rv$hiv.mortality=array(ode.results[keep.years,index+1:state.length]-ode.results[previous.years,index+1:state.length],
                            dim = sapply(state.dim.names,length),
                            dimnames = state.dim.names)
     index=index+state.length
     
     #non.hiv mortality
-    rv$non.hiv.mortality=array(ode.results[keep.years,index+1:state.length], #@melissa check this part but I think it's right
+    rv$non.hiv.mortality=array(ode.results[keep.years,index+1:state.length]-ode.results[previous.years,index+1:state.length], 
                                dim = sapply(state.dim.names,length),
                                dimnames = state.dim.names)
     index=index+state.length
     
     
-    class(rv)="hiv_simulation" #QQ:What does this do?
+    class(rv)="hiv_simulation" 
     
     return(rv) #QQ: should we return it?
 }
