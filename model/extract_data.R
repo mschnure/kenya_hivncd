@@ -1,129 +1,65 @@
+# These functions are used to extract different information from the ODE result
 
-extract.data = function(sim,
-                        data.type,
-                        years= sim$years, 
-                        ages = sim$AGES, 
-                        subgroups = sim$SUBGROUPS, 
-                        sexes = sim$SEXES, 
-                        hiv.status = sim$HIV.STATUS,
-                        keep.dimensions = 'year')
-{
-        
-}
+# GENERAL FORMAT
+# extract.data = function(sim,
+#                         #ODE result
+#                         data.type,
+#                         #type of reported data (states, diagnosis, etc)
+#                         years = sim$years,
+#                         ages = sim$AGES,
+#                         subgroups = sim$SUBGROUPS,
+#                         sexes = sim$SEXES,
+#                         hiv.status = sim$HIV.STATUS,
+#                         keep.dimensions = 'year' #data is summed for each element in this dimention (year: return total data for each year)))
+# )
+# {
+#         
+# }
 
-extract.population <- function(sim,
-                               years= sim$years, 
-                               ages = sim$AGES, 
-                               subgroups = sim$SUBGROUPS, 
-                               sexes = sim$SEXES, 
-                               hiv.status = sim$HIV.STATUS,
-                               keep.dimensions = 'year')
-{
-        do.extract.4D(sim=sim,
-                      arr=sim$population,
-                      years= years, 
-                      ages = ages, 
-                      subgroups = subgroups, 
-                      sexes = sexes, 
-                      hiv.status = hiv.status,
-                      keep.dimensions=keep.dimensions)
-                    
-          }
-
-extract.incidence <- function(sim,
-                              years= sim$years, 
-                              ages = sim$AGES, 
-                              subgroups = sim$SUBGROUPS, 
-                              sexes = sim$SEXES, 
-                              keep.dimensions = 'year')
-{
-        do.extract.3D(sim=sim,
-                      arr=sim$incidence,
-                      years= years, 
-                      ages = ages, 
-                      subgroups = subgroups, 
-                      sexes = sexes, 
-                      keep.dimensions=keep.dimensions)
-}
-
-extract.prevalence <- function(sim,
-                               years= sim$years, 
-                               ages = sim$AGES, 
-                               subgroups = sim$SUBGROUPS, 
-                               sexes = sim$SEXES, 
-                               keep.dimensions = 'year')
-{
-        extract.population(sim=sim,
-                           years=years,
-                           ages=ages,
-                           subgroups=subgroups,
-                           sexes=sexes,
-                           keep.dimensions = keep.dimensions,
-                           hiv.status = sim$HIV.STATES)
-        
-}
-
-extract.new.diagnoses <- function(sim,
-                                  years= sim$years, 
-                                  ages = sim$AGES, 
-                                  subgroups = sim$SUBGROUPS, 
-                                  sexes = sim$SEXES, 
-                                  keep.dimensions = 'year')
-{
-        do.extract.3D(sim=sim,
-                      arr=sim$diagnoses,
-                      years= years, 
-                      ages = ages, 
-                      subgroups = subgroups, 
-                      sexes = sexes, 
-                      keep.dimensions=keep.dimensions)
-}
-
-
-
-
-
-
+#### CORE FUNCTIONS #### 
 do.extract.4D <- function(sim,
-                          arr,
-                          years= sim$years, 
+                          arr, #specific subset array that is needed for the reporting
+                          years = sim$years, #years to include in the report (other years are excluded)
                           ages = sim$AGES, 
+                          sexes = sim$SEXES,
                           subgroups = sim$SUBGROUPS, 
-                          sexes = sim$SEXES, 
                           hiv.status = sim$HIV.STATUS,
-                          keep.dimensions='year')
+                          keep.dimensions = 'year') #collapse all other dimensions & report the data as total value over this dimension
 {
-        # subset array; apply statement to collapse array; dimnames; return
-        #return an array with dimensions keep.dimensions
-        
-        if(!is.character(ages))
+        #making sure that inputs are entered as character and not numerical indexes (if so, return the char values)
+        if (!is.character(ages))
                 ages = sim$AGES[ages]
         
-        if(!is.character(subgroups))
+        if (!is.character(subgroups))
                 subgroups = sim$SUBGROUPS[subgroups]
         
-        if(!is.character(sexes))
+        if (!is.character(sexes))
                 sexes = sim$SEXES[sexes]
         
-        if(!is.character(hiv.status))
+        if (!is.character(hiv.status))
                 hiv.status = sim$HIV.STATUS[hiv.status]
         
-        x = arr[as.character(years),ages,sexes,subgroups,hiv.status]
-        
-        full.dim.names = list(year=years,
-                         age=ages, 
-                         sex=sexes,
-                         subgroup=subgroups,
-                         hiv.status=hiv.status)
-        
-        dim(x)=sapply(full.dim.names,length)
+        #array of final data  
+        x = arr[as.character(years), ages, sexes, subgroups, hiv.status]
+        #full names of all dimensions
+        full.dim.names = list(
+                year = years,
+                age = ages,
+                sex = sexes,
+                subgroup = subgroups,
+                hiv.status = hiv.status
+        )
+        dim.x=sapply(full.dim.names, length)
+        dim(x)=dim.x
         dimnames(x)=full.dim.names
-        
-        keep.dim.names = full.dim.names[keep.dimensions]
 
-        rv = apply(x,keep.dimensions,sum)
-        dim(rv)=sapply(keep.dim.names, length)
-        dimnames(rv)=keep.dim.names
+        #filtering unwanted dimensions out
+        keep.dim.names = full.dim.names[keep.dimensions]
+        #summing over dimensions that are to keep
+        rv = apply(x, keep.dimensions, sum)
+        #adjusting dimension names and 
+        dim(rv) = sapply(keep.dim.names, length)
+        dimnames(rv) = keep.dim.names
         
         rv
 }
@@ -132,15 +68,127 @@ do.extract.4D <- function(sim,
 
 do.extract.3D <- function(sim,
                           arr,
-                          years= sim$years, 
-                          ages = sim$AGES, 
-                          subgroups = sim$SUBGROUPS, 
-                          sexes = sim$SEXES, 
-                          keep.dimensions='year')
+                          years = sim$years,
+                          ages = sim$AGES,
+                          sexes = sim$SEXES,
+                          subgroups = sim$SUBGROUPS,
+                          keep.dimensions = 'year'
+                          )
 {
-        # subset array; apply statement to collapse array; dimnames; return
-        #return an array with dimensions keep.dimensions      
+        #making sure that inputs are entered as character and not numerical indexes (if so, return the char values)
+        if (!is.character(ages))
+                ages = sim$AGES[ages]
+        
+        if (!is.character(subgroups))
+                subgroups = sim$SUBGROUPS[subgroups]
+        
+        if (!is.character(sexes))
+                sexes = sim$SEXES[sexes]
+        
+        #filter the input array for selected years and attributes
+        x=arr[as.character(years),ages,sexes,subgroups]
+        #the full names of the array including all dimension
+        full.dim.names=list(
+                year=years,
+                age=ages,
+                sex=sexes,
+                subgroup=subgroups
+        )
+        dim.x=sapply(full.dim.names, length)
+        dim(x)=dim.x
+        dimnames(x)=full.dim.names
+
+        #filtering the unwanted dimension names out
+        keep.dim.names=full.dim.names[keep.dimensions]
+        #summing over dimensions that are to keep
+        rv= apply(x,keep.dimensions,sum)
+        #adjusting the name and dimensions for the result
+        dim(rv)=sapply(keep.dim.names,length)        
+        dimnames(rv)=keep.dim.names
+# dim(rv)                
+rv                
 }
+
+#### FUNCTIONS TO EXTRACT SPECIFIC OUTPUTS #### 
+extract.population <- function(sim,
+                               years = sim$years,
+                               ages = sim$AGES,
+                               subgroups = sim$SUBGROUPS,
+                               sexes = sim$SEXES,
+                               hiv.status = sim$HIV.STATUS,
+                               keep.dimensions = 'year')
+{
+        do.extract.4D(
+                sim = sim,
+                arr = sim$population,
+                years = years,
+                ages = ages,
+                subgroups = subgroups,
+                sexes = sexes,
+                hiv.status = hiv.status,
+                keep.dimensions = keep.dimensions
+        )
+        
+}
+
+extract.incidence <- function(sim,
+                              years = sim$years,
+                              ages = sim$AGES,
+                              subgroups = sim$SUBGROUPS,
+                              sexes = sim$SEXES,
+                              keep.dimensions = 'year')
+{
+        do.extract.3D(
+                sim = sim,
+                arr = sim$incidence,
+                years = years,
+                ages = ages,
+                subgroups = subgroups,
+                sexes = sexes,
+                keep.dimensions = keep.dimensions
+        )
+}
+
+extract.prevalence <- function(sim,
+                               years = sim$years,
+                               ages = sim$AGES,
+                               subgroups = sim$SUBGROUPS,
+                               sexes = sim$SEXES,
+                               keep.dimensions = 'year')
+{
+        extract.population(
+                sim = sim,
+                years = years,
+                ages = ages,
+                subgroups = subgroups,
+                sexes = sexes,
+                keep.dimensions = keep.dimensions,
+                hiv.status = sim$HIV.STATES
+        )
+        
+}
+
+extract.new.diagnoses <- function(sim,
+                                  years = sim$years,
+                                  ages = sim$AGES,
+                                  subgroups = sim$SUBGROUPS,
+                                  sexes = sim$SEXES,
+                                  keep.dimensions = 'year')
+{
+        do.extract.3D(
+                sim = sim,
+                arr = sim$diagnoses,
+                years = years,
+                ages = ages,
+                subgroups = subgroups,
+                sexes = sexes,
+                keep.dimensions = keep.dimensions
+        )
+}
+
+
+
+
 
 
 

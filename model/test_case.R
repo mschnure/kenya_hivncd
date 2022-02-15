@@ -24,3 +24,7 @@ sim = run.model(parameters=parameters,
               start.year=1970,
               end.year=2020,
               keep.years=c(1970:2020))
+
+sim$population[1,,,,]
+sim$years
+
