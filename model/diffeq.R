@@ -7,7 +7,7 @@ library(odeintr)
 ##---------------------------------------##
 ##-- THE COMPUTE DIFFERENTIAL FUNCTION --##
 ##---------------------------------------##
-# This function is called at every itteration
+# This function is called at every iteration
 # y is 1-D aray including the model state and main transitions that we are interested in (incidence, diagnosis, hiv/non-hiv mortality)
 compute.dx <- function(time,
                        y, #the vector-form model state at this time
@@ -236,7 +236,6 @@ run.model <- function(parameters,
 
 
 ## --break out the epi data we want-- ##
-# keep.years: ##is this an array of years to keep?
 process.ode.results <- function(ode.results,
                                 parameters,
                                 start.year,
@@ -287,25 +286,25 @@ process.ode.results <- function(ode.results,
                         dimnames = state.dim.names)
     index=index+state.length
     
-    #incidence (reporeted as cumulative value)
+    #incidence (reported as cumulative value)
     rv$incidence=array(ode.results[keep.years,index+1:trans.length]-ode.results[previous.years,index+1:trans.length],
                        dim = sapply(trans.dim.names,length),
                        dimnames = trans.dim.names)
     index=index+trans.length
     
-    #diagnosis (reporeted as cumulative value)
+    #diagnosis (reported as cumulative value)
     rv$diagnoses=array(ode.results[keep.years,index+1:trans.length]-ode.results[previous.years,index+1:trans.length],
                        dim = sapply(trans.dim.names,length),
                        dimnames = trans.dim.names)
     index=index+trans.length
     
-    #hiv mortality (reporeted as cumulative value)
+    #hiv mortality (reported as cumulative value)
     rv$hiv.mortality=array(ode.results[keep.years,index+1:state.length]-ode.results[previous.years,index+1:state.length],
                            dim = sapply(state.dim.names,length),
                            dimnames = state.dim.names)
     index=index+state.length
     
-    #non.hiv mortality (reporeted as cumulative value)
+    #non.hiv mortality (reported as cumulative value)
     rv$non.hiv.mortality=array(ode.results[keep.years,index+1:state.length]-ode.results[previous.years,index+1:state.length], 
                                dim = sapply(state.dim.names,length),
                                dimnames = state.dim.names)

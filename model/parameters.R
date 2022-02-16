@@ -60,8 +60,6 @@ map.model.parameters <- function(parameters,
                                subgroup=parameters$SUBGROUPS)
     
     #-- BIRTH --# 
-    #QQ: Fertility vs birht rate in the model?
-    #QQ: why defining birth rate for all age/sex/subgroup/hivStatus? why not using a single birth rate?
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='FERTILITY.RATES',
                                                   value = array(sampled.parameters['birth.rates'],
@@ -154,9 +152,7 @@ map.model.parameters <- function(parameters,
 
     
     
-    # @melissa
-    # come up with a value for every thing in diffeq that is references pp$<whatever>
-    # with the right dimensions
+
     
     
     #-- RETURN --#
@@ -190,7 +186,7 @@ add.time.varying.parameter.value <- function(parameters,
     
     # Append the new values
     param$times = c(param$times, time)
-    param$values = c(param$values, list(value)) #QQ: why defining as a list?
+    param$values = c(param$values, list(value)) 
     
     # Sort by time
     o = order(param$times)
