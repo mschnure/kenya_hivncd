@@ -74,7 +74,7 @@ compute.dx <- function(time,
     
     #-- BIRTH --#
     births = state * pp$FERTILITY.RATES
-    births = apply(births, 3, sum) #QQ: Why summing over subgroups? if subgroups are various locations, this works. But what if theyre set as HIV risk groups? what happens to MSM? 
+    births = apply(births, 3, sum) # assuming the subgroups represent various locations
     
     dx.state[1,'male',,'hiv_negative'] = births*pp$MALE.BIRTHS
     dx.state[1,'female',,'hiv_negative'] = births*(1-pp$MALE.BIRTHS)
@@ -108,13 +108,15 @@ compute.dx <- function(time,
     #-- CHANGES in HIV STATUS --#
     
     #-- DIAGNOSES --#
-    diagnosed = pp$TESTING.RATES * as.numeric(state[,,,'undiagnosed'])  #QQ: why need as.numeric?
+    #Note: When using a multidimension array, if a dimension is set to 1 and we return the array, R will authomaticaly remove that dimention (e.g., a=array(c(1:6),c(3,2,1)) is a 3-dim array; a[1,,] retunrs a 2-D array and excludes the 3rd dimension) 
+    #using as.numeric will allow up to multiply the returned value from the state even if a dimension is droped. otherwise, the multiplication can generate an error
+    diagnosed = pp$TESTING.RATES * as.numeric(state[,,,'undiagnosed'])  
     dx.state[,,,'undiagnosed'] = as.numeric(dx.state[,,,'undiagnosed']) - diagnosed
     dx.state[,,,'diagnosed_unengaged'] = as.numeric(dx.state[,,,'diagnosed_unengaged']) + diagnosed
     dx.diagnoses = dx.diagnoses + diagnosed
     
     #-- NEW INFECTIONS --#
-    incidence = 10     # Using this for now
+    incidence = 20     # Using this for now
     dx.state[,,,'hiv_negative'] = as.numeric(dx.state[,,,'hiv_negative']) - incidence
     dx.state[,,,'undiagnosed'] = as.numeric(dx.state[,,,'undiagnosed']) + incidence
     dx.incidence = dx.incidence + incidence
@@ -152,7 +154,7 @@ compute.dx <- function(time,
     # x.from: strata that transmits HIV
     # for each 'x.to' strata, loop through all 'x.from' stratas and compute the new transmissions based on transmission rate, prevalence of HIV in the 'x.from' strata, and the proportion of partnerships between the two stratas
     
-    if (1==2) #QQ: What's the logic here?
+    if (1==2)  
     {
         for (a.to in parameters$AGES)
         {
@@ -182,7 +184,8 @@ compute.dx <- function(time,
     ##------------------------------##
     #flatten out all our arrays
     #return a vector of length = length(y) that represents the change in each element in y
-    c(as.numeric(dx.state),  #QQ: why as.numeric needed?
+    # when data elements have different dimensions, using as.numeric makes sure that we can collapse them into a 1D vector
+    c(as.numeric(dx.state),   
       as.numeric(dx.incidence), 
       as.numeric(dx.diagnoses), 
       as.numeric(dx.hiv.mortality), 
@@ -192,7 +195,7 @@ compute.dx <- function(time,
 }
 
 
-#QQ: not sure what this function is doing
+# Building up the initial vector, including the initial.states and placeholder for the statistics that are recorded (e.g.,incidence, diagnosis, etc)
 set.up.initial.diffeq.vector <- function(initial.state,
                                          parameters)
 {
@@ -204,7 +207,7 @@ set.up.initial.diffeq.vector <- function(initial.state,
         2 * trans.length #incidence plus new diagnoses
     
     rv = numeric(total.length) #opens a 1-D vector of 0s to this length
-    rv[1:state.length] = as.numeric(initial.state) #QQ: If we had the initial state, why did we define rv? 
+    rv[1:state.length] = as.numeric(initial.state)  
     
     rv
 }
@@ -234,7 +237,6 @@ run.model <- function(parameters,
 
 ## --break out the epi data we want-- ##
 # keep.years: ##is this an array of years to keep?
-
 process.ode.results <- function(ode.results,
                                 parameters,
                                 start.year,
@@ -243,7 +245,8 @@ process.ode.results <- function(ode.results,
 {
     
     # ode.result is a 2-D array with rows representing time, and columns representing the outputs (vector y)
-    
+  # the first row represents the initail state of the model (time = 0)
+  # the first column shows times (we drop it from the results)
     ode.results=as.matrix(ode.results)[,-1]
     
     dimnames(ode.results)[[1]]=(start.year-1):end.year  
@@ -265,14 +268,14 @@ process.ode.results <- function(ode.results,
     state.length = length(parameters$AGES)* length(parameters$SEXES) * length(parameters$SUBGROUPS) * length(parameters$HIV.STATUS)
     trans.length =  length(parameters$AGES)* length(parameters$SEXES) * length(parameters$SUBGROUPS)
     
-    #QQ: what's the target structure for rv?
+    #using a list will allow us to have elements of different size
     rv=list(years=as.numeric(keep.years),
             AGES=parameters$AGES,
             SEXES=parameters$SEXES,
             SUBGROUPS=parameters$SUBGROUPS,
             HIV.STATUS=parameters$HIV.STATUS,
             HIV.STATES=parameters$HIV.STATES, 
-            DIAGNOSED.STATES=parameters$DIAGNOSED.STATES, #QQ: what's DIAGNOSED.STATES?
+            DIAGNOSED.STATES=parameters$DIAGNOSED.STATES, 
             ENGAGED.STATES=parameters$ENGAGED.STATES
     )
     
@@ -284,25 +287,25 @@ process.ode.results <- function(ode.results,
                         dimnames = state.dim.names)
     index=index+state.length
     
-    #incidence
+    #incidence (reporeted as cumulative value)
     rv$incidence=array(ode.results[keep.years,index+1:trans.length]-ode.results[previous.years,index+1:trans.length],
                        dim = sapply(trans.dim.names,length),
                        dimnames = trans.dim.names)
     index=index+trans.length
     
-    #diagnosis
+    #diagnosis (reporeted as cumulative value)
     rv$diagnoses=array(ode.results[keep.years,index+1:trans.length]-ode.results[previous.years,index+1:trans.length],
                        dim = sapply(trans.dim.names,length),
                        dimnames = trans.dim.names)
     index=index+trans.length
     
-    #hiv mortality
+    #hiv mortality (reporeted as cumulative value)
     rv$hiv.mortality=array(ode.results[keep.years,index+1:state.length]-ode.results[previous.years,index+1:state.length],
                            dim = sapply(state.dim.names,length),
                            dimnames = state.dim.names)
     index=index+state.length
     
-    #non.hiv mortality
+    #non.hiv mortality (reporeted as cumulative value)
     rv$non.hiv.mortality=array(ode.results[keep.years,index+1:state.length]-ode.results[previous.years,index+1:state.length], 
                                dim = sapply(state.dim.names,length),
                                dimnames = state.dim.names)
@@ -311,5 +314,5 @@ process.ode.results <- function(ode.results,
     
     class(rv)="hiv_simulation" 
     
-    return(rv) #QQ: should we return it?
+    rv
 }

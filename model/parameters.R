@@ -29,7 +29,7 @@ create.model.parameters <- function(age.cutoffs=c(10,25,55),
     
     
     #- Return --#
-    parameters #QQ: dont we need to return(parameter)?
+    parameters  
 }
 
 
