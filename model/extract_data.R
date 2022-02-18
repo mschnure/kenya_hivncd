@@ -17,6 +17,36 @@
 # }
 
 #### CORE FUNCTIONS #### 
+extract.data = function(sim,
+                        data.type,
+                        years = sim$years, #years to include in the report (other years are excluded)
+                        ages = sim$AGES, 
+                        sexes = sim$SEXES,
+                        subgroups = sim$SUBGROUPS, 
+                        hiv.status = sim$HIV.STATUS,
+                        keep.dimensions = 'year' #collapse all other dimensions & report the data as total value over this dimension
+                        )
+        
+{
+        if (data.type=='incidence')
+                extract.incidence(sim, 
+                                  years=years, 
+                                  ages=ages,
+                                  sexes=sexes,
+                                  subgroups=subgroups,
+                                  keep.dimensions=keep.dimensions)
+        else if (data.type=='diagnoses')
+                extract.new.diagnoses(sim,
+                                      years=years, 
+                                      ages=ages,
+                                      sexes=sexes,
+                                      subgroups=subgroups,
+                                      keep.dimensions=keep.dimensions)
+        else stop("not a valid data type")
+        # fill in other ones
+        
+}
+
 do.extract.4D <- function(sim,
                           arr, #specific subset array that is needed for the reporting
                           years = sim$years, #years to include in the report (other years are excluded)
