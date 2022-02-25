@@ -28,3 +28,7 @@ sim = run.model(parameters=parameters,
 sim$population[1,,,,]
 sim$years
 
+# sims=list(sim,sim1)
+simplot.basic(sim,sim1,
+              years=c(2010:2020),
+              data.types = c("incidence","diagnoses"))

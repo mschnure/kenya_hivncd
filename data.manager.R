@@ -1,3 +1,10 @@
+################################################################################################
+################
+#Description: These functions are used to extract survilance data used to calibrate the model
+################
+################################################################################################
+
+
 get.surveillance.data = function(data.manager,
                                  subgroups,
                                  data.type,
