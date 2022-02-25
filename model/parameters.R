@@ -1,4 +1,8 @@
-#-- sets up the parameter object with constant and time-varying parameters --#
+################################################################################################
+################
+#Description: Functions to set up the parameter object with constant and time-varying parameters
+################
+################################################################################################
 
 
 # age.cutoffs - the lower limit for each bracket

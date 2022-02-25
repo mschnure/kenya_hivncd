@@ -1,4 +1,8 @@
-# These functions are used to extract different information from the ODE result
+################################################################################################
+################
+#Description: These functions are used to extract different information from the ODE result
+################
+################################################################################################
 
 # GENERAL FORMAT
 # extract.data = function(sim,
