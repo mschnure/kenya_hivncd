@@ -1,5 +1,8 @@
-# array set up
-# [age,sex,risk,subpopulation,hiv.status]
+################################################################################################
+################
+#Description: The core differential equation functions modeling the disease dynamic
+################
+################################################################################################
 
 library(odeintr)
 
@@ -116,7 +119,7 @@ compute.dx <- function(time,
     dx.diagnoses = dx.diagnoses + diagnosed
     
     #-- NEW INFECTIONS --#
-    incidence = 20     # Using this for now
+    incidence = 10     # Using this for now
     dx.state[,,,'hiv_negative'] = as.numeric(dx.state[,,,'hiv_negative']) - incidence
     dx.state[,,,'undiagnosed'] = as.numeric(dx.state[,,,'undiagnosed']) + incidence
     dx.incidence = dx.incidence + incidence
