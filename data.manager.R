@@ -1,10 +1,12 @@
 ################################################################################################
 ################
-#Description: These functions are used to extract survilance data used to calibrate the model
+#Description: These functions are used to extract surveillance data used to calibrate the model
 ################
 ################################################################################################
+library(data.table)
 
 
+## DIDN'T WORK ON THIS FUNCTION
 get.surveillance.data = function(data.manager,
                                  subgroups,
                                  data.type,
@@ -39,73 +41,99 @@ get.surveillance.data = function(data.manager,
         
 }
 
-# sub function for overwrite 2D, 3D, 4D
 
 
-read.surveillance.data = function(dir = 'data/raw_data' #where the tables are
-                                  )
-{
-        ## Prevalence
-        sub.dir = file.path(dir,'plhiv')
-        
-        files = list.files(file.path(sub.dir))
 
-        df.prevalence = NULL
+read.surveillance.data.type = function(data.type){
+        rv=list()
         
-        for(i in 1:length(files)){
-                one.df = read.csv(file.path(sub.dir,files[i]))
-                df.prevalence = rbind(df.prevalence, one.df)   
-        }
+       
+        if(data.type=='new')
+                
+        rv$total = read.surveillance.data.files(data.type='new',
+                                                 age='All ages')
         
+
+        rv$subgroups = read.surveillance.data.files(data.type='new',
+                                                    age='All ages',
+                                                    regions = T)
         
-        ## Diagnoses
-        sub.dir = file.path(dir,'new')
+        ## Ages ##
+        # Need to figure this out in the stratified function below 
+        # rv$ages = read.surveillance.data.stratified(data.type='new',
+        #                                             age=ages)
         
-        files = list.files(file.path(sub.dir))
-        
-        df.new = NULL
-        
-        for(i in 1:length(files)){
-                one.df = read.csv(file.path(sub.dir,files[i]))
-                df.new = rbind(df.new, one.df)   
-        }
-        
-        
-        
-        ## Below things are empty - starting to set up 
-        
-        diagnoses = list()
-        
-        diagnoses.total = array()
-        diagnoses$TOTAL = diagnoses.total
-        
-        diagnoses.subgroup = array()
-        diagnoses$SUBGROUP = diagnoses.subgroup
-        
-        diagnoses.subgroup.age = array()
-        diagnoses$SUBGROUP.AGE = diagnoses.subgroup.age
-        
-        diagnoses.subgroup.sex = array()
-        diagnoses$SUBGROUP.SEX = diagnoses.subgroup.sex
-        
-        diagnoses.subgroup.age.sex = array()
-        diagnoses$SUBGROUP.AGE.SEX = diagnoses.subgroup.age.sex
-        
-        # sub list for every data type, each element of diagnoses sublist has an array for what we have 
-        # (total/year, year/subgroup; year/subgroup/sex; year/subgroup/age; year/subgroup/age/sex)
-        
-        # prevalence, suppressed, on ART, etc. 
-        # can start with diagnoses and prevalence 
-        
-        
+        rv
 }
         
 
-# first, function to read in data; store it (an array for every combination of data we have)
-# takes a directory, reads every csv file from that directory into arrays 
+read.surveillance.data.stratified = function(strata){
+        
+        ages=c('0-14','10-19','15-24','15-49','15+','50 and over','All ages')
         
         
+        age1 = read.surveillance.data.files(data.type='new',
+                                            age=ages[1],
+                                            regions = T)
         
- 
+        age2 = read.surveillance.data.files(data.type='new',
+                                            age=ages[2],
+                                            regions = T)
+        
+        
+        ## Need to figure out how to combine arrays?
+
+        
+}
+
+read.surveillance.data.files = function(dir = 'data/raw_data',
+                                        data.type,
+                                        regions = F,
+                                        age
+)
+{
+        sub.dir = file.path(dir, data.type)
+        
+        files = list.files(file.path(sub.dir))
+        
+        ## Total and subgroups
+        file = files[grepl(age,files)]
+        
+        one.df = read.csv(file.path(sub.dir,file), row.names = 1)
+        colnames(one.df) = substring(colnames(one.df),2)
+        years = unique(substr(colnames(one.df),1,4))
+        subgroup.names = rownames(one.df)[-nrow(one.df)]
+        
+        one.df.t = transpose(one.df)
+        rownames(one.df.t) <- colnames(one.df)
+        colnames(one.df.t) <- rownames(one.df)
+        
+        
+        ## Total ##
+        dim.names.total = list(year=as.character(years)
+        )
+        
+        total =  array(as.integer(gsub(" ","",one.df.t[years,ncol(one.df.t)])),
+                       dim = sapply(dim.names.total, length), 
+                       dimnames = dim.names.total)
+        
+        
+        ## Subgroups ##
+        dim.names.subgroups = list(year=as.character(years),
+                                   subgroups=subgroup.names
+        )
+        
+        
+        subgroups =  array(as.integer(sapply(one.df.t[years,1:(length(subgroup.names))], gsub, pattern = " ",replacement = "")),
+                           dim = sapply(dim.names.subgroups, length), 
+                           dimnames = dim.names.subgroups)
+        
+        
+        if(regions==T)
+                return(subgroups)
+        
+        else if(regions==F)
+                return(total)
                 
                 
+}
