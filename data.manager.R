@@ -5,126 +5,115 @@
 ################################################################################################
 library(data.table)
 
-
+# Add in what are the eligible values for each of the arguments below; as a comment
+# Add in protections against bad inputs - warnings, etc. (although this should be robust; can pass anything)
 get.surveillance.data = function(data.manager,
-                                 subgroups = data.manager$SUBGROUPS,
                                  data.type,
-                                 years,
+                                 years = 2010:2015,
                                  ages = data.manager$AGES,
-                                 sexes = NULL, #will have to fill this in later
-                                 keep.dimensions,
-                                 error.statement)
+                                 sexes = data.manager$SEXES, #will have to fill this in later
+                                 subgroups = data.manager$SUBGROUPS,
+                                 keep.dimensions = 'year')
 {
-       pull.years = TRUE
-       pull.ages = any(keep.dimensions=='age') || !setequal(ages, data.manager$AGES) 
-       pull.sexes = any(keep.dimensions=='sex') || !setequal(sexes, data.manager$SEXES)
-       pull.subgroups = any(keep.dimensions=='subgroups') || !setequal(subgroups, data.manager$SUBGROUPS)
+        # keep.dimensions must have year; or if we ask for some ages but don't keep ages, for example
+        # check for these conditions ^; if they occur, give an error
+       
+        pull.years = TRUE
+        pull.ages = any(keep.dimensions=='age') 
+        pull.sexes = any(keep.dimensions=='sex') 
+        pull.subgroups = any(keep.dimensions=='subgroup') 
         
-       pull.dimensions = c('year','age','sex','subgroup')
-       pull.dimensions = pull.dimensions[c(pull.years, pull.ages, pull.sexes, pull.subgroups)]
+        pull.dimensions = c('year','age','sex','subgroup')
+        pull.dimensions = pull.dimensions[c(pull.years, pull.ages, pull.sexes, pull.subgroups)]
         
         dim.names = list(year=as.character(years),
-                        age=ages,
-                        sex=sexes,
-                        subgroup=subgroups
-                        )
-       dim.names = dim.names[pull.dimensions]
-       
+                         age=ages,
+                         sex=sexes,
+                         subgroup=subgroups
+        )
+        dim.names = dim.names[pull.dimensions]
+        
         rv = array(NA, 
                    dim = sapply(dim.names, length), 
                    dimnames = dim.names)
         
-        
-        ## TO REVIEW/CHECK - 1/3 ##
-        if(pull.dimensions=='year')
-                data.element = total
+        if(setequal(pull.dimensions, 'year'))
+                data.element = 'total'
         if(setequal(pull.dimensions, c('year','age')))
-                data.element = age
+                data.element = 'age'
         if(setequal(pull.dimensions, c('year','sex')))
-                data.element = sex
+                data.element = 'sex'
         if(setequal(pull.dimensions, c('year','subgroup')))
-                data.element = subgroup
+                data.element = 'subgroup'
+        if(setequal(pull.dimensions, c('year','age','sex')))
+                data.element = 'age.sex'
         if(setequal(pull.dimensions, c('year','age','subgroup')))
-                data.element = age.subgroup
+                data.element = 'age.subgroup'
         if(setequal(pull.dimensions, c('year','sex','subgroup')))
-                data.element = sex.subgroup
-        if(setequal(pull.dimensions, c('year','age','sex','subgroup'))) # don't actually have this as an option right now
-                data.element = age.sex.subgroup
+                data.element = 'sex.subgroup'
+        if(setequal(pull.dimensions, c('year','age','sex','subgroup'))) 
+                data.element = 'age.sex.subgroup'
         
         data = data.manager[[data.type]][[data.element]]
         
-        
         if(!is.null(data)){
-
+                
                 years.to.get = intersect(as.character(years), dimnames(data)$year)
                 
-                if(length(keep.dimensions==1)){
+                if(length(pull.dimensions)==1){
                         rv[years.to.get] = data[years.to.get]
                 }
                 
-                ## TO REVIEW/CHECK - 2/3 ##
-                else if(setequal(pull.dimensions, c('year','age'))){
+                else if(setequal(pull.dimensions, c('year','age'))){ 
                         ages.to.get = intersect(ages, dimnames(data)$age)
-                        rv[ages.to.get] = data[ages.to.get]
+                        rv[years.to.get, ages.to.get] = data[years.to.get, ages.to.get]
                 }
                 
                 else if (setequal(pull.dimensions, c('year','sex'))){
                         sexes.to.get = intersect(sexes, dimnames(data)$sex)
-                        rv[sexes.to.get] = data[sexes.to.get]
+                        rv[years.to.get, sexes.to.get] = data[years.to.get, sexes.to.get]
                 }
                 
                 else if (setequal(pull.dimensions, c('year','subgroup'))){
                         subgroups.to.get = intersect(subgroups, dimnames(data)$subgroup)
-                        rv[subgroups.to.get] = data[subgroups.to.get]
+                        rv[years.to.get, subgroups.to.get] = data[years.to.get, subgroups.to.get]
+                }
+                
+                else if (setequal(pull.dimensions, c('year','age','sex'))){
+                        ages.to.get = intersect(ages, dimnames(data)$age)
+                        sexes.to.get = intersect(sexes, dimnames(data)$sex)
+                        rv[years.to.get, ages.to.get, sexes.to.get] = data[years.to.get, ages.to.get, sexes.to.get]
                 }
                 
                 else if (setequal(pull.dimensions, c('year','age','subgroup'))){
                         ages.to.get = intersect(ages, dimnames(data)$age)
-                        rv[ages.to.get] = data[ages.to.get]
                         subgroups.to.get = intersect(subgroups, dimnames(data)$subgroup)
-                        rv[subgroups.to.get] = data[subgroups.to.get]
+                        rv[years.to.get, ages.to.get, subgroups.to.get] = data[years.to.get, ages.to.get, subgroups.to.get]
                 }
                 
                 else if (setequal(pull.dimensions, c('year','sex','subgroup'))){
                         sexes.to.get = intersect(sexes, dimnames(data)$sex)
-                        rv[sexes.to.get] = data[sexes.to.get]
                         subgroups.to.get = intersect(subgroups, dimnames(data)$subgroup)
-                        rv[subgroups.to.get] = data[subgroups.to.get]
+                        rv[years.to.get, sexes.to.get, subgroups.to.get] = data[years.to.get, sexes.to.get, subgroups.to.get]
                 }
                 
                 else if (setequal(pull.dimensions, c('year','age','sex','subgroup'))){
                         ages.to.get = intersect(ages, dimnames(data)$age)
-                        rv[ages.to.get] = data[ages.to.get]
                         sexes.to.get = intersect(sexes, dimnames(data)$sex)
-                        rv[sexes.to.get] = data[sexes.to.get]
                         subgroups.to.get = intersect(subgroups, dimnames(data)$subgroup)
-                        rv[subgroups.to.get] = data[subgroups.to.get]
+                        rv[years.to.get, ages.to.get, sexes.to.get, subgroups.to.get] = data[years.to.get, ages.to.get, sexes.to.get, subgroups.to.get]
                 }
                 
                 else stop("incorrect dimensions")
-        
+                
         }
         
-
-        if(!setequal(keep.dimensions, pull.dimensions)){
-                
-                keep.dimensions = intersect(pull.dimensions, keep.dimensions) # keep.dimensions is a subset of pull.dimensions; but puts it in the right order
-                
-                rv = apply(rv, keep.dimensions, sum) # won't work for percentages - if we use in the future
-                
-                dim.names = dim.names[keep.dimensions]
-                dim(rv) = sapply(dim.names, length)
-                dimnames(rv) = dim.names
-                
-                
-                # add in a check for numbers versus proportions 
-        }
         rv
 }
 
 #### Read in all data types ####
 # Calls lower-level function, read.surveillance.data.type
-read.surveillance.data = function(dir){
+read.surveillance.data = function(dir = 'data/raw_data'){
         rv = list(date.created = Sys.Date(),
                   AGES=c('0-14','10-19','15-24','15-49','15+','50 and over')
                   )
@@ -133,7 +122,9 @@ read.surveillance.data = function(dir){
         
         rv$prevalence = read.surveillance.data.type(data.type = 'prevalence')
         
-        rv$SUBGROUPS = dimnames(rv$new$subgroups)$subgroup
+        rv$SUBGROUPS = dimnames(rv$new$subgroup)$subgroup
+        
+        rv$SEXES = c('male','female')
         
         rv
 }
@@ -145,7 +136,7 @@ read.surveillance.data.type = function(data.type){
         
         if(data.type=='new')
         {
-                rv$total = read.surveillance.data.files(data.type='new', #Can I just make data.type = data.type here? Rather than the if statement?
+                rv$total = read.surveillance.data.files(data.type='new', #Can I just make data.type = data.type here? Rather than the if statement? YES
                                                         age='All ages')
                 
                 
@@ -196,7 +187,6 @@ read.surveillance.data.type = function(data.type){
         rv
 }
         
-## TO REVIEW/CHECK - 3/3 ##
 #### Read individual data files WITH stratification ####
 # Calls lower-level function, read.surveillance.data.files
 read.surveillance.data.stratified = function(data.type,
@@ -222,15 +212,13 @@ read.surveillance.data.stratified = function(data.type,
                                    dim = sapply(dim.names, length),
                                    dimnames = dim.names)
                         
-                        rv[,1,] = age1
-                        
-                        # I don't understand why this for loop isn't working 
                         for(i in 1:length(ages)){
                                 x = read.surveillance.data.files(data.type=data.type,
                                                                  age=ages[i],
                                                                  regions = T)
                                 
-                                rv[,i,] = x }
+                                rv[,i,] = x 
+                                }
                 }
                 
                 ## Pull TOTAL AGE array
@@ -241,27 +229,25 @@ read.surveillance.data.stratified = function(data.type,
                                                             regions = F)
                         
                         dim.names = c(dimnames(age1), list(age=ages))
-                        dim.names = dim.names[c(1,3,2)]
                         
                         rv = array(NA,
                                    dim = sapply(dim.names, length),
                                    dimnames = dim.names)
+
                         
-                        rv[,1,] = age1
-                        
-                        # FIX THIS ONE TOO
                         for(i in 1:length(ages)){
                                 x = read.surveillance.data.files(data.type=data.type,
                                                                  age=ages[i],
                                                                  regions = F)
                                 
-                                rv[,i,] = x }
+                                rv[,i] = x }
                 }
                 
         }
         
         else stop("only currently set up for age strata") ## fill in later with sex 
 
+        rv
         
 } 
 
@@ -279,7 +265,11 @@ read.surveillance.data.files = function(dir = 'data/raw_data',
         files = list.files(file.path(sub.dir))
         
         ## Total and subgroups
-        file = files[grepl(age,files)]
+        age.to.match = gsub("\\+", "\\\\+", age)
+        file = files[grepl(age.to.match,files)]
+        
+        if (length(file)!=1)
+                stop("can only pull one file at a time")
         
         one.df = read.csv(file.path(sub.dir,file), row.names = 1)
         colnames(one.df) = substring(colnames(one.df),2)
