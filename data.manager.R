@@ -6,7 +6,6 @@
 library(data.table)
 
 
-## DIDN'T WORK ON THIS FUNCTION
 get.surveillance.data = function(data.manager,
                                  subgroups = data.manager$SUBGROUPS,
                                  data.type,
@@ -17,7 +16,9 @@ get.surveillance.data = function(data.manager,
                                  error.statement)
 {
        pull.years = TRUE
-       pull.ages = any(keep.dimensions=='age') || !setequal(ages, data.manager$AGES) #repeat for sex and subgroups
+       pull.ages = any(keep.dimensions=='age') || !setequal(ages, data.manager$AGES) 
+       pull.sexes = any(keep.dimensions=='sex') || !setequal(sexes, data.manager$SEXES)
+       pull.subgroups = any(keep.dimensions=='subgroups') || !setequal(subgroups, data.manager$SUBGROUPS)
         
        pull.dimensions = c('year','age','sex','subgroup')
        pull.dimensions = pull.dimensions[c(pull.years, pull.ages, pull.sexes, pull.subgroups)]
@@ -33,40 +34,71 @@ get.surveillance.data = function(data.manager,
                    dim = sapply(dim.names, length), 
                    dimnames = dim.names)
         
+        
+        ## TO REVIEW/CHECK - 1/3 ##
+        if(pull.dimensions=='year')
+                data.element = total
+        if(setequal(pull.dimensions, c('year','age')))
+                data.element = age
+        if(setequal(pull.dimensions, c('year','sex')))
+                data.element = sex
+        if(setequal(pull.dimensions, c('year','subgroup')))
+                data.element = subgroup
+        if(setequal(pull.dimensions, c('year','age','subgroup')))
+                data.element = age.subgroup
+        if(setequal(pull.dimensions, c('year','sex','subgroup')))
+                data.element = sex.subgroup
+        if(setequal(pull.dimensions, c('year','age','sex','subgroup'))) # don't actually have this as an option right now
+                data.element = age.sex.subgroup
+        
         data = data.manager[[data.type]][[data.element]]
         
-        # fix data element from below
-        #pull.dimensions = year --> total
-        #pull.dimensions = year, age --> age
-        #pull.dimensions = year, subgroup --> subgroup
-        #pull.dimensions = year, age, subgroup --> age.subgroup
-        #pull.dimensions = year, age, sex, subgroup --> age.sex.subgroup (right now will be an error)
-        
-        #map the keep dimensions to what we want; remember pull.dimensions might not be passed in the right order
-        
-        #distinguish between keep dimensions and get dimensions 
         
         if(!is.null(data)){
 
                 years.to.get = intersect(as.character(years), dimnames(data)$year)
                 
                 if(length(keep.dimensions==1)){
-                        
                         rv[years.to.get] = data[years.to.get]
-                        
                 }
                 
+                ## TO REVIEW/CHECK - 2/3 ##
                 else if(setequal(pull.dimensions, c('year','age'))){
-                        
-
-                        # years and ages --> pull years.to.get and ages.to.get
-                        
+                        ages.to.get = intersect(ages, dimnames(data)$age)
+                        rv[ages.to.get] = data[ages.to.get]
                 }
                 
-                # and all other combinations - redo below
+                else if (setequal(pull.dimensions, c('year','sex'))){
+                        sexes.to.get = intersect(sexes, dimnames(data)$sex)
+                        rv[sexes.to.get] = data[sexes.to.get]
+                }
                 
-                else if (length(pull.dimensions==3)){
-                        
+                else if (setequal(pull.dimensions, c('year','subgroup'))){
+                        subgroups.to.get = intersect(subgroups, dimnames(data)$subgroup)
+                        rv[subgroups.to.get] = data[subgroups.to.get]
+                }
+                
+                else if (setequal(pull.dimensions, c('year','age','subgroup'))){
+                        ages.to.get = intersect(ages, dimnames(data)$age)
+                        rv[ages.to.get] = data[ages.to.get]
+                        subgroups.to.get = intersect(subgroups, dimnames(data)$subgroup)
+                        rv[subgroups.to.get] = data[subgroups.to.get]
+                }
+                
+                else if (setequal(pull.dimensions, c('year','sex','subgroup'))){
+                        sexes.to.get = intersect(sexes, dimnames(data)$sex)
+                        rv[sexes.to.get] = data[sexes.to.get]
+                        subgroups.to.get = intersect(subgroups, dimnames(data)$subgroup)
+                        rv[subgroups.to.get] = data[subgroups.to.get]
+                }
+                
+                else if (setequal(pull.dimensions, c('year','age','sex','subgroup'))){
+                        ages.to.get = intersect(ages, dimnames(data)$age)
+                        rv[ages.to.get] = data[ages.to.get]
+                        sexes.to.get = intersect(sexes, dimnames(data)$sex)
+                        rv[sexes.to.get] = data[sexes.to.get]
+                        subgroups.to.get = intersect(subgroups, dimnames(data)$subgroup)
+                        rv[subgroups.to.get] = data[subgroups.to.get]
                 }
                 
                 else stop("incorrect dimensions")
@@ -90,6 +122,8 @@ get.surveillance.data = function(data.manager,
         rv
 }
 
+#### Read in all data types ####
+# Calls lower-level function, read.surveillance.data.type
 read.surveillance.data = function(dir){
         rv = list(date.created = Sys.Date(),
                   AGES=c('0-14','10-19','15-24','15-49','15+','50 and over')
@@ -104,69 +138,141 @@ read.surveillance.data = function(dir){
         rv
 }
 
-
+#### Read by data type (e.g., new, prevalence, etc.) ####
+# Calls lower-level function, either read.surveillance.data.files (no stratification) or read.surveillance.data.stratified
 read.surveillance.data.type = function(data.type){
         rv=list()
         
-       
         if(data.type=='new')
+        {
+                rv$total = read.surveillance.data.files(data.type='new', #Can I just make data.type = data.type here? Rather than the if statement?
+                                                        age='All ages')
                 
-        rv$total = read.surveillance.data.files(data.type='new',
-                                                 age='All ages')
+                
+                rv$subgroup = read.surveillance.data.files(data.type='new',
+                                                           age='All ages',
+                                                           regions = T)
+                
+                ## Ages ##
+                rv$age = read.surveillance.data.stratified(data.type='new',
+                                                           strata = 'age',
+                                                           regions = F)
+                
+                rv$age.subgroup = read.surveillance.data.stratified(data.type='new',
+                                                                    strata = 'age',
+                                                                    regions = T)
+                
+                ## Sexes ##
+                rv$sex = NULL 
+                
+                rv$sex.subgroup = NULL
+        }
         
-
-        rv$subgroup = read.surveillance.data.files(data.type='new',
-                                                    age='All ages',
-                                                    regions = T)
-        
-        ## Ages ##
-        # fill in with total 
-        rv$age
-        
-        rv$age.subgroup = read.surveillance.data.stratified(data.type='new',
-                                                    age=ages)
+        if(data.type=='prevalence')
+        {
+                rv$total = read.surveillance.data.files(data.type='prevalence',
+                                                        age='All ages')
+                
+                
+                rv$subgroup = read.surveillance.data.files(data.type='prevalence',
+                                                           age='All ages',
+                                                           regions = T)
+                
+                ## Ages ##
+                rv$age = read.surveillance.data.stratified(data.type='prevalence',
+                                                           strata = 'age',
+                                                           regions = F)
+                
+                rv$age.subgroup = read.surveillance.data.stratified(data.type='prevalence',
+                                                                    strata = 'age',
+                                                                    regions = T)
+                
+                ## Sexes ##
+                rv$sex = NULL 
+                
+                rv$sex.subgroup = NULL
+        }
         
         rv
 }
         
-
-read.surveillance.data.stratified = function(strata){ #add regions argument
-        
+## TO REVIEW/CHECK - 3/3 ##
+#### Read individual data files WITH stratification ####
+# Calls lower-level function, read.surveillance.data.files
+read.surveillance.data.stratified = function(data.type,
+                                             strata,
+                                             regions=T)
+{
         ages=c('0-14','10-19','15-24','15-49','15+','50 and over','All ages')
         
-        #fill in to do subgroups and total
-        if(regions)
-        age1 = read.surveillance.data.files(data.type='new',
-                                            age=ages[1],
-                                            regions = T)
+        ## Pull array for age
+        if(strata=='age')
+        {
+                ## Pull AGE array by REGION
+                if(regions)
+                {
+                        age1 = read.surveillance.data.files(data.type=data.type,
+                                                            age=ages[1],
+                                                            regions = T)
+                        
+                        dim.names = c(dimnames(age1), list(age=ages))
+                        dim.names = dim.names[c(1,3,2)]
+                        
+                        rv = array(NA,
+                                   dim = sapply(dim.names, length),
+                                   dimnames = dim.names)
+                        
+                        rv[,1,] = age1
+                        
+                        # I don't understand why this for loop isn't working 
+                        for(i in 1:length(ages)){
+                                x = read.surveillance.data.files(data.type=data.type,
+                                                                 age=ages[i],
+                                                                 regions = T)
+                                
+                                rv[,i,] = x }
+                }
+                
+                ## Pull TOTAL AGE array
+                else 
+                {
+                        age1 = read.surveillance.data.files(data.type=data.type,
+                                                            age=ages[1],
+                                                            regions = F)
+                        
+                        dim.names = c(dimnames(age1), list(age=ages))
+                        dim.names = dim.names[c(1,3,2)]
+                        
+                        rv = array(NA,
+                                   dim = sapply(dim.names, length),
+                                   dimnames = dim.names)
+                        
+                        rv[,1,] = age1
+                        
+                        # FIX THIS ONE TOO
+                        for(i in 1:length(ages)){
+                                x = read.surveillance.data.files(data.type=data.type,
+                                                                 age=ages[i],
+                                                                 regions = F)
+                                
+                                rv[,i,] = x }
+                }
+                
+        }
         
-        dim.names = c(dimnames(age1), list(age=ages))
-        dim.names = dim.names[c(1,3,2)]
-        
-        rv = array(NA,
-                   dim = sapply(dim.names, length),
-                   dimnames = dim.names)
-        
-        rv[,1,] = age1
-        
-        # can for loop over the rest of them 
-        
-        age2 = read.surveillance.data.files(data.type='new',
-                                            age=ages[2],
-                                            regions = T)
-        
-        # total will be 2D array
-        
-        
+        else stop("only currently set up for age strata") ## fill in later with sex 
 
         
-}
+} 
 
+
+
+#### Read individual data files without stratification (lowest-level function) ####
 read.surveillance.data.files = function(dir = 'data/raw_data',
                                         data.type,
                                         regions = F,
-                                        age
-)
+                                        age,
+                                        suffix = NA)
 {
         sub.dir = file.path(dir, data.type)
         
@@ -184,25 +290,51 @@ read.surveillance.data.files = function(dir = 'data/raw_data',
         rownames(one.df.t) <- colnames(one.df)
         colnames(one.df.t) <- rownames(one.df)
         
+        if (is.na(suffix))
+        {
+                ## Total ##
+                dim.names.total = list(year=as.character(years)
+                )
+                
+                total =  array(as.integer(gsub(" ","",one.df.t[years,ncol(one.df.t)])),
+                               dim = sapply(dim.names.total, length), 
+                               dimnames = dim.names.total)
+                
+                
+                ## Subgroups ##
+                dim.names.subgroups = list(year=as.character(years),
+                                           subgroup=subgroup.names
+                )
+                
+                
+                subgroups =  array(as.integer(sapply(one.df.t[years,1:(length(subgroup.names))], gsub, pattern = " ",replacement = "")),
+                                   dim = sapply(dim.names.subgroups, length), 
+                                   dimnames = dim.names.subgroups)
+                
+        }
         
-        ## Total ##
-        dim.names.total = list(year=as.character(years)
-        )
-        
-        total =  array(as.integer(gsub(" ","",one.df.t[years,ncol(one.df.t)])),
-                       dim = sapply(dim.names.total, length), 
-                       dimnames = dim.names.total)
-        
-        
-        ## Subgroups ##
-        dim.names.subgroups = list(year=as.character(years),
-                                   subgroup=subgroup.names
-        )
-        
-        
-        subgroups =  array(as.integer(sapply(one.df.t[years,1:(length(subgroup.names))], gsub, pattern = " ",replacement = "")),
-                           dim = sapply(dim.names.subgroups, length), 
-                           dimnames = dim.names.subgroups)
+        ## Just added this in - check later 
+        if(!is.na(suffix))
+        {
+                ## Total ##
+                dim.names.total = list(year=as.character(paste0(years, "_",suffix))
+                )
+                
+                total =  array(as.integer(gsub(" ","",one.df.t[paste0(years, "_",suffix),ncol(one.df.t)])),
+                               dim = sapply(dim.names.total, length), 
+                               dimnames = dim.names.total)
+                
+                
+                ## Subgroups ##
+                dim.names.subgroups = list(year=as.character(paste0(years, "_",suffix)),
+                                           subgroup=subgroup.names
+                )
+                
+                
+                subgroups =  array(as.integer(sapply(one.df.t[paste0(years, "_",suffix),1:(length(subgroup.names))], gsub, pattern = " ",replacement = "")),
+                                   dim = sapply(dim.names.subgroups, length), 
+                                   dimnames = dim.names.subgroups)
+        }
         
         
         if(regions==T)
