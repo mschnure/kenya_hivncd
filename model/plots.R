@@ -25,7 +25,7 @@ source('model/extract_data.R')
 #Basic plotting function regardeless of subgroups
 simplot.basic = function(..., 
                          years = 2010:2020,
-                         data.types=c('incidence','diagnoses') #QQ: is this what we mean by datatype?
+                         data.types=c('incidence','diagnoses') 
 )
 {
         sims = list(...)
@@ -42,7 +42,7 @@ simplot.basic = function(...,
                         value = as.numeric(extract.data(sim, years = years, data.type=d))
                         
                         # set up a dataframe with 4 columns: year, value, sim id, data.type 
-                        one.df = data.frame(year=years, value=value ,sim.id=i, data.type=d)
+                        one.df = data.frame(year=years, value=value, sim.id=i, data.type=d)
                         
                         df.sim = rbind(df.sim, one.df)   
                 }
@@ -50,9 +50,20 @@ simplot.basic = function(...,
         df.sim$sim.id = as.character(df.sim$sim.id)
         
         # Observed (true) data:
-        df.truth = df.sim # later make it null 
-        df.truth$sim.id = 'truth'
-        df.truth$value = df.truth$value - 10
+        df.truth = NULL # later make it null 
+        
+        for(d in data.types){
+                
+                # Extract the data from simulation
+                value = as.numeric(get.surveillance.data(data.manager = data.manager, years = years, data.type=d))
+                
+                # set up a dataframe with 4 columns: year, value, sim id, data.type 
+                one.df = data.frame(year=years, value=value, sim.id='truth', data.type=d)
+                
+                df.truth = rbind(df.truth, one.df)   
+
+        }
+
         
          # we will add another for loop here that populates similarly for surveillance data; only for data type loop not sim loop 
         

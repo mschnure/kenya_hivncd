@@ -46,6 +46,13 @@ extract.data = function(sim,
                                       sexes=sexes,
                                       subgroups=subgroups,
                                       keep.dimensions=keep.dimensions)
+        else if (data.type=='prevalence')
+                extract.prevalence(sim,
+                                   years=years, 
+                                   ages=ages,
+                                   sexes=sexes,
+                                   subgroups=subgroups,
+                                   keep.dimensions=keep.dimensions)
         else stop("not a valid data type")
         # fill in other ones
         

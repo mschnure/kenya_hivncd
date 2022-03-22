@@ -118,71 +118,43 @@ read.surveillance.data = function(dir = 'data/raw_data'){
                   AGES=c('0-14','10-19','15-24','15-49','15+','50 and over')
                   )
         
-        rv$new = read.surveillance.data.type(data.type = 'new')
+        rv$incidence = read.surveillance.data.type(data.type = 'incidence')
         
         rv$prevalence = read.surveillance.data.type(data.type = 'prevalence')
         
-        rv$SUBGROUPS = dimnames(rv$new$subgroup)$subgroup
+        rv$SUBGROUPS = dimnames(rv$incidence$subgroup)$subgroup
         
         rv$SEXES = c('male','female')
         
         rv
 }
 
-#### Read by data type (e.g., new, prevalence, etc.) ####
+#### Read by data type (e.g., incidence, prevalence, etc.) ####
 # Calls lower-level function, either read.surveillance.data.files (no stratification) or read.surveillance.data.stratified
 read.surveillance.data.type = function(data.type){
         rv=list()
         
-        if(data.type=='new')
-        {
-                rv$total = read.surveillance.data.files(data.type='new', #Can I just make data.type = data.type here? Rather than the if statement? YES
-                                                        age='All ages')
-                
-                
-                rv$subgroup = read.surveillance.data.files(data.type='new',
-                                                           age='All ages',
-                                                           regions = T)
-                
-                ## Ages ##
-                rv$age = read.surveillance.data.stratified(data.type='new',
-                                                           strata = 'age',
-                                                           regions = F)
-                
-                rv$age.subgroup = read.surveillance.data.stratified(data.type='new',
-                                                                    strata = 'age',
-                                                                    regions = T)
-                
-                ## Sexes ##
-                rv$sex = NULL 
-                
-                rv$sex.subgroup = NULL
-        }
+        rv$total = read.surveillance.data.files(data.type=data.type, 
+                                                age='All ages')
         
-        if(data.type=='prevalence')
-        {
-                rv$total = read.surveillance.data.files(data.type='prevalence',
-                                                        age='All ages')
-                
-                
-                rv$subgroup = read.surveillance.data.files(data.type='prevalence',
-                                                           age='All ages',
-                                                           regions = T)
-                
-                ## Ages ##
-                rv$age = read.surveillance.data.stratified(data.type='prevalence',
-                                                           strata = 'age',
-                                                           regions = F)
-                
-                rv$age.subgroup = read.surveillance.data.stratified(data.type='prevalence',
-                                                                    strata = 'age',
-                                                                    regions = T)
-                
-                ## Sexes ##
-                rv$sex = NULL 
-                
-                rv$sex.subgroup = NULL
-        }
+        
+        rv$subgroup = read.surveillance.data.files(data.type=data.type,
+                                                   age='All ages',
+                                                   regions = T)
+        
+        ## Ages ##
+        rv$age = read.surveillance.data.stratified(data.type=data.type,
+                                                   strata = 'age',
+                                                   regions = F)
+        
+        rv$age.subgroup = read.surveillance.data.stratified(data.type=data.type,
+                                                            strata = 'age',
+                                                            regions = T)
+        
+        ## Sexes ##
+        rv$sex = NULL 
+        
+        rv$sex.subgroup = NULL
         
         rv
 }
@@ -258,7 +230,7 @@ read.surveillance.data.files = function(dir = 'data/raw_data',
                                         data.type,
                                         regions = F,
                                         age,
-                                        suffix = NA)
+                                        suffix = "")
 {
         sub.dir = file.path(dir, data.type)
         
@@ -280,51 +252,28 @@ read.surveillance.data.files = function(dir = 'data/raw_data',
         rownames(one.df.t) <- colnames(one.df)
         colnames(one.df.t) <- rownames(one.df)
         
-        if (is.na(suffix))
-        {
-                ## Total ##
-                dim.names.total = list(year=as.character(years)
-                )
-                
-                total =  array(as.integer(gsub(" ","",one.df.t[years,ncol(one.df.t)])),
-                               dim = sapply(dim.names.total, length), 
-                               dimnames = dim.names.total)
-                
-                
-                ## Subgroups ##
-                dim.names.subgroups = list(year=as.character(years),
-                                           subgroup=subgroup.names
-                )
-                
-                
-                subgroups =  array(as.integer(sapply(one.df.t[years,1:(length(subgroup.names))], gsub, pattern = " ",replacement = "")),
-                                   dim = sapply(dim.names.subgroups, length), 
-                                   dimnames = dim.names.subgroups)
-                
-        }
+        ## Put in checks so I manually pull things that will give NAs (e.g., "<", so that any actual errors will show up)
         
-        ## Just added this in - check later 
-        if(!is.na(suffix))
-        {
-                ## Total ##
-                dim.names.total = list(year=as.character(paste0(years, "_",suffix))
-                )
-                
-                total =  array(as.integer(gsub(" ","",one.df.t[paste0(years, "_",suffix),ncol(one.df.t)])),
-                               dim = sapply(dim.names.total, length), 
-                               dimnames = dim.names.total)
-                
-                
-                ## Subgroups ##
-                dim.names.subgroups = list(year=as.character(paste0(years, "_",suffix)),
-                                           subgroup=subgroup.names
-                )
-                
-                
-                subgroups =  array(as.integer(sapply(one.df.t[paste0(years, "_",suffix),1:(length(subgroup.names))], gsub, pattern = " ",replacement = "")),
-                                   dim = sapply(dim.names.subgroups, length), 
-                                   dimnames = dim.names.subgroups)
-        }
+        ## Need to put in check for suffix somehow
+        ## Total ##
+        dim.names.total = list(year=as.character(paste0(years, suffix))
+        )
+        
+        total =  array(as.integer(gsub(" ","",one.df.t[paste0(years, suffix),ncol(one.df.t)])),
+                       dim = sapply(dim.names.total, length), 
+                       dimnames = dim.names.total)
+        
+        
+        ## Subgroups ##
+        dim.names.subgroups = list(year=as.character(paste0(years, suffix)),
+                                   subgroup=subgroup.names
+        )
+        
+        
+        subgroups =  array(as.integer(sapply(one.df.t[paste0(years, suffix),1:(length(subgroup.names))], gsub, pattern = " ",replacement = "")),
+                           dim = sapply(dim.names.subgroups, length), 
+                           dimnames = dim.names.subgroups)
+        
         
         
         if(regions==T)
