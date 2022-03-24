@@ -65,9 +65,6 @@ simplot.basic = function(...,
         }
 
         
-         # we will add another for loop here that populates similarly for surveillance data; only for data type loop not sim loop 
-        
-        
         df.sim
         #plotting function
         ggplot() + 
