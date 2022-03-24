@@ -6,7 +6,7 @@
 
 
 # age.cutoffs - the lower limit for each bracket
-create.model.parameters <- function(age.cutoffs=c(10,25,55),
+create.model.parameters <- function(age.cutoffs=MODEL.AGE.CUTOFFS,
                                    sexes = c('female','male'),
                                    subgroups = 'all')
 {
@@ -19,11 +19,10 @@ create.model.parameters <- function(age.cutoffs=c(10,25,55),
     parameters$SUBGROUPS = subgroups
     
     # ages
-    age.names = c(paste0(age.cutoffs[-length(age.cutoffs)], " to ", age.cutoffs[-1]),
-                  paste0(age.cutoffs[length(age.cutoffs)], "+"))
-    parameters$AGES = age.names
-    parameters$AGE.SPANS = c(age.cutoffs[-1] - age.cutoffs[-length(age.cutoffs)],
-                             Inf)
+    parsed.ages = parse.age.brackets(age.cutoffs)
+
+    parameters$AGES = parsed.ages$labels
+    parameters$AGE.SPANS = parsed.ages$spans
     
     # hiv status
     parameters$HIV.STATUS = c('hiv_negative','undiagnosed','diagnosed_unengaged','engaged_unsuppressed','engaged_suppressed')
