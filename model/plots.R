@@ -44,8 +44,9 @@ simplot = function(...,
                         value = extract.data(sim, years = years, data.type=d)
                         
                         # set up a dataframe with 4 columns: year, value, sim id, data.type 
-                        one.df = reshape2::melt(value) # data.frame(year=years, value=value, sim.id=i, data.type=d) 
-                        # MELISSA need to add sim.id and data.type into one.df
+                        one.df = reshape2::melt(value) 
+                        one.df$sim.id = i
+                        one.df$data.type = d
                         
                         df.sim = rbind(df.sim, one.df)   
                 }
@@ -68,14 +69,7 @@ simplot = function(...,
         }
         
         
-        
-        
-        
-        
-        
-        
-        
-        
+
         
         # setting up facet.by
         facet_string = '~data.type'
@@ -99,6 +93,7 @@ simplot = function(...,
 
 #Basic plotting function regardeless of subgroups
 simplot.basic = function(..., 
+                         data.manager = DATA.MANAGER,
                          years = 2010:2020,
                          data.types=c('incidence','prevalence') 
 )

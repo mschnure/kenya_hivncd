@@ -3,6 +3,7 @@
 
 source('model/diffeq.R')
 source('model/parameters.R')
+source('model/plots.R')
 
 # Set up the parameters
 

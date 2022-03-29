@@ -59,7 +59,6 @@ extract.data = function(sim,
 }
 
 
-## FIX AGES LIKE YOU DID FOR 3D
 do.extract.4D <- function(sim,
                           arr, #specific subset array that is needed for the reporting
                           years = sim$years, #years to include in the report (other years are excluded)
@@ -67,11 +66,14 @@ do.extract.4D <- function(sim,
                           sexes = sim$SEXES,
                           subgroups = sim$SUBGROUPS, 
                           hiv.status = sim$HIV.STATUS,
-                          keep.dimensions = 'year') #collapse all other dimensions & report the data as total value over this dimension
+                          keep.dimensions = 'year', #collapse all other dimensions & report the data as total value over this dimension
+                          age.mapping = MODEL.TO.SURVEILLANCE.AGE.MAPPING) 
 {
         #making sure that inputs are entered as character and not numerical indexes (if so, return the char values)
         if (!is.character(ages))
                 ages = sim$AGES[ages]
+        
+        age.brackets = map.ages(to.map = ages, mapping = age.mapping, map.to.options = sim$AGES)
         
         if (!is.character(subgroups))
                 subgroups = sim$SUBGROUPS[subgroups]
@@ -96,6 +98,37 @@ do.extract.4D <- function(sim,
         dim(x)=dim.x
         dimnames(x)=full.dim.names
 
+        if(length(ages)==length(unlist(age.brackets)) && all(ages==unlist(age.brackets))){
+                #filter the input array for selected years and attributes
+                x=arr[as.character(years),ages,sexes,subgroups, hiv.status]
+                
+                dim.x=sapply(full.dim.names, length)
+                dim(x)=dim.x
+                dimnames(x)=full.dim.names
+        }
+        
+        else {
+                ages.to.pull = unique(unlist(age.brackets))
+                
+                y=arr[as.character(years),ages.to.pull,sexes,subgroups, hiv.status]
+                y.dim.names = full.dim.names
+                y.dim.names$age  = ages.to.pull
+                dim(y) = sapply(y.dim.names, length)
+                dimnames(y) = y.dim.names
+                
+                x = array(0, dim = sapply(full.dim.names, length), dimnames = full.dim.names)
+                
+                for (i in 1:length(ages)){
+                        sub.y = y[,age.brackets[[i]],,,]
+                        sub.y.dim.names = y.dim.names
+                        sub.y.dim.names$age = age.brackets[[i]]
+                        dim(sub.y) = sapply(sub.y.dim.names, length)
+                        dimnames(sub.y) = sub.y.dim.names
+                        
+                        x[,i,,] = apply(sub.y, c("year","sex","subgroup","hiv status"), sum)
+                }
+        }
+        
         #filtering unwanted dimensions out
         keep.dim.names = full.dim.names[keep.dimensions]
         #summing over dimensions that are to keep
@@ -142,7 +175,6 @@ do.extract.3D <- function(sim,
         if(length(ages)==length(unlist(age.brackets)) && all(ages==unlist(age.brackets))){
                 #filter the input array for selected years and attributes
                 x=arr[as.character(years),ages,sexes,subgroups]
-                
                 
                 dim.x=sapply(full.dim.names, length)
                 dim(x)=dim.x
