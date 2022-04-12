@@ -23,31 +23,36 @@
 #### CORE FUNCTIONS #### 
 extract.data = function(sim,
                         data.type,
+                        data.manager = DATA.MANAGER,
                         years = sim$years, #years to include in the report (other years are excluded)
                         ages = sim$AGES, 
                         sexes = sim$SEXES,
                         subgroups = sim$SUBGROUPS, 
                         hiv.status = sim$HIV.STATUS,
-                        keep.dimensions = 'year' #collapse all other dimensions & report the data as total value over this dimension
+                        keep.dimensions = 'year', #collapse all other dimensions & report the data as total value over this dimension
+                        scale.population = F # change once I'm pulling population data
                         )
         
 {
-        if (data.type=='incidence')
-                extract.incidence(sim, 
+        if(all(keep.dimensions!='year'))
+                stop("must keep year dimension")
+           
+                if (data.type=='incidence')
+                rv = extract.incidence(sim, 
                                   years=years, 
                                   ages=ages,
                                   sexes=sexes,
                                   subgroups=subgroups,
                                   keep.dimensions=keep.dimensions)
         else if (data.type=='diagnoses')
-                extract.new.diagnoses(sim,
+                rv = extract.new.diagnoses(sim,
                                       years=years, 
                                       ages=ages,
                                       sexes=sexes,
                                       subgroups=subgroups,
                                       keep.dimensions=keep.dimensions)
         else if (data.type=='prevalence')
-                extract.prevalence(sim,
+                rv = extract.prevalence(sim,
                                    years=years, 
                                    ages=ages,
                                    sexes=sexes,
@@ -56,6 +61,12 @@ extract.data = function(sim,
         else stop("not a valid data type")
         # fill in other ones
         
+        # this only works if year is the first dimension (put in an error above)
+        if (scale.population)
+               rv = rv*(as.numeric(get.surveillance.data(data.manager, data.type = 'population', years = years, keep.dimensions='year')) /
+                        as.numeric(extract.population(sim, years = years, keep.dimensions = 'year')))
+        
+        rv
 }
 
 
@@ -83,9 +94,9 @@ do.extract.4D <- function(sim,
         
         if (!is.character(hiv.status))
                 hiv.status = sim$HIV.STATUS[hiv.status]
-        
-        #array of final data  
-        x = arr[as.character(years), ages, sexes, subgroups, hiv.status]
+
+
+
         #full names of all dimensions
         full.dim.names = list(
                 year = years,
@@ -94,9 +105,6 @@ do.extract.4D <- function(sim,
                 subgroup = subgroups,
                 hiv.status = hiv.status
         )
-        dim.x=sapply(full.dim.names, length)
-        dim(x)=dim.x
-        dimnames(x)=full.dim.names
 
         if(length(ages)==length(unlist(age.brackets)) && all(ages==unlist(age.brackets))){
                 #filter the input array for selected years and attributes
@@ -125,7 +133,7 @@ do.extract.4D <- function(sim,
                         dim(sub.y) = sapply(sub.y.dim.names, length)
                         dimnames(sub.y) = sub.y.dim.names
                         
-                        x[,i,,] = apply(sub.y, c("year","sex","subgroup","hiv status"), sum)
+                        x[,i,,,] = apply(sub.y, c("year","sex","subgroup","hiv.status"), sum)
                 }
         }
         

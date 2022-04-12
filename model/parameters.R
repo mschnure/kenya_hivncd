@@ -48,7 +48,9 @@ map.model.parameters <- function(parameters,
                                                       unsuppressed.disengagement.rates=0.2,
                                                       suppressed.disengagement.rates=0.2,
                                                       suppression.rates=3,
-                                                      unsuppression.rates=0.1
+                                                      unsuppression.rates=0.1,
+                                                      global.transmission.rate=60000,
+                                                      relative.transmission.from.diagnosis=0.33
                                                       ))
 {
     
@@ -114,6 +116,35 @@ map.model.parameters <- function(parameters,
                                                   time = 2000)
     
     #-- NEW INFECTIONS --#
+    transmission.dim.names = list(age.to=parameters$AGES, 
+                                  sex.to=parameters$SEXES,
+                                  subgroup.to=parameters$SUBGROUPS,
+                                  age.from=parameters$AGES, 
+                                  sex.from=parameters$SEXES,
+                                  subgroup.from=parameters$SUBGROUPS)
+    
+    transmission.rates = array(sampled.parameters['global.transmission.rate']/length(parameters$AGES)/length(parameters$SEXES)/length(parameters$SUBGROUPS),
+                               dim=sapply(transmission.dim.names, length),
+                               dimnames=transmission.dim.names)
+    
+    parameters = add.time.varying.parameter.value(parameters,
+                                                  parameter.name='TRANSMISSION.RATES',
+                                                  value = transmission.rates,
+                                                  time = 2000)
+    
+    infectiousness.h = array(0,
+                             dim=sapply(state.dim.names, length),
+                             dimnames=state.dim.names)
+    
+    infectiousness.h[,,,'undiagnosed'] = 1
+    infectiousness.h[,,,'diagnosed_unengaged'] = sampled.parameters['relative.transmission.from.diagnosis']
+    infectiousness.h[,,,'engaged_unsuppressed'] = sampled.parameters['relative.transmission.from.diagnosis']
+    
+    parameters = add.time.varying.parameter.value(parameters,
+                                                  parameter.name='INFECTIOUSNESS.H',
+                                                  value = infectiousness.h,
+                                                  time = 2000)
+    
     
     #-- ENGAGEMENT/DISENGAGEMENT --#
     parameters = add.time.varying.parameter.value(parameters,

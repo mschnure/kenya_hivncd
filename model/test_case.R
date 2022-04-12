@@ -1,8 +1,7 @@
 #testing a commit 
 # new commit
 
-source('model/diffeq.R')
-source('model/parameters.R')
+source('source_code.R')
 source('model/plots.R')
 
 # Set up the parameters
@@ -15,7 +14,7 @@ state.dim.names = list(age=parameters$AGES,
                        sex=parameters$SEXES,
                        subgroup=parameters$SUBGROUPS,
                        hiv.status=parameters$HIV.STATUS)
-initial.state = array(10, 
+initial.state = array(47000000, 
                       dim = sapply(state.dim.names, length), 
                       dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
 
@@ -30,6 +29,8 @@ sim$population[1,,,,]
 sim$years
 
 # sims=list(sim,sim1)
-simplot.basic(sim,
-              years=c(2010:2020),
-              data.types = c("incidence","prevalence"))
+# make this plot total population 
+print(simplot.basic(sim,
+                    years=c(2010:2020),
+                    data.types = c("incidence","prevalence"))
+)

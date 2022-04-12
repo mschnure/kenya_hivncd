@@ -33,7 +33,7 @@ get.surveillance.data = function(data.manager,
         )
         dim.names = dim.names[pull.dimensions]
         
-        rv = array(NA, 
+        rv = array(as.numeric(NA), 
                    dim = sapply(dim.names, length), 
                    dimnames = dim.names)
         
@@ -55,7 +55,7 @@ get.surveillance.data = function(data.manager,
                 data.element = 'age.sex.subgroup'
         
         data = data.manager[[data.type]][[data.element]]
-        
+       
         if(!is.null(data)){
                 
                 years.to.get = intersect(as.character(years), dimnames(data)$year)
@@ -108,6 +108,9 @@ get.surveillance.data = function(data.manager,
                 
         }
         
+        dim(rv) = sapply(dim.names, length)
+        dimnames(rv) = dim.names
+        
         rv
 }
 
@@ -121,6 +124,8 @@ read.surveillance.data = function(dir = 'data/raw_data'){
         rv$incidence = read.surveillance.data.type(data.type = 'incidence')
         
         rv$prevalence = read.surveillance.data.type(data.type = 'prevalence')
+        
+        rv$population = read.population.data.files(data.type = "population")
         
         rv$SUBGROUPS = dimnames(rv$incidence$subgroup)$subgroup
         
@@ -284,3 +289,64 @@ read.surveillance.data.files = function(dir = 'data/raw_data',
                 
                 
 }
+
+
+#### Read demographic data (lowest-level function) ####
+read.population.data.files = function(dir = 'data/raw_data',
+                                      data.type = "population")
+{
+        sub.dir = file.path(dir, data.type)
+        
+        files = list.files(file.path(sub.dir))
+        
+        pop.file = "PopulationByAgeSex"
+        file = files[grepl(pop.file,files)]
+        
+        if (length(file)!=1)
+                stop("can only pull one file at a time")
+        
+        one.df = read.csv(file.path(sub.dir,file))
+        one.df = one.df[one.df$Location=="Kenya",]
+        years = unique(one.df$Time)
+        ages = unique(one.df$AgeGrp)
+        
+        one.df$AgeGrp = factor(one.df$AgeGrp, levels = ages)
+        one.df.sorted = one.df[order(one.df$AgeGrp),]
+        
+        pop.dim.names = list(year = as.character(years),
+                              age = ages)
+        
+        total = array(0,
+                      dim = sapply(pop.dim.names, length), 
+                      dimnames = pop.dim.names)
+        
+        total[] = as.numeric(one.df.sorted[,"PopTotal"])
+        total = cbind(total,rowSums(total))
+        colnames(total) = c(ages,"total")
+        
+        male = array(0,
+                      dim = sapply(pop.dim.names, length), 
+                      dimnames = pop.dim.names)
+        
+        male[] = as.numeric(one.df.sorted[,"PopMale"])
+        male = cbind(male,rowSums(male))
+        colnames(male) = c(ages,"total")
+        
+        female = array(0,
+                     dim = sapply(pop.dim.names, length), 
+                     dimnames = pop.dim.names)
+        
+        female[] = as.numeric(one.df.sorted[,"PopFemale"])
+        female = cbind(female,rowSums(female))
+        colnames(female) = c(ages,"total")
+
+        rv = list()
+        rv$total = total[,"total"]*1000
+        rv$both = total*1000
+        rv$male = male*1000
+        rv$female = female*1000
+
+        rv
+}
+
+

@@ -118,11 +118,53 @@ compute.dx <- function(time,
     dx.state[,,,'diagnosed_unengaged'] = as.numeric(dx.state[,,,'diagnosed_unengaged']) + diagnosed
     dx.diagnoses = dx.diagnoses + diagnosed
     
-    #-- NEW INFECTIONS --#
-    incidence = 1000     # Using this for now
-    dx.state[,,,'hiv_negative'] = as.numeric(dx.state[,,,'hiv_negative']) - incidence
-    dx.state[,,,'undiagnosed'] = as.numeric(dx.state[,,,'undiagnosed']) + incidence
-    dx.incidence = dx.incidence + incidence
+    #-- INCIDENCE --#
+    #we need an array force of infection to each stratum of [age,sex,subgroup,hiv.status]
+    
+    # x.to: strata that receives the new infection
+    # x.from: strata that transmits HIV
+    # for each 'x.to' strata, loop through all 'x.from' stratas and compute the new transmissions based on transmission rate, prevalence of HIV in the 'x.from' strata, and the proportion of partnerships between the two stratas
+    
+        for (a.to in parameters$AGES)
+    {
+      for (s.to in parameters$SEXES)
+      {
+        for (r.to in parameters$SUBGROUPS)
+        {
+          for (a.from in parameters$AGES)
+          {
+            for (s.from in parameters$SEXES)
+            {
+              for (r.from in parameters$SUBGROUPS)
+              {
+                for (h.from in parameters$HIV.STATUS)
+                {
+                  
+                  proportion.of.age.sex.subgroup.who.are.in.h = state[a.from, s.from, r.from, h.from] / sum(state[a.from, s.from, r.from,])
+                  
+                  # dx.incidence[a.to, s.to, r.to] = dx.incidence[a.to, s.to, r.to] +
+                  #     proportion.of.tos.partners.in.from * transmission.rate.from.to.to * prevalence.of.infections.in.from
+                  
+                  # simplified by combining proportion of partners and transmission rate
+                  # TRANSMISSION.RATES is 6 dim: every age/sex/subgroup has from & to
+                  
+                  dx.incidence[a.to, s.to, r.to] = dx.incidence[a.to, s.to, r.to] +
+                    pp$TRANSMISSION.RATES[a.to, s.to, r.to, a.from, s.from, r.from] * proportion.of.age.sex.subgroup.who.are.in.h * 
+                    pp$INFECTIOUSNESS.H[a.from, s.from, r.from, h.from] # set this up to be general/easier for matrix math; but will actually only depend on h 
+                  
+                  
+                  
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+        #-- NEW INFECTIONS --#
+    dx.state[,,,'hiv_negative'] = as.numeric(dx.state[,,,'hiv_negative']) - dx.incidence
+    dx.state[,,,'undiagnosed'] = as.numeric(dx.state[,,,'undiagnosed']) + dx.incidence
     
     #-- ENGAGEMENT --#
     engaged = pp$ENGAGEMENT.RATES * as.numeric(state[,,,'diagnosed_unengaged'])
@@ -150,37 +192,7 @@ compute.dx <- function(time,
     dx.state[,,,'engaged_unsuppressed'] = as.numeric(dx.state[,,,'engaged_unsuppressed']) + unsuppressed
     
     
-    #-- INCIDENCE --#
-    #we need an array force of infection to each stratum of [age,sex,subgroup,hiv.status]
-    
-    # x.to: strata that receives the new infection
-    # x.from: strata that transmits HIV
-    # for each 'x.to' strata, loop through all 'x.from' stratas and compute the new transmissions based on transmission rate, prevalence of HIV in the 'x.from' strata, and the proportion of partnerships between the two stratas
-    
-    if (1==2)  
-    {
-        for (a.to in parameters$AGES)
-        {
-            for (s.to in parameters$SEXES)
-            {
-                for (r.to in parameters$SUBGROUPS)
-                {
-                    for (a.from in parameters$AGES)
-                    {
-                        for (s.from in parameters$SEXES)
-                        {
-                            for (r.from in parameters$SUBGROUPS)
-                            {
-                                dx.incidence[a.to, s.to, r.to] = dx.incidence[a.to, s.to, r.to] +
-                                    proportion.of.tos.partners.in.from * transmission.rate * prevalence.of.infections.in.from
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
+ 
     
     ##------------------------------##
     ##-- PACKAGE IT UP AND RETURN --##

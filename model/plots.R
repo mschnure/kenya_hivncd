@@ -23,14 +23,17 @@ simplot = function(...,
                    facet.by = NULL,
                    split.by = NULL,
                    ages = data.manager$AGES, #use what's in the data as the default
-                   sexes = data.manager$SEXES,
-                   subgroups = data.manager$SUBGROUPS){
+                   sexes = data.manager$SEXES
+                   #subgroups = data.manager$SUBGROUPS
+                   ){
         
         
         # data frame will need columns from basic function; plus column for every facet.by and every split.by
         # then combine all the split.by and sim id's into one column 
         
         sims = list(...)
+        
+        keep.dimensions = union('year',union(facet.by, split.by))
         
         #empty dataframe to combine different simulations
         df.sim = NULL
@@ -41,9 +44,9 @@ simplot = function(...,
                         sim = sims[[i]]
                         
                         # Extract the data from simulation
-                        value = extract.data(sim, years = years, data.type=d)
+                        value = extract.data(sim, years = years, age=ages, sex = sexes, data.type=d, keep.dimensions = keep.dimensions)
                         
-                        # set up a dataframe with 4 columns: year, value, sim id, data.type 
+                        # set up a dataframe with columns: year, value, sim id, data.type 
                         one.df = reshape2::melt(value) 
                         one.df$sim.id = i
                         one.df$data.type = d
@@ -52,6 +55,11 @@ simplot = function(...,
                 }
         }
         df.sim$sim.id = as.character(df.sim$sim.id)
+        df.sim$group.id = paste0("sim ",df.sim$sim.id)
+        
+        for(s in split.by){
+                df.sim$group.id = paste0(df.sim$group.id,", ",s,"=",df.sim[,s])
+        }
         
         # Observed (true) data:
         df.truth = NULL  
@@ -59,15 +67,33 @@ simplot = function(...,
         for(d in data.types){
                 
                 # Extract the data from simulation
-                value = as.numeric(get.surveillance.data(data.manager = data.manager, years = years, data.type=d))
+                value = get.surveillance.data(data.manager = data.manager, 
+                                              years = years, 
+                                              age = ages, 
+                                              sex = sexes, 
+                                              data.type=d, 
+                                              keep.dimensions = keep.dimensions)
                 
                 # set up a dataframe with 4 columns: year, value, sim id, data.type 
-                one.df = data.frame(year=years, value=value, sim.id='truth', data.type=d)
+                one.df = reshape2::melt(value) 
+                one.df$sim.id = "truth"
+                one.df$data.type = d
                 
                 df.truth = rbind(df.truth, one.df)   
                 
         }
         
+        df.truth$group.id = "truth"
+        
+        df.truth$split = "all"
+        
+        for(s in split.by){
+                df.truth$group.id = paste0(df.truth$group.id,", ",s,"=",df.truth[,s])
+                if(s==split.by[1])
+                        df.truth$split = paste0(s,"=",df.truth[,s])
+                else
+                        df.truth$split = paste0(df.truth$split,", ",s,"=",df.truth[,s])
+        }
         
 
         
@@ -76,16 +102,12 @@ simplot = function(...,
         if(length(facet.by)>0)
                 facet_string = paste0(facet_string, '+', paste0(facet.by,collapse = '+'))
         facet_formula = as.formula(facet_string)
-        
-        # setting up split.by
-        
-        
-        
+       
         
         ggplot() + 
                 geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id)) +
-                geom_point(data = df.truth, aes(x = year, y = value, color = sim.id)) +
-                facet_wrap(facet_formula, scales = "free_y") 
+                geom_point(data = df.truth, aes(x = year, y = value, color = sim.id, group = group.id, shape = split)) +
+                facet_wrap(facet_formula, scales = "free_y") + 
                 ylim(0,NA)
 
 
