@@ -316,36 +316,29 @@ read.population.data.files = function(dir = 'data/raw_data',
         pop.dim.names = list(year = as.character(years),
                               age = ages)
         
-        total = array(0,
-                      dim = sapply(pop.dim.names, length), 
-                      dimnames = pop.dim.names)
-        
-        total[] = as.numeric(one.df.sorted[,"PopTotal"])
-        total = cbind(total,rowSums(total))
-        colnames(total) = c(ages,"total")
-        
-        male = array(0,
-                      dim = sapply(pop.dim.names, length), 
-                      dimnames = pop.dim.names)
-        
-        male[] = as.numeric(one.df.sorted[,"PopMale"])
-        male = cbind(male,rowSums(male))
-        colnames(male) = c(ages,"total")
-        
-        female = array(0,
-                     dim = sapply(pop.dim.names, length), 
-                     dimnames = pop.dim.names)
-        
-        female[] = as.numeric(one.df.sorted[,"PopFemale"])
-        female = cbind(female,rowSums(female))
-        colnames(female) = c(ages,"total")
-
+        sexes = c("Total","Male","Female")
         rv = list()
-        rv$total = total[,"total"]*1000
-        rv$both = total*1000
-        rv$male = male*1000
-        rv$female = female*1000
-
+        
+        for (s in sexes){
+                
+                x = array(0,
+                          dim = sapply(pop.dim.names, length), 
+                          dimnames = pop.dim.names)
+                x[] = as.numeric(one.df.sorted[,paste0("Pop",s)])*1000
+                x = cbind(x,rowSums(x))
+                
+                dimnames(x) = list(year = as.character(years),
+                                   age = c(ages,"total"))
+                
+                rv[[s]] = x
+                
+        }
+        
+        total = array(rv$Total[,"total"],
+                      dimnames = list(year = as.character(years)))
+        
+        rv$total = total
+        
         rv
 }
 
