@@ -326,32 +326,69 @@ read.population.data.files = function(dir = 'data/raw_data',
         df$AgeGrp = factor(df$AgeGrp, levels = ages)
         df.sorted = df[order(df$AgeGrp),]
         
-        pop.dim.names = list(year = as.character(years),
+        ## Age array
+        age.dim.names = list(year = as.character(years),
                               age = ages)
         
-        sexes = c("Total","Male","Female")
-        rv = list()
+        age = array(0,
+                    dim = sapply(age.dim.names, length), 
+                    dimnames = age.dim.names)
         
-        for (s in sexes){
-                
-                x = array(0,
-                          dim = sapply(pop.dim.names, length), 
-                          dimnames = pop.dim.names)
-                x[] = as.numeric(df.sorted[,paste0("Pop",s)])*1000
-                x = cbind(x,rowSums(x))
-                
-                dimnames(x) = list(year = as.character(years),
-                                   age = c(ages,"total"))
-                
-                rv[[s]] = x
-                
-        }
+        age[] = as.numeric(df.sorted[,"PopTotal"])*1000
         
-        total = array(rv$Total[,"total"],
+        ## Total array
+        total = array(rowSums(age),
                       dimnames = list(year = as.character(years)))
+
+        ## Age.Sex array
+        sexes = c("male","female")
+        age.sex.dim.names = list(year = as.character(years),
+                                 age = ages,
+                                 sex = sexes)
         
+        male.age = array(0,
+                         dim = sapply(age.dim.names, length), 
+                         dimnames = age.dim.names)
+        
+        male.age[] = as.numeric(df.sorted[,"PopMale"])*1000
+        
+        female.age = array(0,
+                           dim = sapply(age.dim.names, length), 
+                           dimnames = age.dim.names)
+        
+        female.age[] = as.numeric(df.sorted[,"PopFemale"])*1000
+        
+        age.sex = array(0,
+                        dim = sapply(age.sex.dim.names, length), 
+                        dimnames = age.sex.dim.names)
+        
+        age.sex[,,"male"] = male.age
+        age.sex[,,"female"] = female.age
+        
+        ## Sex array
+        male = array(rowSums(male.age),
+                     dimnames = list(year = as.character(years)))
+        
+        female = array(rowSums(female.age),
+                       dimnames = list(year = as.character(years)))
+        
+        sex.dim.names = list(year = as.character(years),
+                             sex = sexes)
+        
+        sex = array(0,
+                    dim = sapply(sex.dim.names, length), 
+                    dimnames = sex.dim.names)
+        
+        sex[,"male"] = male
+        sex[,"female"] = female
+        
+        ## Returns a list
+        rv = list()
         rv$total = total
-        
+        rv$age = age
+        rv$sex = sex
+        rv$age.sex = age.sex
+
         rv
 }
 
@@ -425,7 +462,7 @@ read.death.data.files = function(dir = 'data/raw_data',
                          dimnames = dim.names)
         
         for (i in 3:ncol(df)){
-                rv$total[,(i-2)] = as.integer(gsub(" ","",df[df$Sex=="Both sexes combined",i]))
+                rv$total[,(i-2)] = as.integer(gsub(" ","",df[df$Sex=="Both sexes combined",i]))*1000
         }
         
         rv$male = array(0,
@@ -433,7 +470,7 @@ read.death.data.files = function(dir = 'data/raw_data',
                         dimnames = dim.names)
         
         for (i in 3:ncol(df)){
-                rv$male[,(i-2)] = as.integer(gsub(" ","",df[df$Sex=="Male",i]))
+                rv$male[,(i-2)] = as.integer(gsub(" ","",df[df$Sex=="Male",i]))*1000
         }
         
         rv$female = array(0,
@@ -441,7 +478,7 @@ read.death.data.files = function(dir = 'data/raw_data',
                           dimnames = dim.names)
         
         for (i in 3:ncol(df)){
-                rv$female[,(i-2)] = as.integer(gsub(" ","",df[df$Sex=="Female",i]))
+                rv$female[,(i-2)] = as.integer(gsub(" ","",df[df$Sex=="Female",i]))*1000
         }
         
         rv

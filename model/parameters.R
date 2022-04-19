@@ -116,10 +116,10 @@ map.model.parameters <- function(parameters,
     
     # for every value of the for loop, there will be a large array (for every year) 
     
-    big.array = array(small.array,
-                      dim = sapply(),
-                      dimnames = big.array.dim.names)
-    
+    # big.array = array(small.array,
+    #                   dim = sapply(),
+    #                   dimnames = big.array.dim.names)
+    # 
     
     #-- DIAGNOSES --#
     parameters = add.time.varying.parameter.value(parameters,

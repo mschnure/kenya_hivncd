@@ -18,6 +18,8 @@ initial.state = array(47000000,
                       dim = sapply(state.dim.names, length), 
                       dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
 
+#function to get initial population for 1970 - can be in new file or parameters
+
 # Run it
 sim = run.model(parameters=parameters,
               initial.state=initial.state,
