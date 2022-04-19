@@ -72,6 +72,8 @@ map.model.parameters <- function(parameters,
                                                                 dimnames=state.dim.names),
                                                   time = 2000)
     
+    # call actual birth rates; start with crude birth rate; can change to fertility rates or other options
+    
     
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='MALE.BIRTHS',
@@ -100,12 +102,24 @@ map.model.parameters <- function(parameters,
                                                   value = HIV.MORTALITY.RATES,
                                                   time = 2000)
     
+    #this will be within the for loop
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='NON.HIV.MORTALITY.RATES',
                                                   value = array(sampled.parameters['non.hiv.mortality.rates'],
                                                                 dim=sapply(state.dim.names, length),
-                                                                dimnames=state.dim.names),
+                                                                dimnames=state.dim.names), #change this to the big.array thing below
                                                   time = 2000) # will actually need age-specific mortality (will depend on age brackets)
+    
+    # Get array of death rates from below; for every year, call below function
+    # hydrate array up from 2D to 4D (including subgroup and HIV status)
+    #create an array by calling 2D array and then give dimnames/dimensions that I want - i.e., below 
+    
+    # for every value of the for loop, there will be a large array (for every year) 
+    
+    big.array = array(small.array,
+                      dim = sapply(),
+                      dimnames = big.array.dim.names)
+    
     
     #-- DIAGNOSES --#
     parameters = add.time.varying.parameter.value(parameters,
@@ -271,3 +285,51 @@ compute.time.varying.parameters <- function(parameters, time)
         
     })
 }
+
+
+calculate.death.rates = function(data.manager,
+                                 ages, #specify the model ages here - will have to pass in the model age upper and lower (see other function)
+                                 sexes,
+                                 year){
+    
+    # return a list, each value corresponds to rates; indexed age, sex
+    # indexed age, sex
+    
+    rv = sapply(sexes, function(sex){
+        sapply(ages, function(age){
+            
+            #from surveillance manager, pull all the deaths for any surveillance age bracket that falls into given model age bracket
+            # (use code in ages file) - started a new generic function 
+            # pull the population for any ages that fall in the age bracket and any years in that period, then divide
+            
+            10*sex+age
+            
+            #outer sapply is columns; inner is rows
+            
+        })
+    })
+
+
+    
+}
+
+
+# similar function for birth rates
+
+
+get.initial.population = function(year,
+                                  data.manager,
+                                  ages,
+                                  sexes,
+                                  seed.to.ages,
+                                  seed.to.sexes,
+                                  seed.n){
+    
+    #returns an array indexed age, sex, subgroup (hard code in one subgroup), hiv status
+    # rv [,,,'hiv.negative'] = (population from the surveillance data in that year)
+    
+    rv[seed.to.ages,seed.to.sexes,,'undiagnosed'] = seed.n #puts n hiv cases in each of those brackets (probably middle age bracket, one male/female)
+    
+}
+
+

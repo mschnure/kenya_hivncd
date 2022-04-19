@@ -7,10 +7,19 @@ library(data.table)
 
 # Add in what are the eligible values for each of the arguments below; as a comment
 # Add in protections against bad inputs - warnings, etc. (although this should be robust; can pass anything)
+
+# Each data.manager[[data.type]] is a list with the following elements: 
+# $AGES
+# $SEXES
+# $SUBGROUPS
+# $AGE.LOWERS (0-4 --> 0)
+# $AGE.UPPERS (0-4 --> 5) - i.e., upper is exclusive
+# $total, $age, $age.sex, etc. (this is the actual data - will vary by data type) 
+
 get.surveillance.data = function(data.manager,
                                  data.type,
                                  years = 2010:2015,
-                                 ages = data.manager$AGES,
+                                 ages = data.manager$AGES, # data.manager[[data.type]]$AGES - will have different ages for different data.types
                                  sexes = data.manager$SEXES, #will have to fill this in later
                                  subgroups = data.manager$SUBGROUPS,
                                  keep.dimensions = 'year')
@@ -118,7 +127,7 @@ get.surveillance.data = function(data.manager,
 # Calls lower-level function, read.surveillance.data.type
 read.surveillance.data = function(dir = 'data/raw_data'){
         rv = list(date.created = Sys.Date(),
-                  AGES=c('0-14','10-19','15-24','15-49','15+','50 and over')
+                  AGES=c('0-14','10-19','15-24','15-49','15+','50 and over') # instead of this, will need ages for each data type 
                   )
         
         rv$incidence = read.surveillance.data.type(data.type = 'incidence')

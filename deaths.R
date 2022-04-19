@@ -117,7 +117,7 @@ for (i in 1:length(start.years)){
         
 }
 
-CDR = DATA.MANAGER$deaths$total/five.year.age.groups
+DR = 1000*DATA.MANAGER$deaths$total/five.year.age.groups
 
 # end.year = as.numeric(substr(years[length(years)],8,11))
 # years.to.fill = as.character(start.year:end.year)

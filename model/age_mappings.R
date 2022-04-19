@@ -27,6 +27,7 @@ parse.age.brackets = function(age.cutoffs) {
 
 
 # Combine model age groups to create surveillance age groups 
+# Could either hard code another mapping for the population data, or create a generic - see below 
 MODEL.TO.SURVEILLANCE.AGE.MAPPING = list(
         "0-14" = c("0-9","10-14"),
         "10-19" = c("10-14", "15-19"),
@@ -55,6 +56,17 @@ map.ages = function(to.map,
         rv
 }
 
-
+map.ages.by.cutoffs = function(target.lower,
+                               target.upper,
+                               from.lowers,
+                               from.uppers){
+        
+        # returns a set of indices which is a subset of 1:length(from.lowers)
+        
+        #e.g., model age bracket is 0-10; from.lowers are 0,5,10, etc.
+        # so indices would be the first two from.lowers
+        # or, if it's 10-20, the lowers would be 3:4
+        
+}
 
 
