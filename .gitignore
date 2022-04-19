@@ -1,4 +1,18 @@
+# R 
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
+*.Rproj
+
+
+# Project-specific
+data
+
+# Project-specific
+/temp/
+*git-ignored/
+
+# OS-specific
+.DS_Store
+~$*
