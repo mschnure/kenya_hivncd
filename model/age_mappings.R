@@ -30,15 +30,16 @@ parse.age.brackets = function(age.cutoffs) {
 }
 
 
-# Combine model age groups to create surveillance age groups 
-# Could either hard code another mapping for the population data, or create a generic - see below 
+## Combine model age groups to create surveillance age groups ##
+
+## SPECIFIC VERSION ##
 MODEL.TO.SURVEILLANCE.AGE.MAPPING = list(
         "0-14" = c("0-9","10-14"),
         "10-19" = c("10-14", "15-19"),
         "15-24" = c("15-19", "20-24"),
         "15-49" = c("15-19", "20-24","25-29","30-39","40-49"),
         "15+" = c("15-19", "20-24","25-29","30-39","40-49","50-59","60-69","70-79","80 and over"),
-        "50 and over" = "50-59","60-69","70-79","80 and over"
+        "50 and over" = c("50-59","60-69","70-79","80 and over")
 )
 
 map.ages = function(to.map,
@@ -60,19 +61,63 @@ map.ages = function(to.map,
         rv
 }
 
-map.ages.by.cutoffs = function(target.lower, # surveillance lowers
-                               target.upper, # surveillance uppers
+
+## GENERIC VERSION ##
+GENERIC.AGE.MAPPING = map.all.ages(data.type = "incidence") # testing this out with incidence - makes the same list as above 
+
+# Loops through below function (map.ages.by.cutoffs) for ALL surveillance brackets
+# Returns a list where each item of the list is a surveillance age bracket and the model age brackets that go into it
+map.all.ages = function(data.manager = DATA.MANAGER,
+                        data.type,
+                        model.age.cutoffs = MODEL.AGE.CUTOFFS){
+        
+        parsed.model.ages = parse.age.brackets(model.age.cutoffs)
+        
+        surveillance.lowers = data.manager[[data.type]]$AGE.LOWERS
+        surveillance.uppers = data.manager[[data.type]]$AGE.UPPERS
+        surveillance.ages = data.manager[[data.type]]$AGES
+
+        rv = list()
+        
+        for (i in 1:length(surveillance.lowers)){
+                x = map.ages.by.cutoffs(target.lower = surveillance.lowers[i],
+                                         target.upper = surveillance.uppers[i],
+                                         from.lowers = parsed.model.ages$lowers,
+                                         from.uppers = parsed.model.ages$uppers)
+                
+                rv[[i]] = x$labels
+                
+        }
+        
+        names(rv) = surveillance.ages
+        
+        rv
+}
+
+## Given ONE surveillance age bracket, returns the model age brackets to include
+## E.g., given surveillance age bracket of 15-24, would return 15-19, 20-24
+map.ages.by.cutoffs = function(target.lower, # surveillance lower
+                               target.upper, # surveillance upper
                                from.lowers, # model lowers
                                from.uppers){ # model uppers
         
+        rv = list()
+        rv$lowers = from.lowers[from.lowers>=target.lower & from.lowers<target.upper]
+        rv$uppers = from.uppers[from.uppers>target.lower & from.uppers<=target.upper]
+        
+        rv$spans = rv$uppers-rv$lowers
+        
+        rv$labels = paste0(rv$lowers,"-", (rv$uppers-1))
+        rv$labels[is.infinite(rv$uppers)] = paste0(rv$lowers[is.infinite(rv$uppers)], " and over")
+        
+        rv
+
+    # (Notes from before writing this: 
         # returns a set of indices which is a subset of 1:length(from.lowers)
         
-        #e.g., model age bracket is 0-10; from.lowers are 0,5,10, etc.
+        # e.g., model age bracket is 0-10; from.lowers are 0,5,10, etc.
         # so indices would be the first two from.lowers
-        # or, if it's 10-20, the lowers would be 3:4
-        
-
-    
+        # or, if it's 10-20, the lowers would be 3:4)
 }
 
 
