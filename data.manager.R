@@ -8,20 +8,21 @@ library(data.table)
 # Add in what are the eligible values for each of the arguments below; as a comment
 # Add in protections against bad inputs - warnings, etc. (although this should be robust; can pass anything)
 
-# Each data.manager[[data.type]] is a list with the following elements: 
+# Each data.manager[[data.type]] is a list with the following elements:  
 # $AGES
-# $SEXES
+# $SEXES 
 # $SUBGROUPS
 # $AGE.LOWERS (0-4 --> 0)
 # $AGE.UPPERS (0-4 --> 5) - i.e., upper is exclusive
 # $total, $age, $age.sex, etc. (this is the actual data - will vary by data type) 
+# DON'T HAVE AGES/SEXES/SUBGROUPS FOR BIRTHS 
 
 get.surveillance.data = function(data.manager,
                                  data.type,
                                  years = 2010:2015,
-                                 ages = data.manager$AGES, # data.manager[[data.type]]$AGES - will have different ages for different data.types
-                                 sexes = data.manager$SEXES, #will have to fill this in later
-                                 subgroups = data.manager$SUBGROUPS,
+                                 ages = data.manager[[data.type]]$AGES, 
+                                 sexes = data.manager[[data.type]]$SEXES, #only works for population now, not incidence/prevalence
+                                 subgroups = data.manager[[data.type]]$SUBGROUPS,
                                  keep.dimensions = 'year')
 {
         # keep.dimensions must have year; or if we ask for some ages but don't keep ages, for example
@@ -126,23 +127,42 @@ get.surveillance.data = function(data.manager,
 #### Read in all data types ####
 # Calls lower-level function, read.surveillance.data.type
 read.surveillance.data = function(dir = 'data/raw_data'){
-        rv = list(date.created = Sys.Date(),
-                  AGES=c('0-14','10-19','15-24','15-49','15+','50 and over') # instead of this, will need ages for each data type 
+        rv = list(date.created = Sys.Date()
                   )
         
         rv$incidence = read.surveillance.data.type(data.type = 'incidence')
+        rv$incidence$AGES = c('0-14','10-19','15-24','15-49','15+','50 and over')
+        rv$incidence$AGE.LOWERS = c(0,10,15,15,15,50)
+        rv$incidence$AGE.UPPERS = c(15,20,25,50,Inf,Inf)
+        rv$incidence$SEXES = c('male','female')
+        rv$incidence$SUBGROUPS = dimnames(rv$incidence$subgroup)$subgroup
         
         rv$prevalence = read.surveillance.data.type(data.type = 'prevalence')
+        rv$prevalence$AGES = c('0-14','10-19','15-24','15-49','15+','50 and over')
+        rv$prevalence$AGE.LOWERS = c(0,10,15,15,15,50)
+        rv$prevalence$AGE.UPPERS = c(15,20,25,50,Inf,Inf)
+        rv$prevalence$SEXES = c('male','female')
+        rv$prevalence$SUBGROUPS = dimnames(rv$prevalence$subgroup)$subgroup
         
         rv$population = read.population.data.files(data.type = "population")
+        rv$population$AGES = c('0-4', '5-9','10-14','15-19','20-24','25-29','30-34',
+                               '35-39','40-44','45-49','50-54','55-59','60-64','65-69',
+                               '70-74','75-79','80-84','85-89','90-94','95-99','100+')
+        rv$population$AGE.LOWERS = c(0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100)
+        rv$population$AGE.UPPERS = c(5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,Inf)
+        rv$population$SEXES = c('male','female')
+        rv$population$SUBGROUPS = dimnames(rv$incidence$subgroup)$subgroup ## NO POPULATION SUBGROUPS FOR NOW
         
         rv$births = read.birth.data.files(data.type = "population")
         
         rv$deaths = read.death.data.files(data.type = "population")
-        
-        rv$SUBGROUPS = dimnames(rv$incidence$subgroup)$subgroup
-        
-        rv$SEXES = c('male','female')
+        rv$deaths$AGES = c('0-4', '5-9','10-14','15-19','20-24','25-29','30-34',
+                               '35-39','40-44','45-49','50-54','55-59','60-64','65-69',
+                               '70-74','75-79','80-84','85-89','90-94','95+')
+        rv$deaths$AGE.LOWERS = c(0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95)
+        rv$deaths$AGE.UPPERS = c(5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,Inf)
+        rv$deaths$SEXES = c('male','female')
+        rv$deaths$SUBGROUPS = dimnames(rv$incidence$subgroup)$subgroup ## NO POPULATION SUBGROUPS FOR NOW
         
         rv
 }
@@ -238,6 +258,7 @@ read.surveillance.data.stratified = function(data.type,
         else stop("only currently set up for age strata") ## fill in later with sex 
 
         rv
+        
         
 } 
 

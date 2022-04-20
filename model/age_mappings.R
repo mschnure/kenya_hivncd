@@ -5,9 +5,13 @@
 ################################################################################################
 
 # Model age cutoffs are created so that they can combine into the surveillance age groups
-# Surveillance age groups: '0-14','10-19','15-24','15-49','15+','50 and over'
+# UNAIDS surveillance age groups: '0-14','10-19','15-24','15-49','15+','50 and over'
+# Population data age groups: '0-4', '5-9','10-14','15-19','20-24','25-29','30-34',
+                            # '35-39','40-44','45-49','50-54','55-59','60-64','65-69',
+                            # '70-74','75-79','80-84','85-89','90-94','95-99','100+','Total'
+# Deaths age groups has same as population, but 95+ instead of 95-99 and 100+
 
-MODEL.AGE.CUTOFFS = c(0,10,15,20,25,50,Inf)
+MODEL.AGE.CUTOFFS = c(0,10,15,20,25,30,40,50,60,70,80,Inf)
 
 parse.age.brackets = function(age.cutoffs) {
         
@@ -32,9 +36,9 @@ MODEL.TO.SURVEILLANCE.AGE.MAPPING = list(
         "0-14" = c("0-9","10-14"),
         "10-19" = c("10-14", "15-19"),
         "15-24" = c("15-19", "20-24"),
-        "15-49" = c("15-19", "20-24","25-49"),
-        "15+" = c("15-19", "20-24","25-49","50 and over"),
-        "50 and over" = "50 and over"
+        "15-49" = c("15-19", "20-24","25-29","30-39","40-49"),
+        "15+" = c("15-19", "20-24","25-29","30-39","40-49","50-59","60-69","70-79","80 and over"),
+        "50 and over" = "50-59","60-69","70-79","80 and over"
 )
 
 map.ages = function(to.map,
@@ -56,10 +60,10 @@ map.ages = function(to.map,
         rv
 }
 
-map.ages.by.cutoffs = function(target.lower,
-                               target.upper,
-                               from.lowers,
-                               from.uppers){
+map.ages.by.cutoffs = function(target.lower, # surveillance lowers
+                               target.upper, # surveillance uppers
+                               from.lowers, # model lowers
+                               from.uppers){ # model uppers
         
         # returns a set of indices which is a subset of 1:length(from.lowers)
         
@@ -67,6 +71,8 @@ map.ages.by.cutoffs = function(target.lower,
         # so indices would be the first two from.lowers
         # or, if it's 10-20, the lowers would be 3:4
         
+
+    
 }
 
 
