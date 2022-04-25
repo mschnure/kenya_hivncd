@@ -94,8 +94,43 @@ map.all.ages = function(data.manager = DATA.MANAGER,
         rv
 }
 
+# for population age brackets, have to reverse - combine surveillance into model age brackets (see below)
+POPULATION.AGE.MAPPING = map.population.ages(data.type = "population") 
+
+#REVERSE OF ABOVE FUNCTION, because population age brackets are FINER than model age brackets
+# Loops through below function (map.ages.by.cutoffs) for all MODEL brackets
+# Returns a list where each item of the list is a MODEL age bracket and the POPULATION surveillance age brackets that go into it
+map.population.ages = function(data.manager = DATA.MANAGER,
+                               data.type,
+                               model.age.cutoffs = MODEL.AGE.CUTOFFS){
+        
+        parsed.model.ages = parse.age.brackets(model.age.cutoffs)
+        
+        surveillance.lowers = data.manager[[data.type]]$AGE.LOWERS
+        surveillance.uppers = data.manager[[data.type]]$AGE.UPPERS
+        surveillance.ages = data.manager[[data.type]]$AGES
+        
+        rv = list()
+        
+        for (i in 1:length(parsed.ages$lowers)){
+                x = map.ages.by.cutoffs(target.lower = parsed.model.ages$lowers[i],
+                                        target.upper = parsed.model.ages$uppers[i],
+                                        from.lowers = surveillance.lowers,
+                                        from.uppers = surveillance.uppers)
+                
+                rv[[i]] = x$labels
+                
+        }
+        
+        names(rv) = parsed.model.ages$labels
+        
+        rv
+}        
+
 ## Given ONE surveillance age bracket, returns the model age brackets to include
 ## E.g., given surveillance age bracket of 15-24, would return 15-19, 20-24
+## this is reversed for population data because it is finer than model brackets
+## --> e.g., given MODEL bracket of 0-9, returns pop brackets 0-4, 5-9
 map.ages.by.cutoffs = function(target.lower, # surveillance lower
                                target.upper, # surveillance upper
                                from.lowers, # model lowers
