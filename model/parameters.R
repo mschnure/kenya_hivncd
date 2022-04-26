@@ -286,33 +286,100 @@ compute.time.varying.parameters <- function(parameters, time)
     })
 }
 
+## DON'T HAVE SEX-SPECIFIC DEATH RATES; also currently not a very good function 
+calculate.death.rates = function(data.manager){
+    
+        years.by.five = data.manager$deaths$YEARS
+        deaths.ages = data.manager$deaths$AGES
+        start.years = as.numeric(substr(years.by.five,1,4))
+        end.years = as.numeric(substr(years.by.five,8,11))
+        mid.years = (start.years + (end.years-1))/2
+        
+        ## Pull deaths
+        deaths.age = get.surveillance.data(data.manager = data.manager,
+                                           data.type = "deaths",
+                                           years = years.by.five,
+                                           keep.dimensions = c('year','age'))
+        
+        deaths.total = get.surveillance.data(data.manager = data.manager,
+                                             data.type = "deaths",
+                                             years = years.by.five)
+        
+        ## Pull population
+        pop.age = get.surveillance.data(data.manager = data.manager,
+                                        data.type = "population",
+                                        years = 1950:2020,
+                                        keep.dimensions = c('year','age'))
+        
+        # combine 95-99 and 100+ into 95+
+        pop.age = cbind(pop.age[,1:(ncol(pop.age)-2)],cbind(rowSums(pop.age[,(ncol(pop.age)-1):(ncol(pop.age))])))
+        colnames(pop.age) = deaths.ages
+        
+        pop.total = get.surveillance.data(data.manager = data.manager,
+                                          data.type = "population",
+                                          years = 1950:2020)
+        
+        death.rate.dim.names.age = list(year = years.by.five,
+                                        age = deaths.ages)
+        
+        death.rate.dim.names.total = list(year = years.by.five)
+        
+        ## Aggregate population for every five years (e.g., 1950-1954)
+        five.year.age.groups.age = array(0,
+                                         dim = sapply(death.rate.dim.names.age, length),
+                                         dimnames = death.rate.dim.names.age)
+        
+        
+        for (i in 1:length(start.years)){
+                five.year.age.groups.age[i,] = colSums(pop.age[(i*5-4):(i*5),])
+                
+        }
+        
+        five.year.age.groups.total = array(0,
+                                           dim = sapply(death.rate.dim.names.total, length),
+                                           dimnames = death.rate.dim.names.total)
+        
+        for (i in 1:length(start.years)){
+                five.year.age.groups.total[i] = sum(pop.total[(i*5-4):(i*5)])
+                
+        }
+        
+        DR.AGE = 1000*deaths.age/five.year.age.groups.age
+        DR.TOTAL = 1000*deaths.total/five.year.age.groups.total
+        
+        dimnames(DR.TOTAL) = list(year=as.character(mid.years))
+        dimnames(DR.AGE) = list(year=as.character(mid.years),
+                                age = deaths.ages)
+        
+        rv = list()
+        rv$total = DR.TOTAL
+        rv$age = DR.AGE
 
+        rv
+}
+
+# HOW WE SET UP PREVIOUSLY 
 calculate.death.rates = function(data.manager,
                                  ages, #specify the model ages here - will have to pass in the model age upper and lower (see other function)
                                  sexes,
                                  year){
-    
-    # return a list, each value corresponds to rates; indexed age, sex
-    # indexed age, sex
-    
-    rv = sapply(sexes, function(sex){
-        sapply(ages, function(age){
-            
-            #from surveillance manager, pull all the deaths for any surveillance age bracket that falls into given model age bracket
-            # (use code in ages file) - started a new generic function 
-            # pull the population for any ages that fall in the age bracket and any years in that period, then divide
-            
-            10*sex+age
-            
-            #outer sapply is columns; inner is rows
-            
+        
+        # return a list, each value corresponds to rates; indexed age, sex
+        # indexed age, sex
+        
+        rv = sapply(sexes, function(sex){
+                sapply(ages, function(age){
+                        
+                        #from surveillance manager, pull all the deaths for any surveillance age bracket that falls into given model age bracket
+                        # (use code in ages file) - started a new generic function 
+                        # pull the population for any ages that fall in the age bracket and any years in that period, then divide
+                        
+                        #outer sapply is columns; inner is rows
+                        
+                })
         })
-    })
-
-
-    
+        
 }
-
 
 # similar function for birth rates
 

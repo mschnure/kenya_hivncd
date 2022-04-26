@@ -156,6 +156,8 @@ read.surveillance.data = function(dir = 'data/raw_data'){
         rv$births = read.birth.data.files(data.type = "population")
         
         rv$deaths = read.death.data.files(data.type = "population")
+        rv$deaths$YEARS = c("1950 - 1955","1955 - 1960","1960 - 1965","1965 - 1970","1970 - 1975","1975 - 1980","1980 - 1985",
+                            "1985 - 1990","1990 - 1995","1995 - 2000","2000 - 2005","2005 - 2010","2010 - 2015","2015 - 2020")
         rv$deaths$AGES = c('0-4', '5-9','10-14','15-19','20-24','25-29','30-34',
                                '35-39','40-44','45-49','50-54','55-59','60-64','65-69',
                                '70-74','75-79','80-84','85-89','90-94','95+')
@@ -464,45 +466,82 @@ read.death.data.files = function(dir = 'data/raw_data',
         df = read.csv(file.path(sub.dir,file))
         df = cbind(df[,c(-1,-2,-5)],df[,5])
         colnames(df) = df[1,]
-        ages = as.character(df[1,3:ncol(df)])
+        ages = as.character(df[1,3:(ncol(df)-1)])
         df = df[-5:-1,]
         
         years = unique(df$Time)
+
         
-        # start.year = as.numeric(substr(years[1],1,4))
-        # end.year = as.numeric(substr(years[length(years)],8,11))
-        # years.to.fill = as.character(start.year:end.year)
+        ## Age array
+        age.dim.names = list(year = as.character(years),
+                             age = ages)
         
-        dim.names = list(year = years,
-                         age = ages)
+        age = array(0,
+                    dim = sapply(age.dim.names, length), 
+                    dimnames = age.dim.names)
         
+        for (i in 3:(ncol(df)-1)){
+                age[,(i-2)] = as.integer(gsub(" ","",df[df$Sex=="Both sexes combined",i]))*1000
+        }
+        
+        ## Total array 
+        total = array(as.integer(gsub(" ","",df[df$Sex=="Both sexes combined",ncol(df)]))*1000,
+                      dimnames = list(year = as.character(years)))
+        
+        ## Age.sex array
+        sexes = c("male","female")
+        age.sex.dim.names = list(year = as.character(years),
+                                 age = ages,
+                                 sex = sexes)
+        male.age = array(0,
+                         dim = sapply(age.dim.names, length), 
+                         dimnames = age.dim.names)
+        
+        for (i in 3:(ncol(df)-1)){
+                male.age[,(i-2)] = as.integer(gsub(" ","",df[df$Sex=="Male",i]))*1000
+        }
+        
+        female.age = array(0,
+                           dim = sapply(age.dim.names, length), 
+                           dimnames = age.dim.names)
+        
+        for (i in 3:(ncol(df)-1)){
+                female.age[,(i-2)] = as.integer(gsub(" ","",df[df$Sex=="Female",i]))*1000
+        }
+        
+        age.sex = array(0,
+                        dim = sapply(age.sex.dim.names, length), 
+                        dimnames = age.sex.dim.names)
+        
+        age.sex[,,"male"] = male.age
+        age.sex[,,"female"] = female.age
+        
+        ## Sex array 
+        male = array(as.integer(gsub(" ","",df[df$Sex=="Male",ncol(df)]))*1000,
+                     dimnames = list(year = as.character(years)))
+        
+        female = array(as.integer(gsub(" ","",df[df$Sex=="Female",ncol(df)]))*1000,
+                       dimnames = list(year = as.character(years)))
+        
+        sex.dim.names = list(year = as.character(years),
+                             sex = sexes)
+        
+        sex = array(0,
+                    dim = sapply(sex.dim.names, length), 
+                    dimnames = sex.dim.names)
+        
+        sex[,"male"] = male
+        sex[,"female"] = female
+        
+        ## Returns a list
         rv = list()
-        
-        rv$total = array(0,
-                         dim = sapply(dim.names, length), 
-                         dimnames = dim.names)
-        
-        for (i in 3:ncol(df)){
-                rv$total[,(i-2)] = as.integer(gsub(" ","",df[df$Sex=="Both sexes combined",i]))*1000
-        }
-        
-        rv$male = array(0,
-                        dim = sapply(dim.names, length), 
-                        dimnames = dim.names)
-        
-        for (i in 3:ncol(df)){
-                rv$male[,(i-2)] = as.integer(gsub(" ","",df[df$Sex=="Male",i]))*1000
-        }
-        
-        rv$female = array(0,
-                          dim = sapply(dim.names, length), 
-                          dimnames = dim.names)
-        
-        for (i in 3:ncol(df)){
-                rv$female[,(i-2)] = as.integer(gsub(" ","",df[df$Sex=="Female",i]))*1000
-        }
+        rv$total = total
+        rv$age = age
+        rv$sex = sex
+        rv$age.sex = age.sex
         
         rv
+
         
         # Eventually, divide one period of deaths (e.g., deaths for 1950-1955) by the sum of the population from 1950-1954
         # Could alternatively divide one period of deaths by 5 and then get individual-year death rates, but those aren't exact and probably not necessary
