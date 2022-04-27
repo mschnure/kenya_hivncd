@@ -110,6 +110,10 @@ map.model.parameters <- function(parameters,
                                                                 dimnames=state.dim.names), #change this to the big.array thing below
                                                   time = 2000) # will actually need age-specific mortality (will depend on age brackets)
     
+    # This doesn't have the right age brackets/set up - need to fix below function
+    deaths.age.sex = calculate.all.death.rates(data.manager = DATA.MANAGER, keep.dimensions = c('year','sex','age'))
+    
+    # Notes from 4/15 meeting
     # Get array of death rates from below; for every year, call below function
     # hydrate array up from 2D to 4D (including subgroup and HIV status)
     #create an array by calling 2D array and then give dimnames/dimensions that I want - i.e., below 
@@ -120,6 +124,7 @@ map.model.parameters <- function(parameters,
     #                   dim = sapply(),
     #                   dimnames = big.array.dim.names)
     # 
+    
     
     #-- DIAGNOSES --#
     parameters = add.time.varying.parameter.value(parameters,
@@ -286,100 +291,121 @@ compute.time.varying.parameters <- function(parameters, time)
     })
 }
 
-## DON'T HAVE SEX-SPECIFIC DEATH RATES; also currently not a very good function 
-calculate.death.rates = function(data.manager){
-    
+## Calculates death rates (total, by age, by sex, or by age/sex)
+# this uses fixed age groups from the deaths data; need to use model age groups
+calculate.all.death.rates = function(data.manager,
+                                     keep.dimensions){
+        
         years.by.five = data.manager$deaths$YEARS
         deaths.ages = data.manager$deaths$AGES
+        deaths.sexes = data.manager$deaths$SEXES
         start.years = as.numeric(substr(years.by.five,1,4))
         end.years = as.numeric(substr(years.by.five,8,11))
         mid.years = (start.years + (end.years-1))/2
         
-        ## Pull deaths
-        deaths.age = get.surveillance.data(data.manager = data.manager,
-                                           data.type = "deaths",
-                                           years = years.by.five,
-                                           keep.dimensions = c('year','age'))
-        
-        deaths.total = get.surveillance.data(data.manager = data.manager,
-                                             data.type = "deaths",
-                                             years = years.by.five)
+        ## Pull deaths (I'm using the getter function here, but above I pulled the years straight from the data manager...)
+        deaths = get.surveillance.data(data.manager = data.manager,
+                                       data.type = "deaths",
+                                       years = years.by.five,
+                                       keep.dimensions = keep.dimensions)
         
         ## Pull population
-        pop.age = get.surveillance.data(data.manager = data.manager,
-                                        data.type = "population",
-                                        years = 1950:2020,
-                                        keep.dimensions = c('year','age'))
+        pop = get.surveillance.data(data.manager = data.manager,
+                                    data.type = "population",
+                                    years = 1950:2020,
+                                    keep.dimensions = keep.dimensions) 
         
-        # combine 95-99 and 100+ into 95+
-        pop.age = cbind(pop.age[,1:(ncol(pop.age)-2)],cbind(rowSums(pop.age[,(ncol(pop.age)-1):(ncol(pop.age))])))
-        colnames(pop.age) = deaths.ages
+        # combine 95-99 and 100+ into 95+ --> very hacky 
+        if (setequal(keep.dimensions, c('year','age'))){
+                pop = cbind(pop[,1:(ncol(pop)-2)],cbind(rowSums(pop[,(ncol(pop)-1):(ncol(pop))])))
+                colnames(pop) = deaths.ages
+        }
+        if (setequal(keep.dimensions, c('year','age','sex'))){
+                male = pop[,,"male"]
+                female = pop[,,"female"]
+                male = cbind(male[,1:(ncol(male)-2)],cbind(rowSums(male[,(ncol(male)-1):(ncol(male))])))
+                female = cbind(female[,1:(ncol(female)-2)],cbind(rowSums(female[,(ncol(female)-1):(ncol(female))])))
+                
+                pop = pop[,-21,]
+                pop[,,"male"] = male
+                pop[,,"female"] = female
+                dimnames(pop)[2][[1]] = deaths.ages
+        } 
         
-        pop.total = get.surveillance.data(data.manager = data.manager,
-                                          data.type = "population",
-                                          years = 1950:2020)
+        ## Dim names
+        if(length(keep.dimensions)==1){
+                death.rate.dim.names = list(year = years.by.five)
+        }
         
-        death.rate.dim.names.age = list(year = years.by.five,
-                                        age = deaths.ages)
+        if (setequal(keep.dimensions, c('year','age'))){
+                death.rate.dim.names = list(year = years.by.five,
+                                            age = deaths.ages)
+        }
         
-        death.rate.dim.names.total = list(year = years.by.five)
+        if (setequal(keep.dimensions, c('year','sex'))){
+                death.rate.dim.names = list(year = years.by.five,
+                                            sex = deaths.sexes)
+        }
+        
+        if (setequal(keep.dimensions, c('year','age','sex'))){
+                death.rate.dim.names = list(year = years.by.five,
+                                            age = deaths.ages,
+                                            sex = deaths.sexes)
+        }
         
         ## Aggregate population for every five years (e.g., 1950-1954)
-        five.year.age.groups.age = array(0,
-                                         dim = sapply(death.rate.dim.names.age, length),
-                                         dimnames = death.rate.dim.names.age)
+        five.year.age.groups = array(0,
+                                     dim = sapply(death.rate.dim.names, length),
+                                     dimnames = death.rate.dim.names)
         
-        
-        for (i in 1:length(start.years)){
-                five.year.age.groups.age[i,] = colSums(pop.age[(i*5-4):(i*5),])
-                
+        if(length(keep.dimensions)==1){
+                for (i in 1:length(start.years)){
+                        five.year.age.groups[i] = sum(pop[(i*5-4):(i*5)])
+                }
         }
         
-        five.year.age.groups.total = array(0,
-                                           dim = sapply(death.rate.dim.names.total, length),
-                                           dimnames = death.rate.dim.names.total)
-        
-        for (i in 1:length(start.years)){
-                five.year.age.groups.total[i] = sum(pop.total[(i*5-4):(i*5)])
-                
+        if (setequal(keep.dimensions, c('year','age')) | setequal(keep.dimensions, c('year','sex')) ){
+                for (i in 1:length(start.years)){
+                        five.year.age.groups[i,] = colSums(pop[(i*5-4):(i*5),])
+                }
         }
         
-        DR.AGE = 1000*deaths.age/five.year.age.groups.age
-        DR.TOTAL = 1000*deaths.total/five.year.age.groups.total
+        if (setequal(keep.dimensions, c('year','age','sex'))){
+                for (i in 1:length(start.years)){
+                        five.year.age.groups[i,,] = colSums(pop[(i*5-4):(i*5),,])
+                }
+        }
         
-        dimnames(DR.TOTAL) = list(year=as.character(mid.years))
-        dimnames(DR.AGE) = list(year=as.character(mid.years),
-                                age = deaths.ages)
+        # BEFORE THIS STEP, NEED TO CHANGE TO MODEL AGE GROUPS USING MAPPING
+        DEATH.RATE = 1000*deaths/five.year.age.groups 
+        death.rate.dim.names$year = as.character(mid.years) # e.g., change from "1950 - 1955" to 1952
+        dimnames(DEATH.RATE) = death.rate.dim.names
         
-        rv = list()
-        rv$total = DR.TOTAL
-        rv$age = DR.AGE
-
-        rv
+        DEATH.RATE
 }
 
 # HOW WE SET UP PREVIOUSLY 
-calculate.death.rates = function(data.manager,
-                                 ages, #specify the model ages here - will have to pass in the model age upper and lower (see other function)
-                                 sexes,
-                                 year){
-        
-        # return a list, each value corresponds to rates; indexed age, sex
-        # indexed age, sex
-        
-        rv = sapply(sexes, function(sex){
-                sapply(ages, function(age){
-                        
-                        #from surveillance manager, pull all the deaths for any surveillance age bracket that falls into given model age bracket
-                        # (use code in ages file) - started a new generic function 
-                        # pull the population for any ages that fall in the age bracket and any years in that period, then divide
-                        
-                        #outer sapply is columns; inner is rows
-                        
-                })
-        })
-        
-}
+# calculate.death.rates = function(data.manager,
+#                                  ages, #specify the model ages here - will have to pass in the model age upper and lower (see other function)
+#                                  sexes,
+#                                  year){
+#         
+#         # return a list, each value corresponds to rates; indexed age, sex
+#         # indexed age, sex
+#         
+#         rv = sapply(sexes, function(sex){
+#                 sapply(ages, function(age){
+#                         
+#                         #from surveillance manager, pull all the deaths for any surveillance age bracket that falls into given model age bracket
+#                         # (use code in ages file) - started a new generic function 
+#                         # pull the population for any ages that fall in the age bracket and any years in that period, then divide
+#                         
+#                         #outer sapply is columns; inner is rows
+#                         
+#                 })
+#         })
+#         
+# }
 
 # similar function for birth rates
 
