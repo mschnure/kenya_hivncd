@@ -137,24 +137,18 @@ compute.dx <- function(time,
             {
               for (r.from in parameters$SUBGROUPS)
               {
-                for (h.from in parameters$HIV.STATUS)
-                {
-                  
-                  proportion.of.age.sex.subgroup.who.are.in.h = state[a.from, s.from, r.from, h.from] / sum(state[a.from, s.from, r.from,])
-                  
-                  # dx.incidence[a.to, s.to, r.to] = dx.incidence[a.to, s.to, r.to] +
-                  #     proportion.of.tos.partners.in.from * transmission.rate.from.to.to * prevalence.of.infections.in.from
-                  
-                  # simplified by combining proportion of partners and transmission rate
-                  # TRANSMISSION.RATES is 6 dim: every age/sex/subgroup has from & to
-                  
-                  dx.incidence[a.to, s.to, r.to] = dx.incidence[a.to, s.to, r.to] +
-                    pp$TRANSMISSION.RATES[a.to, s.to, r.to, a.from, s.from, r.from] * proportion.of.age.sex.subgroup.who.are.in.h * 
-                    pp$INFECTIOUSNESS.H[a.from, s.from, r.from, h.from] # set this up to be general/easier for matrix math; but will actually only depend on h 
-                  
-                  
-                  
-                }
+                
+                      # does not depend on HIV status
+                      proportion.of.age.sex.subgroup.who.are.in.h = state[a.from, s.from, r.from,] / sum(state[a.from, s.from, r.from,])
+                      infectiousness = sum(proportion.of.age.sex.subgroup.who.are.in.h*pp$INFECTIOUSNESS.H[a.from, s.from, r.from,])
+                      
+                      dx.incidence[a.to, s.to, r.to] = dx.incidence[a.to, s.to, r.to] +
+                              pp$TRANSMISSION.RATES[a.to, s.to, r.to, a.from, s.from, r.from] * infectiousness
+                      # transmission rate depends on (age/sex, etc.) of both partnering strata, but does not depend on HIV status; 
+                      # infectiousness only depends on (age/sex, etc.) of infecting partner (i.e., suppression, awareness)
+                      
+                      # --> most interventions go into transmission rate 
+                      
               }
             }
           }
