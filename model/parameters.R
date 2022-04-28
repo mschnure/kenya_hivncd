@@ -42,7 +42,7 @@ map.model.parameters <- function(parameters,
                                                       aging.rates=0.10,
                                                       hiv.mortality.rates.suppressed=0.01, 
                                                       hiv.mortality.rates.unsuppressed=0.02,
-                                                      non.hiv.mortality.rates=0.01, 
+                                                      # non.hiv.mortality.rates=0.01, 
                                                       testing.rates=1.5, 
                                                       engagement.rates=3,
                                                       unsuppressed.disengagement.rates=0.2,
@@ -102,16 +102,21 @@ map.model.parameters <- function(parameters,
                                                   value = HIV.MORTALITY.RATES,
                                                   time = 2000)
     
-    #this will be within the for loop
-    parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='NON.HIV.MORTALITY.RATES',
-                                                  value = array(sampled.parameters['non.hiv.mortality.rates'],
-                                                                dim=sapply(state.dim.names, length),
-                                                                dimnames=state.dim.names), #change this to the big.array thing below
-                                                  time = 2000) # will actually need age-specific mortality (will depend on age brackets)
+
+    deaths.age.sex = calculate.all.death.rates(data.manager = DATA.MANAGER, 
+                                               keep.dimensions = c('year','sex','age'), 
+                                               model.age.cutoffs = MODEL.AGE.CUTOFFS)
     
-    # This doesn't have the right age brackets/set up - need to fix below function
-    deaths.age.sex = calculate.all.death.rates(data.manager = DATA.MANAGER, keep.dimensions = c('year','sex','age'))
+    for (year in dimnames(deaths.age.sex)$year){
+            rv = array(deaths.age.sex[year,,],
+                       dim = sapply(state.dim.names, length),
+                       dimnames = state.dim.names)
+            
+            parameters = add.time.varying.parameter.value(parameters,
+                                                          parameter.name='NON.HIV.MORTALITY.RATES',
+                                                          value = rv,
+                                                          time = as.numeric(year))
+    }
     
     # Notes from 4/15 meeting
     # Get array of death rates from below; for every year, call below function
@@ -292,18 +297,30 @@ compute.time.varying.parameters <- function(parameters, time)
 }
 
 ## Calculates death rates (total, by age, by sex, or by age/sex)
-# this uses fixed age groups from the deaths data; need to use model age groups
 calculate.all.death.rates = function(data.manager,
-                                     keep.dimensions){
+                                     keep.dimensions = c('year','age','sex'),
+                                     model.age.cutoffs){
+        
+        POPULATION.AGE.MAPPING = map.population.ages(data.manager = data.manager,
+                                                     data.type = "population",
+                                                     model.age.cutoffs = model.age.cutoffs)
         
         years.by.five = data.manager$deaths$YEARS
         deaths.ages = data.manager$deaths$AGES
+        deaths.ages.rev = c(deaths.ages[-length(deaths.ages)],"95-99","100 and over")
         deaths.sexes = data.manager$deaths$SEXES
         start.years = as.numeric(substr(years.by.five,1,4))
         end.years = as.numeric(substr(years.by.five,8,11))
         mid.years = (start.years + (end.years-1))/2
         
-        ## Pull deaths (I'm using the getter function here, but above I pulled the years straight from the data manager...)
+        age.dim.names = list(year = years.by.five,
+                              age = deaths.ages.rev)
+        
+        full.dim.names = list(year = years.by.five,
+                              age = deaths.ages.rev,
+                              sex = deaths.sexes)
+        
+        ## Pull deaths
         deaths = get.surveillance.data(data.manager = data.manager,
                                        data.type = "deaths",
                                        years = years.by.five,
@@ -315,21 +332,24 @@ calculate.all.death.rates = function(data.manager,
                                     years = 1950:2020,
                                     keep.dimensions = keep.dimensions) 
         
-        # combine 95-99 and 100+ into 95+ --> very hacky 
+        # Adding '100 and over' age group to deaths (set to 0) 
         if (setequal(keep.dimensions, c('year','age'))){
-                pop = cbind(pop[,1:(ncol(pop)-2)],cbind(rowSums(pop[,(ncol(pop)-1):(ncol(pop))])))
-                colnames(pop) = deaths.ages
+                deaths.100 = rep(0, length(years.by.five))
+                deaths = cbind(deaths,deaths.100)
+                dimnames(deaths) = age.dim.names
+                
         }
         if (setequal(keep.dimensions, c('year','age','sex'))){
-                male = pop[,,"male"]
-                female = pop[,,"female"]
-                male = cbind(male[,1:(ncol(male)-2)],cbind(rowSums(male[,(ncol(male)-1):(ncol(male))])))
-                female = cbind(female[,1:(ncol(female)-2)],cbind(rowSums(female[,(ncol(female)-1):(ncol(female))])))
-                
-                pop = pop[,-21,]
-                pop[,,"male"] = male
-                pop[,,"female"] = female
-                dimnames(pop)[2][[1]] = deaths.ages
+                deaths.100 = rep(0, length(years.by.five))
+                male = deaths[,,"male"]
+                female = deaths[,,"female"]
+                male = cbind(male,deaths.100)
+                dimnames(male) = age.dim.names
+                female = cbind(female,deaths.100)
+                dimnames(female) = age.dim.names
+                deaths = array(c(male,female),
+                             dim = sapply(full.dim.names, length),
+                             dimnames = full.dim.names)
         } 
         
         ## Dim names
@@ -338,8 +358,7 @@ calculate.all.death.rates = function(data.manager,
         }
         
         if (setequal(keep.dimensions, c('year','age'))){
-                death.rate.dim.names = list(year = years.by.five,
-                                            age = deaths.ages)
+                death.rate.dim.names = age.dim.names
         }
         
         if (setequal(keep.dimensions, c('year','sex'))){
@@ -348,9 +367,7 @@ calculate.all.death.rates = function(data.manager,
         }
         
         if (setequal(keep.dimensions, c('year','age','sex'))){
-                death.rate.dim.names = list(year = years.by.five,
-                                            age = deaths.ages,
-                                            sex = deaths.sexes)
+                death.rate.dim.names = full.dim.names
         }
         
         ## Aggregate population for every five years (e.g., 1950-1954)
@@ -376,36 +393,63 @@ calculate.all.death.rates = function(data.manager,
                 }
         }
         
-        # BEFORE THIS STEP, NEED TO CHANGE TO MODEL AGE GROUPS USING MAPPING
-        DEATH.RATE = 1000*deaths/five.year.age.groups 
-        death.rate.dim.names$year = as.character(mid.years) # e.g., change from "1950 - 1955" to 1952
-        dimnames(DEATH.RATE) = death.rate.dim.names
         
-        DEATH.RATE
+        ## Divide deaths by population, mapping to model age brackets 
+        if(length(keep.dimensions)==1){
+                rv = sapply(years.by.five, function(year){
+                        (deaths[year])/(five.year.age.groups[year])
+                })
+                
+                new.dim.names = list(year = mid.years)
+        }
+        
+        if (setequal(keep.dimensions, c('year','age'))){
+                rv = sapply(1:length(POPULATION.AGE.MAPPING), function(age){
+                        sapply(years.by.five, function(year){
+                                age.to = names(POPULATION.AGE.MAPPING)[age] # names of mapping are the model ages - what I want to map TO
+                                ages.from = POPULATION.AGE.MAPPING[[age]] # list elements are the population ages - what I want to map FROM
+                                sum(deaths[year,ages.from])/sum(five.year.age.groups[year,ages.from])
+                        })
+                })
+                
+                new.dim.names = list(year = mid.years,
+                                     age = names(POPULATION.AGE.MAPPING))
+        }
+        
+        if (setequal(keep.dimensions, c('year','sex')) ){
+                rv = sapply(deaths.sexes, function(sex){
+                        sapply(years.by.five, function(year){
+                                (deaths[year,sex])/(five.year.age.groups[year,sex])
+                        })
+                })
+                
+                new.dim.names = list(year = mid.years,
+                                     sex = deaths.sexes)
+        }
+
+        if (setequal(keep.dimensions, c('year','age','sex'))){
+                rv = sapply(deaths.sexes, function(sex){
+                        sapply(1:length(POPULATION.AGE.MAPPING), function(age){
+                                sapply(years.by.five, function(year){
+                                        age.to = names(POPULATION.AGE.MAPPING)[age] # names of mapping are the model ages - what I want to map TO
+                                        ages.from = POPULATION.AGE.MAPPING[[age]] # list elements are the population ages - what I want to map FROM
+                                        sum(deaths[year,ages.from,sex])/sum(five.year.age.groups[year,ages.from,sex])
+                                })
+                        })
+                })
+                
+                new.dim.names = list(year = mid.years,
+                                     age = names(POPULATION.AGE.MAPPING),
+                                     sex = deaths.sexes)
+        }
+        
+        dim(rv) = sapply(new.dim.names, length)
+        dimnames(rv) = new.dim.names
+        
+        rv
+        
 }
 
-# HOW WE SET UP PREVIOUSLY 
-# calculate.death.rates = function(data.manager,
-#                                  ages, #specify the model ages here - will have to pass in the model age upper and lower (see other function)
-#                                  sexes,
-#                                  year){
-#         
-#         # return a list, each value corresponds to rates; indexed age, sex
-#         # indexed age, sex
-#         
-#         rv = sapply(sexes, function(sex){
-#                 sapply(ages, function(age){
-#                         
-#                         #from surveillance manager, pull all the deaths for any surveillance age bracket that falls into given model age bracket
-#                         # (use code in ages file) - started a new generic function 
-#                         # pull the population for any ages that fall in the age bracket and any years in that period, then divide
-#                         
-#                         #outer sapply is columns; inner is rows
-#                         
-#                 })
-#         })
-#         
-# }
 
 # similar function for birth rates
 
@@ -418,6 +462,8 @@ get.initial.population = function(year,
                                   seed.to.sexes,
                                   seed.n){
     
+        # pull population from data manager; will need to get it into the correct age brackets (similar to sapply above for deaths)
+        
     #returns an array indexed age, sex, subgroup (hard code in one subgroup), hiv status
     # rv [,,,'hiv.negative'] = (population from the surveillance data in that year)
     

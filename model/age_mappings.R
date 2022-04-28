@@ -152,12 +152,12 @@ map.ages.by.cutoffs = function(target.lower, # surveillance lower
 }
 
 
-# GENERIC VERSION ##
-GENERIC.AGE.MAPPING = map.all.ages(data.manager = DATA.MANAGER,
-                                   data.type = "incidence") # testing this out with incidence - makes the same list as above
-
-# for population age brackets, have to reverse - combine surveillance into model age brackets (see below)
-POPULATION.AGE.MAPPING = map.population.ages(data.manager = DATA.MANAGER,
-                                             data.type = "population")
+# # GENERIC VERSION ##
+# GENERIC.AGE.MAPPING = map.all.ages(data.manager = DATA.MANAGER,
+#                                    data.type = "incidence") # testing this out with incidence - makes the same list as above
+# 
+# # for population age brackets, have to reverse - combine surveillance into model age brackets (see below)
+# POPULATION.AGE.MAPPING = map.population.ages(data.manager = DATA.MANAGER,
+#                                              data.type = "population")
 
 
