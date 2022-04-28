@@ -1,6 +1,3 @@
-#testing a commit 
-# new commit
-
 source('source_code.R')
 source('model/plots.R')
 
@@ -14,7 +11,7 @@ state.dim.names = list(age=parameters$AGES,
                        sex=parameters$SEXES,
                        subgroup=parameters$SUBGROUPS,
                        hiv.status=parameters$HIV.STATUS)
-initial.state = array(47000000, 
+initial.state = array(100000, 
                       dim = sapply(state.dim.names, length), 
                       dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
 
