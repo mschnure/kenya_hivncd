@@ -38,7 +38,7 @@ create.model.parameters <- function(age.cutoffs=MODEL.AGE.CUTOFFS,
 
 #-- Map all parameters --#
 map.model.parameters <- function(parameters,
-                                 sampled.parameters=c(birth.rates=0.01, 
+                                 sampled.parameters=c(#birth.rates=0.01, 
                                                       aging.rates=0.10,
                                                       hiv.mortality.rates.suppressed=0.01, 
                                                       hiv.mortality.rates.unsuppressed=0.02,
@@ -65,15 +65,20 @@ map.model.parameters <- function(parameters,
                                subgroup=parameters$SUBGROUPS)
     
     #-- BIRTH --# 
-    parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='FERTILITY.RATES',
-                                                  value = array(sampled.parameters['birth.rates'],
-                                                                dim=sapply(state.dim.names, length),
-                                                                dimnames=state.dim.names),
-                                                  time = 2000)
+    # starting with crude birth rate for now; can change to fertility rates or other options
+    births.age.sex = map.birth.rates(data.manager = DATA.MANAGER,
+                                     model.age.cutoffs = MODEL.AGE.CUTOFFS)
     
-    # call actual birth rates; start with crude birth rate; can change to fertility rates or other options
-    
+    for (year in dimnames(births.age.sex)$year){
+            rv = array(births.age.sex[year,,],
+                       dim = sapply(state.dim.names, length),
+                       dimnames = state.dim.names)
+            
+            parameters = add.time.varying.parameter.value(parameters,
+                                                          parameter.name='FERTILITY.RATES',
+                                                          value = rv,
+                                                          time = as.numeric(year))
+    }
     
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='MALE.BIRTHS',
@@ -117,19 +122,6 @@ map.model.parameters <- function(parameters,
                                                           value = rv,
                                                           time = as.numeric(year))
     }
-    
-    # Notes from 4/15 meeting
-    # Get array of death rates from below; for every year, call below function
-    # hydrate array up from 2D to 4D (including subgroup and HIV status)
-    #create an array by calling 2D array and then give dimnames/dimensions that I want - i.e., below 
-    
-    # for every value of the for loop, there will be a large array (for every year) 
-    
-    # big.array = array(small.array,
-    #                   dim = sapply(),
-    #                   dimnames = big.array.dim.names)
-    # 
-    
     
     #-- DIAGNOSES --#
     parameters = add.time.varying.parameter.value(parameters,
@@ -393,7 +385,6 @@ calculate.all.death.rates = function(data.manager,
                 }
         }
         
-        
         ## Divide deaths by population, mapping to model age brackets 
         if(length(keep.dimensions)==1){
                 rv = sapply(years.by.five, function(year){
@@ -452,7 +443,39 @@ calculate.all.death.rates = function(data.manager,
 
 
 # similar function for birth rates
+map.birth.rates = function(data.manager,
+                           model.age.cutoffs){
+        
+        years.by.five = data.manager$births$YEARS
+        start.years = as.numeric(substr(years.by.five,1,4))
+        end.years = as.numeric(substr(years.by.five,6,9))
+        mid.years = (start.years + (end.years-1))/2
 
+        POPULATION.AGE.MAPPING = map.population.ages(data.manager = data.manager,
+                                                     data.type = "population",
+                                                     model.age.cutoffs = model.age.cutoffs)
+        
+        ages = names(POPULATION.AGE.MAPPING)
+        sexes = c("male","female")
+        
+        full.dim.names = list(year = mid.years,
+                              age = ages,
+                              sex = sexes)
+        
+        ## Pull deaths
+        births = get.surveillance.data(data.manager = data.manager,
+                                       data.type = "births",
+                                       years = years.by.five,
+                                       keep.dimensions = 'year')
+        
+        
+        rv = array(births,
+                   dim = sapply(full.dim.names, length),
+                   dimnames = full.dim.names)
+
+        rv
+        
+}
 
 get.initial.population = function(year,
                                   data.manager,

@@ -154,6 +154,10 @@ read.surveillance.data = function(dir = 'data/raw_data'){
         rv$population$SUBGROUPS = dimnames(rv$incidence$subgroup)$subgroup ## NO POPULATION SUBGROUPS FOR NOW
         
         rv$births = read.birth.data.files(data.type = "population")
+        rv$births$YEARS = c("1950-1955","1955-1960","1960-1965","1965-1970","1970-1975","1975-1980","1980-1985","1985-1990",
+                            "1990-1995","1995-2000","2000-2005","2005-2010","2010-2015","2015-2020","2020-2025","2025-2030",
+                            "2030-2035","2035-2040","2040-2045","2045-2050","2050-2055","2055-2060","2060-2065","2065-2070",
+                            "2070-2075","2075-2080","2080-2085","2085-2090","2090-2095","2095-2100")
         
         rv$deaths = read.death.data.files(data.type = "population")
         rv$deaths$YEARS = c("1950 - 1955","1955 - 1960","1960 - 1965","1965 - 1970","1970 - 1975","1975 - 1980","1980 - 1985",
@@ -436,15 +440,11 @@ read.birth.data.files = function(dir = 'data/raw_data',
         
         rv = list()
         
-        births = array(as.numeric(df$CBR),
+        births = array((as.numeric(df$CBR)/1000),
                        dimnames = list(year = as.character(years)))
-                       
-        # deaths = array(as.numeric(df$CDR),
-        #                dimnames = list(year = as.character(years)))               
                                       
-        rv$births = births
-        # rv$deaths = deaths
-                                      
+        rv$total = births
+
         rv
 }
 
@@ -541,9 +541,4 @@ read.death.data.files = function(dir = 'data/raw_data',
         rv$age.sex = age.sex
         
         rv
-
-        
-        # Eventually, divide one period of deaths (e.g., deaths for 1950-1955) by the sum of the population from 1950-1954
-        # Could alternatively divide one period of deaths by 5 and then get individual-year death rates, but those aren't exact and probably not necessary
-        
 }
