@@ -2,7 +2,6 @@ source('source_code.R')
 source('model/plots.R')
 
 # Set up the parameters
-
 parameters = create.model.parameters()
 parameters = map.model.parameters(parameters)
 
@@ -11,9 +10,18 @@ state.dim.names = list(age=parameters$AGES,
                        sex=parameters$SEXES,
                        subgroup=parameters$SUBGROUPS,
                        hiv.status=parameters$HIV.STATUS)
-initial.state = array(100000, 
-                      dim = sapply(state.dim.names, length), 
-                      dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
+# initial.state = array(100000, 
+#                       dim = sapply(state.dim.names, length), 
+#                       dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
+
+initial.state = get.initial.population(year = "1970", 
+                                       data.manager = DATA.MANAGER, 
+                                       model.age.cutoffs = MODEL.AGE.CUTOFFS, 
+                                       ages = parameters$AGES, 
+                                       sexes = parameters$SEXES, 
+                                       seed.to.ages = c(4,5,6), 
+                                       seed.to.sexes = c(1,2), 
+                                       seed.n = 1)
 
 #function to get initial population for 1970 - can be in new file or parameters
 

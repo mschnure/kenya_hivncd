@@ -442,7 +442,7 @@ calculate.all.death.rates = function(data.manager,
 }
 
 
-# similar function for birth rates
+## Create birth rate array 
 map.birth.rates = function(data.manager,
                            model.age.cutoffs){
         
@@ -479,19 +479,60 @@ map.birth.rates = function(data.manager,
 
 get.initial.population = function(year,
                                   data.manager,
+                                  model.age.cutoffs,
                                   ages,
                                   sexes,
                                   seed.to.ages,
                                   seed.to.sexes,
                                   seed.n){
     
-        # pull population from data manager; will need to get it into the correct age brackets (similar to sapply above for deaths)
+        pop = get.surveillance.data(data.manager = data.manager,
+                                    data.type = "population",
+                                    years = 1970,
+                                    keep.dimensions = c('year','age','sex')) 
         
-    #returns an array indexed age, sex, subgroup (hard code in one subgroup), hiv status
-    # rv [,,,'hiv.negative'] = (population from the surveillance data in that year)
-    
-    rv[seed.to.ages,seed.to.sexes,,'undiagnosed'] = seed.n #puts n hiv cases in each of those brackets (probably middle age bracket, one male/female)
-    
+        pop.ages = dimnames(pop)$age
+        pop.ages = c(pop.ages[-length(pop.ages)],"100 and over")
+        dimnames(pop)$age = pop.ages
+        
+        POPULATION.AGE.MAPPING = map.population.ages(data.manager = data.manager,
+                                                     data.type = "population",
+                                                     model.age.cutoffs = model.age.cutoffs)
+
+        # sum up population from surveillance data in to correct model age brackets
+        initial.pop = sapply(sexes, function(sex){
+                sapply(1:length(POPULATION.AGE.MAPPING), function(age){
+                        age.to = names(POPULATION.AGE.MAPPING)[age] # names of mapping are the model ages - what I want to map TO
+                        ages.from = POPULATION.AGE.MAPPING[[age]] # list elements are the population ages - what I want to map FROM
+                        sum(pop[,ages.from,sex])
+                })
+        })
+
+        # correct the dimensions on initial.pop
+        new.dim.names = list(year = "1970",
+                             age = names(POPULATION.AGE.MAPPING),
+                             sex = sexes)
+        
+        dim(initial.pop) = sapply(new.dim.names, length)
+        dimnames(initial.pop) = new.dim.names
+        
+        # set up array for model, indexed [age,sex,subgroup,hiv status]
+        state.dim.names = list(age=parameters$AGES, 
+                               sex=parameters$SEXES,
+                               subgroup=parameters$SUBGROUPS,
+                               hiv.status=parameters$HIV.STATUS)
+        
+        rv = array(0,
+                   dim = sapply(state.dim.names, length),
+                   dimnames = state.dim.names)
+        
+        # add in initial population to hiv negative 
+        rv[,,,'hiv_negative'] = initial.pop
+        
+        #puts n hiv cases in each of those brackets (probably middle age bracket, one male/female)
+        rv[seed.to.ages,seed.to.sexes,,'undiagnosed'] = seed.n 
+        
+        rv
 }
 
 
