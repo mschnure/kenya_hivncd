@@ -28,8 +28,13 @@ sim$population[1,,,,]
 sim$years
 
 # sims=list(sim,sim1)
-# make this plot total population 
+
+# print(simplot.basic(sim,
+#                     years=c(2010:2020),
+#                     data.types = c("incidence","prevalence"))
+# )
+
 print(simplot.basic(sim,
-                    years=c(2010:2020),
-                    data.types = c("incidence","prevalence"))
+                    years=c(1970:2020),
+                    data.types = "population")
 )
