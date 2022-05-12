@@ -240,9 +240,7 @@ extract.population <- function(sim,
                                hiv.status = sim$HIV.STATUS,
                                keep.dimensions = 'year')
 {
-        
-        POPULATION.AGE.MAPPING = map.population.ages(data.manager = DATA.MANAGER,
-                                                     data.type = "population")
+
         do.extract.4D(
                 sim = sim,
                 arr = sim$population,
@@ -251,8 +249,7 @@ extract.population <- function(sim,
                 subgroups = subgroups,
                 sexes = sexes,
                 hiv.status = hiv.status,
-                keep.dimensions = keep.dimensions,
-                age.mapping = POPULATION.AGE.MAPPING
+                keep.dimensions = keep.dimensions
         )
         
 }
