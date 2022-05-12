@@ -125,38 +125,58 @@ compute.dx <- function(time,
     # x.from: strata that transmits HIV
     # for each 'x.to' strata, loop through all 'x.from' stratas and compute the new transmissions based on transmission rate, prevalence of HIV in the 'x.from' strata, and the proportion of partnerships between the two stratas
     
-        for (a.to in parameters$AGES)
-    {
-      for (s.to in parameters$SEXES)
+    # for loop - not actually using this (see other code below)
+    if(1==2){
+      
+      for (a.to in parameters$AGES)
       {
-        for (r.to in parameters$SUBGROUPS)
+        for (s.to in parameters$SEXES)
         {
-          for (a.from in parameters$AGES)
+          for (r.to in parameters$SUBGROUPS)
           {
-            for (s.from in parameters$SEXES)
+            for (a.from in parameters$AGES)
             {
-              for (r.from in parameters$SUBGROUPS)
+              for (s.from in parameters$SEXES)
               {
-                
-                      # does not depend on HIV status
-                      proportion.of.age.sex.subgroup.who.are.in.h = state[a.from, s.from, r.from,] / sum(state[a.from, s.from, r.from,])
-                      infectiousness = sum(proportion.of.age.sex.subgroup.who.are.in.h*pp$INFECTIOUSNESS.H[a.from, s.from, r.from,])
-                      
-                      dx.incidence[a.to, s.to, r.to] = dx.incidence[a.to, s.to, r.to] +
-                              pp$TRANSMISSION.RATES[a.to, s.to, r.to, a.from, s.from, r.from] * infectiousness
-                      # transmission rate depends on (age/sex, etc.) of both partnering strata, but does not depend on HIV status; 
-                      # infectiousness only depends on (age/sex, etc.) of infecting partner (i.e., suppression, awareness)
-                      
-                      # --> most interventions go into transmission rate 
-                      
+                for (r.from in parameters$SUBGROUPS)
+                {
+                  
+                  # does not depend on HIV status
+                  proportion.of.age.sex.subgroup.who.are.in.h = state[a.from, s.from, r.from,] / sum(state[a.from, s.from, r.from,])
+                  infectiousness = sum(proportion.of.age.sex.subgroup.who.are.in.h*pp$INFECTIOUSNESS.H[a.from, s.from, r.from,])
+                  
+                  dx.incidence[a.to, s.to, r.to] = dx.incidence[a.to, s.to, r.to] +
+                    pp$TRANSMISSION.RATES[a.to, s.to, r.to, a.from, s.from, r.from] * infectiousness # this is missing 'to' stratum size; fixed below
+                  # transmission rate depends on (age/sex, etc.) of both partnering strata, but does not depend on HIV status; 
+                  # infectiousness only depends on (age/sex, etc.) of infecting partner (i.e., suppression, awareness)
+                  
+                  # --> most interventions go into transmission rate 
+                  
+                }
               }
             }
           }
         }
       }
-    }
     
-        #-- NEW INFECTIONS --#
+    }
+
+    
+    total.in.each.stratum = rowSums(state, dims=3) #3D array indexed [age,sex,subgroup]
+    proportion.of.age.sex.subgroup.who.are.in.h = state/as.numeric(total.in.each.stratum) #4D array indexed [age,sex,subgroup,hiv status]
+    
+    # summing infectiousness in each strata of age, sex, subgroup based on proportion in each HIV category and infectiousness of that category
+    infectiousness.from = rowSums((proportion.of.age.sex.subgroup.who.are.in.h*pp$INFECTIOUSNESS.H), dims = 3) 
+    
+    # matrix math to multiply transmission rates (2D matrix of to's and from's) by infectiousness of from's
+    dx.incidence.rate = pp$TRANSMISSION.RATES %*% as.numeric(infectiousness.from)
+    
+    dx.incidence = state[,,,'hiv_negative'] * as.numeric(dx.incidence.rate)
+    
+    
+    
+    
+    #-- NEW INFECTIONS --#
     dx.state[,,,'hiv_negative'] = as.numeric(dx.state[,,,'hiv_negative']) - dx.incidence
     dx.state[,,,'undiagnosed'] = as.numeric(dx.state[,,,'undiagnosed']) + dx.incidence
     
