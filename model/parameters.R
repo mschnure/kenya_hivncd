@@ -49,7 +49,7 @@ map.model.parameters <- function(parameters,
                                                       suppressed.disengagement.rates=0.2,
                                                       suppression.rates=3,
                                                       unsuppression.rates=0.1,
-                                                      global.transmission.rate=0, #the average number of infections from one undiagnosed HIV+ person per year 
+                                                      global.transmission.rate=6, #the average number of infections from one undiagnosed HIV+ person per year 
                                                       relative.transmission.from.diagnosis=0.33
                                                       ))
 {
@@ -310,7 +310,7 @@ calculate.all.death.rates = function(data.manager,
                                      model.age.cutoffs){
         
         POPULATION.AGE.MAPPING = map.population.ages(data.manager = data.manager,
-                                                     data.type = "population",
+                                                     data.type = "population.full",
                                                      model.age.cutoffs = model.age.cutoffs)
         
         years.by.five = data.manager$deaths$YEARS
@@ -336,7 +336,7 @@ calculate.all.death.rates = function(data.manager,
         
         ## Pull population
         pop = get.surveillance.data(data.manager = data.manager,
-                                    data.type = "population",
+                                    data.type = "population.full",
                                     years = 1950:2020,
                                     keep.dimensions = keep.dimensions) 
         
@@ -412,7 +412,7 @@ calculate.all.death.rates = function(data.manager,
         
         if (setequal(keep.dimensions, c('year','age'))){
                 rv = sapply(1:length(POPULATION.AGE.MAPPING), function(age){
-                        sapply(years.by.five, function(year){
+                        sapply(1:length(years.by.five), function(year){
                                 age.to = names(POPULATION.AGE.MAPPING)[age] # names of mapping are the model ages - what I want to map TO
                                 ages.from = POPULATION.AGE.MAPPING[[age]] # list elements are the population ages - what I want to map FROM
                                 sum(deaths[year,ages.from])/sum(five.year.age.groups[year,ages.from])
@@ -425,7 +425,7 @@ calculate.all.death.rates = function(data.manager,
         
         if (setequal(keep.dimensions, c('year','sex')) ){
                 rv = sapply(deaths.sexes, function(sex){
-                        sapply(years.by.five, function(year){
+                        sapply(1:length(years.by.five), function(year){
                                 (deaths[year,sex])/(five.year.age.groups[year,sex])
                         })
                 })
@@ -437,7 +437,7 @@ calculate.all.death.rates = function(data.manager,
         if (setequal(keep.dimensions, c('year','age','sex'))){
                 rv = sapply(deaths.sexes, function(sex){
                         sapply(1:length(POPULATION.AGE.MAPPING), function(age){
-                                sapply(years.by.five, function(year){
+                                sapply(1:length(years.by.five), function(year){
                                         age.to = names(POPULATION.AGE.MAPPING)[age] # names of mapping are the model ages - what I want to map TO
                                         ages.from = POPULATION.AGE.MAPPING[[age]] # list elements are the population ages - what I want to map FROM
                                         sum(deaths[year,ages.from,sex])/sum(five.year.age.groups[year,ages.from,sex])
@@ -468,7 +468,7 @@ map.birth.rates = function(data.manager,
         mid.years = (start.years + (end.years-1))/2
 
         POPULATION.AGE.MAPPING = map.population.ages(data.manager = data.manager,
-                                                     data.type = "population",
+                                                     data.type = "population.full",
                                                      model.age.cutoffs = model.age.cutoffs)
         
         ages = names(POPULATION.AGE.MAPPING)
@@ -503,7 +503,7 @@ get.initial.population = function(year,
                                   seed.n){
     
         pop = get.surveillance.data(data.manager = data.manager,
-                                    data.type = "population",
+                                    data.type = "population.full",
                                     years = 1970,
                                     keep.dimensions = c('year','age','sex')) 
         
@@ -512,7 +512,7 @@ get.initial.population = function(year,
         dimnames(pop)$age = pop.ages
         
         POPULATION.AGE.MAPPING = map.population.ages(data.manager = data.manager,
-                                                     data.type = "population",
+                                                     data.type = "population.full",
                                                      model.age.cutoffs = model.age.cutoffs)
 
         # sum up population from surveillance data in to correct model age brackets
