@@ -49,7 +49,7 @@ map.model.parameters <- function(parameters,
                                                       suppressed.disengagement.rates=0.2,
                                                       suppression.rates=3,
                                                       unsuppression.rates=0.1,
-                                                      global.transmission.rate=60000,
+                                                      global.transmission.rate=0, #the average number of infections from one undiagnosed HIV+ person per year 
                                                       relative.transmission.from.diagnosis=0.33
                                                       ))
 {
@@ -60,9 +60,13 @@ map.model.parameters <- function(parameters,
                            subgroup=parameters$SUBGROUPS,
                            hiv.status=parameters$HIV.STATUS)
     
+    n.states = prod(sapply(state.dim.names, length))
+    
     trans.dim.names = list(age=parameters$AGES, 
-                               sex=parameters$SEXES,
-                               subgroup=parameters$SUBGROUPS)
+                           sex=parameters$SEXES,
+                           subgroup=parameters$SUBGROUPS)
+    
+    n.trans.states = prod(sapply(trans.dim.names, length))
     
     #-- BIRTH --# 
     # starting with crude birth rate for now; can change to fertility rates or other options
@@ -131,6 +135,15 @@ map.model.parameters <- function(parameters,
                                                                 dimnames=trans.dim.names),
                                                   time = 2000)
     
+    # Add more testing rates (e.g., testing.rates.1) to have splines - same thing for suppression; engagement
+    # parameters = add.time.varying.parameter.value(parameters,
+    #                                               parameter.name='TESTING.RATES',
+    #                                               value = array(sampled.parameters['testing.rates'],
+    #                                                             dim=sapply(trans.dim.names, length),
+    #                                                             dimnames=trans.dim.names),
+    #                                               time = 2000)
+    
+    
     #-- NEW INFECTIONS --#
     transmission.dim.names = list(age.to=parameters$AGES, 
                                   sex.to=parameters$SEXES,
@@ -139,9 +152,12 @@ map.model.parameters <- function(parameters,
                                   sex.from=parameters$SEXES,
                                   subgroup.from=parameters$SUBGROUPS)
     
-    transmission.rates = array(sampled.parameters['global.transmission.rate']/length(parameters$AGES)/length(parameters$SEXES)/length(parameters$SUBGROUPS),
+    transmission.rates = array(sampled.parameters['global.transmission.rate']/n.trans.states,
                                dim=sapply(transmission.dim.names, length),
                                dimnames=transmission.dim.names)
+    
+    dim(transmission.rates) = c(n.trans.states, n.trans.states)
+    transmission.rates = as.matrix(transmission.rates)
     
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='TRANSMISSION.RATES',
