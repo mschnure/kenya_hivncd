@@ -36,7 +36,7 @@ sim$years
 # sims=list(sim,sim1)
 
 print(simplot.basic(sim,
-                    years=c(1970:2020),
+                    years=c(2000:2020),
                     data.types = c("incidence","prevalence"))
 )
 
@@ -44,3 +44,7 @@ print(simplot.basic(sim,
                     years=c(1970:2020),
                     data.types = "population")
 )
+
+print(simplot(sim, 
+              years=c(1970:2020),
+              data.types = "population", facet.by = 'age'))
