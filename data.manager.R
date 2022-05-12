@@ -144,14 +144,23 @@ read.surveillance.data = function(dir = 'data/raw_data'){
         rv$prevalence$SEXES = c('male','female')
         rv$prevalence$SUBGROUPS = dimnames(rv$prevalence$subgroup)$subgroup
         
-        rv$population = read.population.data.files(data.type = "population")
-        rv$population$AGES = c('0-4', '5-9','10-14','15-19','20-24','25-29','30-34',
-                               '35-39','40-44','45-49','50-54','55-59','60-64','65-69',
-                               '70-74','75-79','80-84','85-89','90-94','95-99','100+')
-        rv$population$AGE.LOWERS = c(0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100)
-        rv$population$AGE.UPPERS = c(5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,Inf)
+        # Population data aggregated into model age groups 
+        rv$population = read.population.data.files.model.ages(data.type = "population", model.age.cutoffs = MODEL.AGE.CUTOFFS)
+        rv$population$AGES = c("0-9","10-14","15-19","20-24","25-29","30-39","40-49","50-59","60-69","70-79","80 and over")
+        rv$population$AGE.LOWERS = c(0,10,15,20,25,30,40,50,60,70,80)
+        rv$population$AGE.UPPERS = c(10,15,20,25,30,40,50,60,70,80,Inf)
         rv$population$SEXES = c('male','female')
         rv$population$SUBGROUPS = dimnames(rv$incidence$subgroup)$subgroup ## NO POPULATION SUBGROUPS FOR NOW
+        
+        # Full population data
+        rv$population.full = read.population.data.files.all.ages(data.type = "population")
+        rv$population.full$AGES = c('0-4', '5-9','10-14','15-19','20-24','25-29','30-34',
+                               '35-39','40-44','45-49','50-54','55-59','60-64','65-69',
+                               '70-74','75-79','80-84','85-89','90-94','95-99','100 and over')
+        rv$population.full$AGE.LOWERS = c(0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100)
+        rv$population.full$AGE.UPPERS = c(5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,Inf)
+        rv$population.full$SEXES = c('male','female')
+        rv$population.full$SUBGROUPS = dimnames(rv$incidence$subgroup)$subgroup ## NO POPULATION SUBGROUPS FOR NOW
         
         rv$births = read.birth.data.files(data.type = "population")
         rv$births$YEARS = c("1950-1955","1955-1960","1960-1965","1965-1970","1970-1975","1975-1980","1980-1985","1985-1990",
@@ -331,8 +340,142 @@ read.surveillance.data.files = function(dir = 'data/raw_data',
 }
 
 
-#### Read population data (lowest-level function) ####
-read.population.data.files = function(dir = 'data/raw_data',
+#### Read population data - KEEP MODEL AGE GROUPS ONLY (lowest-level function) ####
+read.population.data.files.model.ages = function(dir = 'data/raw_data',
+                                               data.type = "population",
+                                               model.age.cutoffs)
+{
+        POPULATION.AGE.MAPPING = POPULATION.AGE.MAPPING.HARD.CODE # can't use below function because it calls the datamanager
+        
+        # POPULATION.AGE.MAPPING = map.population.ages(data.manager = data.manager,
+        #                                              data.type = "population",
+        #                                              model.age.cutoffs = model.age.cutoffs)
+        
+        sub.dir = file.path(dir, data.type)
+        
+        files = list.files(file.path(sub.dir))
+        
+        pop.file = "PopulationByAgeSex"
+        file = files[grepl(pop.file,files)]
+        
+        if (length(file)!=1)
+                stop("can only pull one file at a time")
+        
+        df = read.csv(file.path(sub.dir,file))
+        df = df[df$Location=="Kenya",]
+        years = as.numeric(unique(df$Time))
+        ages = unique(df$AgeGrp)
+        ages = c(ages[-length(ages)],"100 and over")
+        
+        
+        df$AgeGrp = factor(df$AgeGrp, levels = ages)
+        df.sorted = df[order(df$AgeGrp),]
+        
+        ## Age array
+        age.dim.names = list(year = as.character(years),
+                             age = ages)
+        
+        age.full = array(0,
+                         dim = sapply(age.dim.names, length), 
+                         dimnames = age.dim.names)
+        
+        age.full[] = as.numeric(df.sorted[,"PopTotal"])*1000
+        
+        # MAP TO MODEL AGES
+        age = sapply(1:length(POPULATION.AGE.MAPPING), function(a){
+                sapply(1:length(years), function(y){
+                        age.to = names(POPULATION.AGE.MAPPING)[a] # names of mapping are the model ages - what I want to map TO
+                        ages.from = POPULATION.AGE.MAPPING[[a]] # list elements are the population ages - what I want to map FROM
+                        sum(age.full[y,ages.from])
+                })
+        })
+        
+        dimnames(age) = list(year = as.character(years),
+                             age = names(POPULATION.AGE.MAPPING))
+        
+        
+        ## Total array
+        total = array(rowSums(age),
+                      dimnames = list(year = as.character(years)))
+        
+        ## Age.Sex array
+        sexes = c("male","female")
+        age.sex.dim.names = list(year = as.character(years),
+                                 age = names(POPULATION.AGE.MAPPING),
+                                 sex = sexes)
+        
+        male.age.full = array(0,
+                              dim = sapply(age.dim.names, length), 
+                              dimnames = age.dim.names)
+        
+        male.age.full[] = as.numeric(df.sorted[,"PopMale"])*1000
+        
+        # MAP TO MODEL AGES
+        male.age = sapply(1:length(POPULATION.AGE.MAPPING), function(a){
+                sapply(1:length(years), function(y){
+                        age.to = names(POPULATION.AGE.MAPPING)[a] # names of mapping are the model ages - what I want to map TO
+                        ages.from = POPULATION.AGE.MAPPING[[a]] # list elements are the population ages - what I want to map FROM
+                        sum(male.age.full[y,ages.from])
+                })
+        })
+        
+        dimnames(male.age) = list(year = as.character(years),
+                                  age = names(POPULATION.AGE.MAPPING))
+        
+        female.age.full = array(0,
+                                dim = sapply(age.dim.names, length), 
+                                dimnames = age.dim.names)
+        
+        female.age.full[] = as.numeric(df.sorted[,"PopFemale"])*1000
+        
+        # MAP TO MODEL AGES
+        female.age = sapply(1:length(POPULATION.AGE.MAPPING), function(a){
+                sapply(1:length(years), function(y){
+                        age.to = names(POPULATION.AGE.MAPPING)[a] # names of mapping are the model ages - what I want to map TO
+                        ages.from = POPULATION.AGE.MAPPING[[a]] # list elements are the population ages - what I want to map FROM
+                        sum(female.age.full[y,ages.from])
+                })
+        })
+        
+        dimnames(female.age) = list(year = as.character(years),
+                                    age = names(POPULATION.AGE.MAPPING))
+        
+        age.sex = array(0,
+                        dim = sapply(age.sex.dim.names, length), 
+                        dimnames = age.sex.dim.names)
+        
+        age.sex[,,"male"] = male.age
+        age.sex[,,"female"] = female.age
+        
+        ## Sex array
+        male = array(rowSums(male.age),
+                     dimnames = list(year = as.character(years)))
+        
+        female = array(rowSums(female.age),
+                       dimnames = list(year = as.character(years)))
+        
+        sex.dim.names = list(year = as.character(years),
+                             sex = sexes)
+        
+        sex = array(0,
+                    dim = sapply(sex.dim.names, length), 
+                    dimnames = sex.dim.names)
+        
+        sex[,"male"] = male
+        sex[,"female"] = female
+        
+        ## Returns a list
+        rv = list()
+        rv$total = total
+        rv$age = age
+        rv$sex = sex
+        rv$age.sex = age.sex
+        
+        rv
+}
+
+#### Read population data - KEEP ALL AGE GROUPS (lowest-level function) ####
+read.population.data.files.all.ages = function(dir = 'data/raw_data',
                                       data.type = "population")
 {
         sub.dir = file.path(dir, data.type)
@@ -349,6 +492,7 @@ read.population.data.files = function(dir = 'data/raw_data',
         df = df[df$Location=="Kenya",]
         years = unique(df$Time)
         ages = unique(df$AgeGrp)
+        ages = c(ages[-length(ages)],"100 and over")
         
         df$AgeGrp = factor(df$AgeGrp, levels = ages)
         df.sorted = df[order(df$AgeGrp),]
