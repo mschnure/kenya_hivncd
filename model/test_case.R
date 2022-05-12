@@ -23,8 +23,6 @@ initial.state = get.initial.population(year = "1970",
                                        seed.to.sexes = c(1,2), 
                                        seed.n = 1)
 
-#function to get initial population for 1970 - can be in new file or parameters
-
 # Run it
 sim = run.model(parameters=parameters,
               initial.state=initial.state,
@@ -37,10 +35,10 @@ sim$years
 
 # sims=list(sim,sim1)
 
-# print(simplot.basic(sim,
-#                     years=c(2010:2020),
-#                     data.types = c("incidence","prevalence"))
-# )
+print(simplot.basic(sim,
+                    years=c(1970:2020),
+                    data.types = c("incidence","prevalence"))
+)
 
 print(simplot.basic(sim,
                     years=c(1970:2020),
