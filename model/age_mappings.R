@@ -42,6 +42,21 @@ MODEL.TO.SURVEILLANCE.AGE.MAPPING = list(
         "50 and over" = c("50-59","60-69","70-79","80 and over")
 )
 
+
+POPULATION.AGE.MAPPING.HARD.CODE = list(
+        "0-9" = c("0-4","5-9"),
+        "10-14" = c("10-14"),
+        "15-19" = c("15-19"),
+        "20-24" = c("20-24"),
+        "25-29" = c("25-29"),
+        "30-39" = c("30-34", "35-39"),
+        "40-49" = c("40-44","45-49"),
+        "50-59" = c("50-54","55-59"),
+        "60-69" = c("60-64","65-69"),
+        "70-79" = c("70-74","75-79"),
+        "80 and over" = c("80-84","85-89","90-94","95-99","100 and over")
+)
+
 map.ages = function(to.map,
                     mapping = MODEL.TO.SURVEILLANCE.AGE.MAPPING,
                     map.to.options = unique(unlist(mapping))){
