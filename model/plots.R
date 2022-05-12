@@ -22,8 +22,8 @@ simplot = function(...,
                    data.types = c('incidence','prevalence'),
                    facet.by = NULL,
                    split.by = NULL,
-                   ages = data.manager[[data.types]]$AGES, #use what's in the data as the default
-                   sexes = data.manager[[data.types]]$SEXES
+                   ages = data.manager[[data.types[1]]]$AGES, #use what's in the data as the default - there is a problem here if you have multiple data types
+                   sexes = data.manager[[data.types[1]]]$SEXES
                    #subgroups = data.manager$SUBGROUPS
                    ){
         
