@@ -39,7 +39,7 @@ create.model.parameters <- function(age.cutoffs=MODEL.AGE.CUTOFFS,
 #-- Map all parameters --#
 map.model.parameters <- function(parameters,
                                  sampled.parameters=c(#birth.rates=0.01, 
-                                                      aging.rates=0.10,
+                                                      # aging.rates=0.10, #changed this to be dynamic; 1/age span
                                                       hiv.mortality.rates.suppressed=0.01, 
                                                       hiv.mortality.rates.unsuppressed=0.02,
                                                       # non.hiv.mortality.rates=0.01, 
@@ -90,12 +90,16 @@ map.model.parameters <- function(parameters,
                                                   time = 2000)
     
     #-- AGING --#
+    
+    aging.rates = array((1/parameters$AGE.SPANS),
+                        dim=sapply(state.dim.names, length),
+                        dimnames=state.dim.names)
+    
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='AGING.RATES',
-                                                  value = array(sampled.parameters['aging.rates'],
-                                                                dim=sapply(state.dim.names, length),
-                                                                dimnames=state.dim.names),
+                                                  value = aging.rates,
                                                   time = 2000)
+    
     
     #-- MORTALITY --#
     HIV.MORTALITY.RATES=array(0, #assume 0 for non-hiv states
@@ -115,7 +119,29 @@ map.model.parameters <- function(parameters,
     deaths.age.sex = calculate.all.death.rates(data.manager = DATA.MANAGER, 
                                                keep.dimensions = c('year','sex','age'), 
                                                model.age.cutoffs = MODEL.AGE.CUTOFFS)
-    
+
+    if(1==2){
+        
+        anchor.year = 2020
+        years = as.numeric(dimnames(deaths.age.sex)$year) - anchor.year
+        
+        desired.years = c(years,max(years)+c(5,10)) # future years to predict; redefine this in absolute years then shift 
+        
+        mask = rep(T,length(years)) # can use this to remove years
+        
+        smooth.deaths.age.sex = apply(deaths.age.sex,c('sex','age'),function(rates){
+            
+            fit = lm(log(rates[mask]) ~ years[mask]) # can change from log, which years, etc.
+        
+            exp(fit$coefficients[1] + fit$coefficients[2]*desired.years) #gives projections; exponentiate if log
+                
+        })
+        
+        dim(smooth.deaths.age.sex) # will need to set this to the correct years, ages, sexes
+        
+        
+    }
+        
     for (year in dimnames(deaths.age.sex)$year){
             rv = array(deaths.age.sex[year,,],
                        dim = sapply(state.dim.names, length),
@@ -126,6 +152,8 @@ map.model.parameters <- function(parameters,
                                                           value = rv,
                                                           time = as.numeric(year))
     }
+    
+    
     
     #-- DIAGNOSES --#
     parameters = add.time.varying.parameter.value(parameters,
