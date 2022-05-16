@@ -48,3 +48,17 @@ print(simplot.basic(sim,
 print(simplot(sim, 
               years=c(1970:2020),
               data.types = "population", facet.by = 'age'))
+
+# code for testing births/deaths 
+if (1==2){
+        births.test = sapply(parameters$time.varying.parameters$FERTILITY.RATES$values, function(z){z[1]})
+        qplot(1:30,births.test)+ylim(0,NA) # testing out births plot
+        qplot(1:30,log(births.test)) # log transformed births 
+        logit = function(p){log(p)-log(1-p)} 
+        qplot(1:30,logit(births.test)) # logit births 
+        qplot(1:30,logit(births.test/.06)) # relative to max birth rate 
+        
+        deaths.test = sapply(parameters$time.varying.parameters$NON.HIV.MORTALITY.RATES$values, function(z){z[,1,1,1]})
+        qplot(1:14,deaths.test[1,])+ylim(0,NA) # testing out deaths plot; 1st age group only (11 age groups total)
+        qplot(1:14,log(deaths.test[1,])) # log transformed deaths
+}
