@@ -162,12 +162,23 @@ read.surveillance.data = function(dir = 'data/raw_data'){
         rv$population.full$SEXES = c('male','female')
         rv$population.full$SUBGROUPS = dimnames(rv$incidence$subgroup)$subgroup ## NO POPULATION SUBGROUPS FOR NOW
         
+        # Age-specific fertility rate 
+        rv$fertility = read.fertility.data.files(data.type = "population")
+        rv$fertility$YEARS = c("1953","1958","1963","1968","1973","1978","1983","1988","1993","1998","2003",
+                               "2008","2013","2018","2023","2028","2033","2038","2043","2048","2053","2058",
+                               "2063","2068","2073","2078","2083","2088","2093","2098")
+        rv$fertility$AGES = c("15-19","20-24","25-29","30-39","40-49")
+        rv$fertility$AGE.LOWERS = c(15,20,25,30,40)
+        rv$fertility$AGE.UPPERS = c(20,25,30,40,50)
+        
+        # Crude birth rate
         rv$births = read.birth.data.files(data.type = "population")
         rv$births$YEARS = c("1950-1955","1955-1960","1960-1965","1965-1970","1970-1975","1975-1980","1980-1985","1985-1990",
                             "1990-1995","1995-2000","2000-2005","2005-2010","2010-2015","2015-2020","2020-2025","2025-2030",
                             "2030-2035","2035-2040","2040-2045","2045-2050","2050-2055","2055-2060","2060-2065","2065-2070",
                             "2070-2075","2075-2080","2080-2085","2085-2090","2090-2095","2095-2100")
         
+        #Deaths
         rv$deaths = read.death.data.files(data.type = "population")
         rv$deaths$YEARS = c("1950 - 1955","1955 - 1960","1960 - 1965","1965 - 1970","1970 - 1975","1975 - 1980","1980 - 1985",
                             "1985 - 1990","1990 - 1995","1995 - 2000","2000 - 2005","2005 - 2010","2010 - 2015","2015 - 2020")
@@ -564,15 +575,15 @@ read.population.data.files.all.ages = function(dir = 'data/raw_data',
 }
 
 
-#### Read birth data (lowest-level function) ####
-read.birth.data.files = function(dir = 'data/raw_data',
-                           data.type = "population")
+#### Read age-specific fertility rate (lowest-level function) ####
+read.fertility.data.files = function(dir = 'data/raw_data',
+                                     data.type = "population")
 {
         sub.dir = file.path(dir, data.type)
         
         files = list.files(file.path(sub.dir))
         
-        pop.file = "Period_Indicators"
+        pop.file = "Fertility"
         file = files[grepl(pop.file,files)]
         
         if (length(file)!=1)
@@ -580,17 +591,34 @@ read.birth.data.files = function(dir = 'data/raw_data',
         
         df = read.csv(file.path(sub.dir,file))
         df = df[df$Location=="Kenya",]
-        years = unique(df$Time)
+        years = unique(df$MidPeriod)
+        ages = unique(df$AgeGrp)
+        
+        # reverse dim order so that array fills correctly (will transpose later)
+        dim.names = list(age = ages,
+                         year = as.character(years))
+        
+        fertility.rate = array(df$ASFR/1000,
+                               dim = sapply(dim.names, length),
+                               dimnames = dim.names)
+        
+        fertility.rate = t(fertility.rate) # transpose so that year dimension is now first
+        
+        # combine 30-34 and 35-39 into 30-39; same for 40-49
+        ages.new = c(ages[1:3], "30-39","40-49")
+        new.dim.names = list(year = as.character(years),
+                             age = ages.new)
+        
+        fertility.rate.new = array(c(fertility.rate[,c(1:3)],(fertility.rate[,4]+fertility.rate[,5])/2,(fertility.rate[,6]+fertility.rate[,7])/2),
+                                 dim = sapply(new.dim.names, length),
+                                 dimnames = new.dim.names)
         
         rv = list()
+        rv$age = fertility.rate.new
         
-        births = array((as.numeric(df$CBR)/1000),
-                       dimnames = list(year = as.character(years)))
-                                      
-        rv$total = births
-
         rv
 }
+
 
 
 #### Read death data (lowest-level function) ####
@@ -615,7 +643,6 @@ read.death.data.files = function(dir = 'data/raw_data',
         
         years = unique(df$Time)
 
-        
         ## Age array
         age.dim.names = list(year = as.character(years),
                              age = ages)
@@ -683,6 +710,35 @@ read.death.data.files = function(dir = 'data/raw_data',
         rv$age = age
         rv$sex = sex
         rv$age.sex = age.sex
+        
+        rv
+}
+
+
+#### Read crude birth rate (lowest-level function) ####
+read.birth.data.files = function(dir = 'data/raw_data',
+                                 data.type = "population")
+{
+        sub.dir = file.path(dir, data.type)
+        
+        files = list.files(file.path(sub.dir))
+        
+        pop.file = "Period_Indicators"
+        file = files[grepl(pop.file,files)]
+        
+        if (length(file)!=1)
+                stop("can only pull one file at a time")
+        
+        df = read.csv(file.path(sub.dir,file))
+        df = df[df$Location=="Kenya",]
+        years = unique(df$Time)
+        
+        rv = list()
+        
+        births = array((as.numeric(df$CBR)/1000),
+                       dimnames = list(year = as.character(years)))
+        
+        rv$total = births
         
         rv
 }
