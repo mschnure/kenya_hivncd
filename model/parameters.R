@@ -40,18 +40,19 @@ create.model.parameters <- function(age.cutoffs=MODEL.AGE.CUTOFFS,
 map.model.parameters <- function(parameters,
                                  sampled.parameters=c(#birth.rates=0.01, 
                                                       # aging.rates=0.10, #changed this to be dynamic; 1/age span
-                                                      hiv.mortality.rates.suppressed=0.01, 
-                                                      hiv.mortality.rates.unsuppressed=0.02,
-                                                      # non.hiv.mortality.rates=0.01, 
-                                                      testing.rates=1.5, 
-                                                      engagement.rates=3,
-                                                      unsuppressed.disengagement.rates=0.2,
-                                                      suppressed.disengagement.rates=0.2,
-                                                      suppression.rates=3,
-                                                      unsuppression.rates=0.1,
-                                                      global.transmission.rate=6, #the average number of infections from one undiagnosed HIV+ person per year 
-                                                      relative.transmission.from.diagnosis=0.33
-                                                      ))
+                                     fertility.multiplier=1.2,
+                                     hiv.mortality.rates.suppressed=0.01, 
+                                     hiv.mortality.rates.unsuppressed=0.02,
+                                     # non.hiv.mortality.rates=0.01, 
+                                     testing.rates=1.5, 
+                                     engagement.rates=3,
+                                     unsuppressed.disengagement.rates=0.2,
+                                     suppressed.disengagement.rates=0.2,
+                                     suppression.rates=3,
+                                     unsuppression.rates=0.1,
+                                     global.transmission.rate=6, #the average number of infections from one undiagnosed HIV+ person per year 
+                                     relative.transmission.from.diagnosis=0.33
+                                 ))
 {
     
     #-- SET UP DIMENSIONS --#
@@ -69,11 +70,39 @@ map.model.parameters <- function(parameters,
     n.trans.states = prod(sapply(trans.dim.names, length))
     
     #-- BIRTH --# 
-    # starting with crude birth rate for now; can change to fertility rates or other options
-    births.age.sex = map.birth.rates(data.manager = DATA.MANAGER,
-                                     model.age.cutoffs = MODEL.AGE.CUTOFFS)
     
-    for (year in dimnames(births.age.sex)$year){
+    age.specific.fertility = get.surveillance.data(data.manager = DATA.MANAGER, 
+                                                   data.type = "fertility", 
+                                                   years = DATA.MANAGER$fertility$YEARS, 
+                                                   keep.dimensions = 'age')
+    
+    full.dim.names = list(year = DATA.MANAGER$fertility$YEARS,
+                          age = parameters$AGES,
+                          sex = parameters$SEXES)
+    
+    all.fertility = array(0,
+                          dim = sapply(full.dim.names, length),
+                          dimnames = full.dim.names)
+    
+    all.fertility[,dimnames(age.specific.fertility)$age,"female"] = age.specific.fertility
+    
+    for (year in dimnames(all.fertility)$year){
+            rv = array(all.fertility[year,,]*sampled.parameters["fertility.multiplier"], #added a tuning parameter to match population
+                       dim = sapply(state.dim.names, length),
+                       dimnames = state.dim.names)
+
+        parameters = add.time.varying.parameter.value(parameters,
+                                                      parameter.name='FERTILITY.RATES',
+                                                      value = rv,
+                                                      time = as.numeric(year))
+    }
+    
+    # old version - crude birth rate for entire population
+    if(1==2){
+        births.age.sex = map.birth.rates(data.manager = DATA.MANAGER,
+                                         model.age.cutoffs = MODEL.AGE.CUTOFFS)
+        
+        for (year in dimnames(births.age.sex)$year){
             rv = array(births.age.sex[year,,],
                        dim = sapply(state.dim.names, length),
                        dimnames = state.dim.names)
@@ -82,8 +111,10 @@ map.model.parameters <- function(parameters,
                                                           parameter.name='FERTILITY.RATES',
                                                           value = rv,
                                                           time = as.numeric(year))
+        }
     }
     
+
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='MALE.BIRTHS',
                                                   value = 0.5,
@@ -120,7 +151,7 @@ map.model.parameters <- function(parameters,
                                                keep.dimensions = c('year','sex','age'), 
                                                model.age.cutoffs = MODEL.AGE.CUTOFFS)
 
-    if(1==2){
+    if(1==2){ #setting up code to smooth/project death rate into future 
         
         anchor.year = 2020
         years = as.numeric(dimnames(deaths.age.sex)$year) - anchor.year
@@ -486,7 +517,7 @@ calculate.all.death.rates = function(data.manager,
 }
 
 
-## Create birth rate array 
+## Create crude birth rate array
 map.birth.rates = function(data.manager,
                            model.age.cutoffs){
         
