@@ -41,6 +41,7 @@ map.model.parameters <- function(parameters,
                                  sampled.parameters=c(#birth.rates=0.01, 
                                                       # aging.rates=0.10, #changed this to be dynamic; 1/age span
                                      fertility.multiplier=1.2,
+                                     over.80.mortality.multiplier=1.5,
                                      hiv.mortality.rates.suppressed=0.01, 
                                      hiv.mortality.rates.unsuppressed=0.02,
                                      # non.hiv.mortality.rates=0.01, 
@@ -177,6 +178,9 @@ map.model.parameters <- function(parameters,
             rv = array(deaths.age.sex[year,,],
                        dim = sapply(state.dim.names, length),
                        dimnames = state.dim.names)
+            
+            # tune 80+ mortality
+            rv["80 and over",,,] = rv["80 and over",,,]*sampled.parameters["over.80.mortality.multiplier"]
             
             parameters = add.time.varying.parameter.value(parameters,
                                                           parameter.name='NON.HIV.MORTALITY.RATES',
