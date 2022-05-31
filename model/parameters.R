@@ -35,25 +35,27 @@ create.model.parameters <- function(age.cutoffs=MODEL.AGE.CUTOFFS,
     parameters  
 }
 
+get.default.parameters = function()
+{
+    rv = c(fertility.multiplier=1.2,
+           over.80.mortality.multiplier=1.5,
+           hiv.mortality.rates.suppressed=0.01, 
+           hiv.mortality.rates.unsuppressed=0.02,
+           # non.hiv.mortality.rates=0.01, 
+           testing.rates=1.5, 
+           engagement.rates=3,
+           unsuppressed.disengagement.rates=0.2,
+           suppressed.disengagement.rates=0.2,
+           suppression.rates=3,
+           unsuppression.rates=0.1,
+           global.transmission.rate=6, #the average number of infections from one undiagnosed HIV+ person per year 
+           relative.transmission.from.diagnosis=0.33) #repeat this
+}
+
 
 #-- Map all parameters --#
 map.model.parameters <- function(parameters,
-                                 sampled.parameters=c(#birth.rates=0.01, 
-                                                      # aging.rates=0.10, #changed this to be dynamic; 1/age span
-                                     fertility.multiplier=1.2,
-                                     over.80.mortality.multiplier=1.5,
-                                     hiv.mortality.rates.suppressed=0.01, 
-                                     hiv.mortality.rates.unsuppressed=0.02,
-                                     # non.hiv.mortality.rates=0.01, 
-                                     testing.rates=1.5, 
-                                     engagement.rates=3,
-                                     unsuppressed.disengagement.rates=0.2,
-                                     suppressed.disengagement.rates=0.2,
-                                     suppression.rates=3,
-                                     unsuppression.rates=0.1,
-                                     global.transmission.rate=6, #the average number of infections from one undiagnosed HIV+ person per year 
-                                     relative.transmission.from.diagnosis=0.33
-                                 ))
+                                 sampled.parameters=get.default.parameters())
 {
     
     #-- SET UP DIMENSIONS --#
