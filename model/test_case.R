@@ -59,6 +59,10 @@ if (1==2){
         qplot(1:30,logit(births.test/.06)) # relative to max birth rate 
         
         deaths.test = sapply(parameters$time.varying.parameters$NON.HIV.MORTALITY.RATES$values, function(z){z[,1,1,1]})
-        qplot(1:14,deaths.test[1,])+ylim(0,NA) # testing out deaths plot; 1st age group only (11 age groups total)
-        qplot(1:14,log(deaths.test[1,])) # log transformed deaths
+        deaths.years = parameters$time.varying.parameters$NON.HIV.MORTALITY.RATES$times
+        qplot(deaths.years[6:14],deaths.test[1,6:14], xlab = "year")+ylim(0,NA) # testing out deaths plot; 1st age group only (11 age groups total)
+        qplot(1:14,log(deaths.test[2,])) # log transformed deaths
+        
+        #AIDS mortality
+        qplot(1990:2020, DATA.MANAGER$AIDSmortality, xlab = "year")
 }

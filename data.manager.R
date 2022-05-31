@@ -144,6 +144,8 @@ read.surveillance.data = function(dir = 'data/raw_data'){
         rv$prevalence$SEXES = c('male','female')
         rv$prevalence$SUBGROUPS = dimnames(rv$prevalence$subgroup)$subgroup
         
+        rv$AIDSmortality = read.surveillance.data.files(data.type = "AIDS mortality", age = "All")
+        
         # Population data aggregated into model age groups 
         rv$population = read.population.data.files.model.ages(data.type = "population", model.age.cutoffs = MODEL.AGE.CUTOFFS)
         rv$population$AGES = c("0-9","10-14","15-19","20-24","25-29","30-39","40-49","50-59","60-69","70-79","80 and over")
@@ -324,7 +326,7 @@ read.surveillance.data.files = function(dir = 'data/raw_data',
         dim.names.total = list(year=as.character(paste0(years, suffix))
         )
         
-        total =  array(as.integer(gsub(" ","",one.df.t[paste0(years, suffix),ncol(one.df.t)])),
+        total =  array(as.numeric(gsub(" ","",one.df.t[paste0(years, suffix),ncol(one.df.t)])),
                        dim = sapply(dim.names.total, length), 
                        dimnames = dim.names.total)
         
