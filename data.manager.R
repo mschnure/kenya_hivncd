@@ -144,7 +144,7 @@ read.surveillance.data = function(dir = 'data/raw_data'){
         rv$prevalence$SEXES = c('male','female')
         rv$prevalence$SUBGROUPS = dimnames(rv$prevalence$subgroup)$subgroup
         
-        rv$AIDSmortality = read.surveillance.data.files(data.type = "AIDS mortality", age = "All")
+        rv$AIDSmortality = read.surveillance.data.files(data.type = "AIDS mortality", age = "All")/1000
         
         # Population data aggregated into model age groups 
         rv$population = read.population.data.files.model.ages(data.type = "population", model.age.cutoffs = MODEL.AGE.CUTOFFS)
