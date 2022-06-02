@@ -133,17 +133,22 @@ do.extract.4D <- function(sim,
                 dim(y) = sapply(y.dim.names, length)
                 dimnames(y) = y.dim.names
                 
-                x = array(0, dim = sapply(full.dim.names, length), dimnames = full.dim.names)
-                
-                for (i in 1:length(ages)){
-                        sub.y = y[,age.brackets[[i]],,,]
-                        sub.y.dim.names = y.dim.names
-                        sub.y.dim.names$age = age.brackets[[i]]
-                        dim(sub.y) = sapply(sub.y.dim.names, length)
-                        dimnames(sub.y) = sub.y.dim.names
+                if(any(keep.dimensions=="age")){
                         
-                        x[,i,,,] = apply(sub.y, c("year","sex","subgroup","hiv.status"), sum)
+                        x = array(0, dim = sapply(full.dim.names, length), dimnames = full.dim.names)
+                        
+                        for (i in 1:length(ages)){
+                                sub.y = y[,age.brackets[[i]],,,]
+                                sub.y.dim.names = y.dim.names
+                                sub.y.dim.names$age = age.brackets[[i]]
+                                dim(sub.y) = sapply(sub.y.dim.names, length)
+                                dimnames(sub.y) = sub.y.dim.names
+                                
+                                x[,i,,,] = apply(sub.y, c("year","sex","subgroup","hiv.status"), sum)
+                        }
                 }
+                else
+                        x=y
         }
         
         #filtering unwanted dimensions out
@@ -207,17 +212,22 @@ do.extract.3D <- function(sim,
                 dim(y) = sapply(y.dim.names, length)
                 dimnames(y) = y.dim.names
                 
-                x = array(0, dim = sapply(full.dim.names, length), dimnames = full.dim.names)
-
-                for (i in 1:length(ages)){
-                        sub.y = y[,age.brackets[[i]],,]
-                        sub.y.dim.names = y.dim.names
-                        sub.y.dim.names$age = age.brackets[[i]]
-                        dim(sub.y) = sapply(sub.y.dim.names, length)
-                        dimnames(sub.y) = sub.y.dim.names
+                if(any(keep.dimensions=="age")){
                         
-                        x[,i,,] = apply(sub.y, c("year","sex","subgroup"), sum)
+                        x = array(0, dim = sapply(full.dim.names, length), dimnames = full.dim.names)
+                        
+                        for (i in 1:length(ages)){
+                                sub.y = y[,age.brackets[[i]],,]
+                                sub.y.dim.names = y.dim.names
+                                sub.y.dim.names$age = age.brackets[[i]]
+                                dim(sub.y) = sapply(sub.y.dim.names, length)
+                                dimnames(sub.y) = sub.y.dim.names
+                                
+                                x[,i,,] = apply(sub.y, c("year","sex","subgroup"), sum)
+                        }
                 }
+                else
+                        x=y
         }
         
         #filtering the unwanted dimension names out
