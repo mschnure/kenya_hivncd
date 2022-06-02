@@ -39,23 +39,29 @@ get.default.parameters = function()
 {
     rv = c(fertility.multiplier=1.2,
            over.80.mortality.multiplier=1.5,
-           hiv.mortality.rates.suppressed=0.01, 
-           hiv.mortality.rates.unsuppressed=0.02,
+           hiv.mortality.rates.suppressed=0.0, # will need to update
+           hiv.mortality.rates.unsuppressed=0.0, #update 
            # non.hiv.mortality.rates=0.01, 
-           testing.rates=1.5, 
+           testing.rates=0.8, 
            engagement.rates=3,
            unsuppressed.disengagement.rates=0.2,
            suppressed.disengagement.rates=0.2,
            suppression.rates=3,
            unsuppression.rates=0.1,
-           global.transmission.rate=6, #the average number of infections from one undiagnosed HIV+ person per year 
+           # global.transmission.rate=6, #the average number of infections from one undiagnosed HIV+ person per year 
+           start.time=1975,
+           time.0=1990,
+           time.1=1998,
+           trate.0=1.3,
+           trate.1=0.27,
            relative.transmission.from.diagnosis=0.33) #repeat this
 }
 
 
 #-- Map all parameters --#
 map.model.parameters <- function(parameters,
-                                 sampled.parameters=get.default.parameters())
+                                 sampled.parameters=get.default.parameters(),
+                                 project.to.year=2040)
 {
     
     #-- SET UP DIMENSIONS --#
@@ -154,30 +160,34 @@ map.model.parameters <- function(parameters,
                                                keep.dimensions = c('year','sex','age'), 
                                                model.age.cutoffs = MODEL.AGE.CUTOFFS)
 
-    if(1==2){ #setting up code to smooth/project death rate into future 
+    #setting up code to smooth/project death rate into future 
+    anchor.year = 2020
+    years = as.numeric(dimnames(deaths.age.sex)$year) - anchor.year
+    years.label = as.numeric(dimnames(deaths.age.sex)$year) # for plotting
+    
+    project.years = (max(years)+1):(project.to.year-anchor.year)-max(years)
+    project.years = project.years[project.years%%5==0] # only including multiples of 5
+    desired.years = c(years,max(years)+project.years) # future years to predict
+    smoothed.years.label = desired.years + anchor.year # for plotting
+    mask = rep(T,length(years)) # use this to remove years
+    mask = years.label<1987 
+    
+    # Smoothed non-HIV mortality: fit regression on desired years only (using mask above)
+    smooth.deaths.age.sex = apply(deaths.age.sex,c('age','sex'),function(rates){
         
-        anchor.year = 2020
-        years = as.numeric(dimnames(deaths.age.sex)$year) - anchor.year
+        fit = lm(log(rates[mask]) ~ years[mask]) # can change from log, which years, etc.
         
-        desired.years = c(years,max(years)+c(5,10)) # future years to predict; redefine this in absolute years then shift 
+        exp(fit$coefficients[1] + fit$coefficients[2]*desired.years) #gives projections; exponentiate if log
         
-        mask = rep(T,length(years)) # can use this to remove years
-        
-        smooth.deaths.age.sex = apply(deaths.age.sex,c('sex','age'),function(rates){
-            
-            fit = lm(log(rates[mask]) ~ years[mask]) # can change from log, which years, etc.
-        
-            exp(fit$coefficients[1] + fit$coefficients[2]*desired.years) #gives projections; exponentiate if log
-                
-        })
-        
-        dim(smooth.deaths.age.sex) # will need to set this to the correct years, ages, sexes
-        
-        
-    }
-        
-    for (year in dimnames(deaths.age.sex)$year){
-            rv = array(deaths.age.sex[year,,],
+    })
+    dim.names = list(year = smoothed.years.label,
+                     age = dimnames(smooth.deaths.age.sex)[2]$age,
+                     sex = dimnames(smooth.deaths.age.sex)[3]$sex)
+    dim(smooth.deaths.age.sex) = sapply(dim.names, length)
+    dimnames(smooth.deaths.age.sex) = dim.names
+    
+    for (year in dimnames(smooth.deaths.age.sex)$year){
+            rv = array(smooth.deaths.age.sex[year,,],
                        dim = sapply(state.dim.names, length),
                        dimnames = state.dim.names)
             
@@ -217,17 +227,55 @@ map.model.parameters <- function(parameters,
                                   sex.from=parameters$SEXES,
                                   subgroup.from=parameters$SUBGROUPS)
     
-    transmission.rates = array(sampled.parameters['global.transmission.rate']/n.trans.states,
-                               dim=sapply(transmission.dim.names, length),
-                               dimnames=transmission.dim.names)
+    #previous global transmission rate
+    if(1==2){
+        transmission.rates = array(sampled.parameters['global.transmission.rate']/n.trans.states,
+                                   dim=sapply(transmission.dim.names, length),
+                                   dimnames=transmission.dim.names)
+        dim(transmission.rates) = c(n.trans.states, n.trans.states)
+        transmission.rates = as.matrix(transmission.rates)
+        
+        parameters = add.time.varying.parameter.value(parameters,
+                                                      parameter.name='TRANSMISSION.RATES',
+                                                      value = transmission.rates,
+                                                      time = 2000)
+    }
+
+    # Start transmission to 0 until start.time (setting at 1980 for now)
+    parameters = add.time.varying.parameter.value(parameters,
+                                                  parameter.name='TRANSMISSION.RATES',
+                                                  value = 0,
+                                                  time = (sampled.parameters['start.time']-0.001))
     
-    dim(transmission.rates) = c(n.trans.states, n.trans.states)
-    transmission.rates = as.matrix(transmission.rates)
+    # Set transmission rate to a high level (trate.0) at start.time (1980 for now)
+    transmission.rates.0 = array(sampled.parameters['trate.0']/n.trans.states,
+                                dim=sapply(transmission.dim.names, length),
+                                dimnames=transmission.dim.names)
+    dim(transmission.rates.0) = c(n.trans.states, n.trans.states)
+    transmission.rates.0 = as.matrix(transmission.rates.0)
     
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='TRANSMISSION.RATES',
-                                                  value = transmission.rates,
-                                                  time = 2000)
+                                                  value = transmission.rates.0,
+                                                  time = sampled.parameters['start.time'])
+    
+    # End high transmission rate at time.0 (1990 for now) - have to set it again so that this is the year it interpolates from
+    parameters = add.time.varying.parameter.value(parameters,
+                                                  parameter.name='TRANSMISSION.RATES',
+                                                  value = transmission.rates.0,
+                                                  time = sampled.parameters['time.0'])
+    
+    # Set transmission rate to a low level (trate.1) at time.1 (2000 for now)
+    transmission.rates.1 = array(sampled.parameters['trate.1']/n.trans.states,
+                                 dim=sapply(transmission.dim.names, length),
+                                 dimnames=transmission.dim.names)
+    dim(transmission.rates.1) = c(n.trans.states, n.trans.states)
+    transmission.rates.1 = as.matrix(transmission.rates.1)
+    
+    parameters = add.time.varying.parameter.value(parameters,
+                                                  parameter.name='TRANSMISSION.RATES',
+                                                  value = transmission.rates.1,
+                                                  time = sampled.parameters['time.1'])
     
     infectiousness.h = array(0,
                              dim=sapply(state.dim.names, length),
