@@ -10,6 +10,7 @@ years.label = as.numeric(dimnames(deaths.age.sex)$year) # for plotting
 desired.years = c(years,max(years)+c(5,10)) # future years to predict
 smoothed.years.label = desired.years + anchor.year # for plotting
 mask = rep(T,length(years)) # use this to remove years
+mask = years.label<1987 
 
 # Smoothed non-HIV mortality: fit regression on desired years only (using mask above)
 smooth.deaths.age.sex = apply(deaths.age.sex,c('age','sex'),function(rates){
@@ -32,8 +33,8 @@ AIDS.mortality$id = "AIDS"
 
 # FIFTH AGE GROUP, MALE ONLY 
 # age groups:"0-9","10-14","15-19","20-24","25-29","30-39","40-49","50-59","60-69","70-79","80 and over"
-original.data = data.frame(year = years.label, value = as.numeric(deaths.age.sex[,5,1])) # [year,age,sex]
-smoothed.data = data.frame(year = smoothed.years.label, value = as.numeric(smooth.deaths.age.sex[,5,1])) # [year,age,sex]
+original.data = data.frame(year = years.label, value = as.numeric(deaths.age.sex[,9,1])) # [year,age,sex]
+smoothed.data = data.frame(year = smoothed.years.label, value = as.numeric(smooth.deaths.age.sex[,9,1])) # [year,age,sex]
 original.data$id = "original"
 smoothed.data$id = "smoothed"
 
