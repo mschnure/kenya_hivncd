@@ -10,9 +10,6 @@ state.dim.names = list(age=parameters$AGES,
                        sex=parameters$SEXES,
                        subgroup=parameters$SUBGROUPS,
                        hiv.status=parameters$HIV.STATUS)
-# initial.state = array(100000, 
-#                       dim = sapply(state.dim.names, length), 
-#                       dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
 
 initial.state = get.initial.population(year = "1970", 
                                        data.manager = DATA.MANAGER, 
@@ -30,24 +27,23 @@ sim = run.model(parameters=parameters,
               end.year=2020,
               keep.years=c(1970:2020))
 
-sim$population[1,,,,]
-sim$years
-
+# sim$population[1,,,,]
+# sim$years
 # sims=list(sim,sim1)
 
-# print(simplot.basic(sim,
-#                     years=c(2000:2020),
-#                     data.types = c("incidence","prevalence"))
-# )
+print(simplot.basic(sim,
+                    years=c(1970:2020),
+                    data.types = c("incidence","prevalence"))
+)
 # 
 # print(simplot.basic(sim,
 #                     years=c(1970:2020),
 #                     data.types = "population")
 # )
 
-print(simplot(sim, 
-              years=c(1970:2020),
-              data.types = "population", facet.by = 'age'))
+# print(simplot(sim, 
+#               years=c(1970:2020),
+#               data.types = "population", facet.by = 'age'))
 
 # code for testing births/deaths 
 if (1==2){
