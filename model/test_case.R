@@ -31,19 +31,26 @@ sim = run.model(parameters=parameters,
 # sim$years
 # sims=list(sim,sim1)
 
-print(simplot.basic(sim,
-                    years=c(1970:2020),
-                    data.types = c("incidence","prevalence"))
+print(simplot(sim,
+              years=c(1970:2020),
+              data.types = c("incidence","prevalence"))
 )
+
+print(simplot(sim,
+              years=c(1980:2020),
+              data.types = c("incidence"),
+              facet.by = 'age')
+)
+
 # 
 # print(simplot.basic(sim,
 #                     years=c(1970:2020),
 #                     data.types = "population")
 # )
 
-# print(simplot(sim, 
-#               years=c(1970:2020),
-#               data.types = "population", facet.by = 'age'))
+print(simplot(sim,
+              years=c(1970:2020),
+              data.types = "population", facet.by = 'age'))
 
 # code for testing births/deaths 
 if (1==2){
