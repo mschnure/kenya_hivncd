@@ -54,9 +54,14 @@ get.default.parameters = function()
            time.1=1998,
            trate.0=1.3,
            trate.1=0.27,
+           male.to.male.multiplier=1,
+           female.to.male.multiplier=1,
+           age.15.to.19.multiplier=1,
+           age.20.to.29.multiplier=1,
+           age.40.to.49.multiplier=1,
+           age.50.and.over.multiplier=1,
            relative.transmission.from.diagnosis=0.33) #repeat this
 }
-
 
 #-- Map all parameters --#
 map.model.parameters <- function(parameters,
@@ -241,18 +246,62 @@ map.model.parameters <- function(parameters,
                                                       time = 2000)
     }
 
-    # Start transmission to 0 until start.time (setting at 1980 for now)
+    
+    # Mixing proportions: array where every combo of age.to, sex.to sums to 1 (capturing all of their partners)
+    mixing.proportions.0 = sapply(parameters$SEXES, function(sex.to){
+        sapply(parameters$AGES, function(age.to){
+            
+            # for this age bracket/sex.to, what proportion of that sexes partners are in the other sexes
+            sex.proportions = get.sex.mixing.proportions(sex.to = sex.to,
+                                                         age.to=age.to,
+                                                         sexes=parameters$SEXES,
+                                                         sampled.parameters = sampled.parameters)      
+            
+            # then, for that sex-sex combination what proportion are in each age group
+            sapply(parameters$SEXES, function(sex.from){
+                sex.proportions[sex.from]*get.age.mixing.proportions(sex.to=sex.to,
+                                                                     age.to=age.to,
+                                                                     sex.from=sex.from,
+                                                                     ages=parameters$AGES,
+                                                                     sampled.parameters=sampled.parameters)
+            })
+        })
+    })
+
+    dim(mixing.proportions.0) = c(n.trans.states, n.trans.states)
+    mixing.proportions.0 = t(mixing.proportions.0)
+    dim(mixing.proportions.0) = sapply(transmission.dim.names, length)
+    dimnames(mixing.proportions.0) = transmission.dim.names
+    
+    
+    # Set transmission to 0 until start.time (setting at 1980 for now)
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='TRANSMISSION.RATES',
                                                   value = 0,
                                                   time = (sampled.parameters['start.time']-0.001))
     
-    # Set transmission rate to a high level (trate.0) at start.time (1980 for now)
-    transmission.rates.0 = array(sampled.parameters['trate.0']/n.trans.states,
-                                dim=sapply(transmission.dim.names, length),
-                                dimnames=transmission.dim.names)
+
+    
+    # Set transmission rate to a high level (trate.0) at start.time
+    transmission.rates.0 = make.transmission.array(parameters = parameters,
+                                                   global.trate = sampled.parameters["trate.0"],
+                                                   male.to.male.multiplier = sampled.parameters["male.to.male.multiplier"], # add this above
+                                                   female.to.male.multiplier = sampled.parameters["female.to.male.multiplier"],
+                                                   age.multipliers = c(0,0,
+                                                                       sampled.parameters["age.15.to.19.multiplier"],
+                                                                       sampled.parameters["age.20.to.29.multiplier"],
+                                                                       sampled.parameters["age.20.to.29.multiplier"],
+                                                                       1,
+                                                                       sampled.parameters["age.40.to.49.multiplier"],
+                                                                       sampled.parameters["age.50.and.over.multiplier"],
+                                                                       sampled.parameters["age.50.and.over.multiplier"],
+                                                                       sampled.parameters["age.50.and.over.multiplier"],
+                                                                       sampled.parameters["age.50.and.over.multiplier"]))
+    transmission.rates.0=transmission.rates.0*mixing.proportions.0
+
     dim(transmission.rates.0) = c(n.trans.states, n.trans.states)
     transmission.rates.0 = as.matrix(transmission.rates.0)
+    
     
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='TRANSMISSION.RATES',
@@ -265,13 +314,30 @@ map.model.parameters <- function(parameters,
                                                   value = transmission.rates.0,
                                                   time = sampled.parameters['time.0'])
     
-    # Set transmission rate to a low level (trate.1) at time.1 (2000 for now)
-    transmission.rates.1 = array(sampled.parameters['trate.1']/n.trans.states,
-                                 dim=sapply(transmission.dim.names, length),
-                                 dimnames=transmission.dim.names)
+    
+    # Set transmission rate to a low level (trate.1) at time.1
+    transmission.rates.1 = make.transmission.array(parameters = parameters,
+                                                   global.trate = sampled.parameters["trate.1"],
+                                                   male.to.male.multiplier = sampled.parameters["male.to.male.multiplier"], # add this above
+                                                   female.to.male.multiplier = sampled.parameters["female.to.male.multiplier"],
+                                                   age.multipliers = c(0,0,
+                                                                       sampled.parameters["age.15.to.19.multiplier"],
+                                                                       sampled.parameters["age.20.to.29.multiplier"],
+                                                                       sampled.parameters["age.20.to.29.multiplier"],
+                                                                       1,
+                                                                       sampled.parameters["age.40.to.49.multiplier"],
+                                                                       sampled.parameters["age.50.and.over.multiplier"],
+                                                                       sampled.parameters["age.50.and.over.multiplier"],
+                                                                       sampled.parameters["age.50.and.over.multiplier"],
+                                                                       sampled.parameters["age.50.and.over.multiplier"]))
+    
+    mixing.proportions.1 = mixing.proportions.0 # keep this the same for now
+    transmission.rates.1=transmission.rates.1*mixing.proportions.1
+    
     dim(transmission.rates.1) = c(n.trans.states, n.trans.states)
     transmission.rates.1 = as.matrix(transmission.rates.1)
     
+
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='TRANSMISSION.RATES',
                                                   value = transmission.rates.1,
@@ -662,6 +728,32 @@ get.initial.population = function(year,
         rv[seed.to.ages,seed.to.sexes,,'undiagnosed'] = seed.n 
         
         rv
+}
+
+make.transmission.array = function(parameters,
+                                   global.trate,
+                                   male.to.male.multiplier,
+                                   female.to.male.multiplier,
+                                   female.to.female.multiplier = 0,
+                                   age.multipliers
+                                   ){
+    
+    transmission.dim.names = list(age.to=parameters$AGES, 
+                                  sex.to=parameters$SEXES,
+                                  subgroup.to=parameters$SUBGROUPS,
+                                  age.from=parameters$AGES, 
+                                  sex.from=parameters$SEXES,
+                                  subgroup.from=parameters$SUBGROUPS)
+    
+    rv = array(global.trate*age.multipliers,
+               sapply(transmission.dim.names, length),
+               dimnames = transmission.dim.names)
+    
+    rv[,"male",,,"male",] = rv[,"male",,,"male",]*male.to.male.multiplier
+    rv[,"male",,,"female",] = rv[,"male",,,"female",]*female.to.male.multiplier
+    rv[,"female",,,"female",] = rv[,"female",,,"female",]*female.to.female.multiplier
+    
+    rv
 }
 
 
