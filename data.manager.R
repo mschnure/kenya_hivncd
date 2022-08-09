@@ -407,7 +407,7 @@ combine.pdf.years = function(dir = 'data/raw_data/pdfs',
 }
 
 
-#### Read sex data from pdfs ####
+#### Read sex data from pdfs #### THIS IS 15+ DATA - NEED TO CHANGE 
 read.pdf.data.files = function(dir = 'data/raw_data/pdfs',
                                data.type,
                                pdf.year,

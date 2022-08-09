@@ -52,7 +52,7 @@ print(simplot(sim,
               years=c(1970:2020),
               data.types = "population", facet.by = 'age'))
 
-# code for testing births/deaths 
+# code for testing births/deaths - this no longer works 
 if (1==2){
         births.test = sapply(parameters$time.varying.parameters$FERTILITY.RATES$values, function(z){z[1]})
         qplot(1:30,births.test)+ylim(0,NA) # testing out births plot
