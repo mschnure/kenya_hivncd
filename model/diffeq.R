@@ -1,11 +1,8 @@
 ################################################################################################
-################
 #Description: The core differential equation functions modeling the disease dynamic
-################
 ################################################################################################
 
 library(odeintr)
-
 
 ##---------------------------------------##
 ##-- THE COMPUTE DIFFERENTIAL FUNCTION --##
@@ -14,8 +11,7 @@ library(odeintr)
 # y is 1-D aray including the model state and main transitions that we are interested in (incidence, diagnosis, hiv/non-hiv mortality)
 compute.dx <- function(time,
                        y, #the vector-form model state at this time
-                       parameters)
-{
+                       parameters){
     ##---------------------------------##
     ##-- GET TIME-VARYING PARAMETERS --##
     ##---------------------------------##
@@ -127,40 +123,40 @@ compute.dx <- function(time,
     
     # for loop - not actually using this (see other code below)
     if(1==2){
-      
-      for (a.to in parameters$AGES)
-      {
-        for (s.to in parameters$SEXES)
+        
+        for (a.to in parameters$AGES)
         {
-          for (r.to in parameters$SUBGROUPS)
-          {
-            for (a.from in parameters$AGES)
+            for (s.to in parameters$SEXES)
             {
-              for (s.from in parameters$SEXES)
-              {
-                for (r.from in parameters$SUBGROUPS)
+                for (r.to in parameters$SUBGROUPS)
                 {
-                  
-                  # does not depend on HIV status
-                  proportion.of.age.sex.subgroup.who.are.in.h = state[a.from, s.from, r.from,] / sum(state[a.from, s.from, r.from,])
-                  infectiousness = sum(proportion.of.age.sex.subgroup.who.are.in.h*pp$INFECTIOUSNESS.H[a.from, s.from, r.from,])
-                  
-                  dx.incidence[a.to, s.to, r.to] = dx.incidence[a.to, s.to, r.to] +
-                    pp$TRANSMISSION.RATES[a.to, s.to, r.to, a.from, s.from, r.from] * infectiousness # this is missing 'to' stratum size; fixed below
-                  # transmission rate depends on (age/sex, etc.) of both partnering strata, but does not depend on HIV status; 
-                  # infectiousness only depends on (age/sex, etc.) of infecting partner (i.e., suppression, awareness)
-                  
-                  # --> most interventions go into transmission rate 
-                  
+                    for (a.from in parameters$AGES)
+                    {
+                        for (s.from in parameters$SEXES)
+                        {
+                            for (r.from in parameters$SUBGROUPS)
+                            {
+                                
+                                # does not depend on HIV status
+                                proportion.of.age.sex.subgroup.who.are.in.h = state[a.from, s.from, r.from,] / sum(state[a.from, s.from, r.from,])
+                                infectiousness = sum(proportion.of.age.sex.subgroup.who.are.in.h*pp$INFECTIOUSNESS.H[a.from, s.from, r.from,])
+                                
+                                dx.incidence[a.to, s.to, r.to] = dx.incidence[a.to, s.to, r.to] +
+                                    pp$TRANSMISSION.RATES[a.to, s.to, r.to, a.from, s.from, r.from] * infectiousness # this is missing 'to' stratum size; fixed below
+                                # transmission rate depends on (age/sex, etc.) of both partnering strata, but does not depend on HIV status; 
+                                # infectiousness only depends on (age/sex, etc.) of infecting partner (i.e., suppression, awareness)
+                                
+                                # --> most interventions go into transmission rate 
+                                
+                            }
+                        }
+                    }
                 }
-              }
             }
-          }
         }
-      }
-    
+        
     }
-
+    
     
     total.in.each.stratum = rowSums(state, dims=3) #3D array indexed [age,sex,subgroup]
     proportion.of.age.sex.subgroup.who.are.in.h = state/as.numeric(total.in.each.stratum) #4D array indexed [age,sex,subgroup,hiv status]
@@ -206,7 +202,7 @@ compute.dx <- function(time,
     dx.state[,,,'engaged_unsuppressed'] = as.numeric(dx.state[,,,'engaged_unsuppressed']) + unsuppressed
     
     
- 
+    
     
     ##------------------------------##
     ##-- PACKAGE IT UP AND RETURN --##
@@ -226,8 +222,7 @@ compute.dx <- function(time,
 
 # Building up the initial vector, including the initial.states and placeholder for the statistics that are recorded (e.g.,incidence, diagnosis, etc)
 set.up.initial.diffeq.vector <- function(initial.state,
-                                         parameters)
-{
+                                         parameters){
     # y is 1-D aray including the model state and main transitions that we are interested in (incidence, diagnosis, hiv/non-hiv mortality)
     state.length = length(parameters$AGES)*length(parameters$SEXES)*length(parameters$SUBGROUPS)*length(parameters$HIV.STATUS)
     trans.length = length(parameters$AGES)*length(parameters$SEXES)*length(parameters$SUBGROUPS)
@@ -246,8 +241,7 @@ run.model <- function(parameters,
                       initial.state,
                       start.year,
                       end.year,
-                      keep.years)
-{
+                      keep.years){
     #This is just a stub
     ode.results = odeintr::integrate_sys(sys=function(x,t){compute.dx(time=t,y=x,parameters=parameters)},
                                          init=set.up.initial.diffeq.vector(initial.state, parameters),
@@ -269,12 +263,10 @@ process.ode.results <- function(ode.results,
                                 parameters,
                                 start.year,
                                 end.year,
-                                keep.years)
-{
-    
+                                keep.years){
     # ode.result is a 2-D array with rows representing time, and columns representing the outputs (vector y)
-  # the first row represents the initail state of the model (time = 0)
-  # the first column shows times (we drop it from the results)
+    # the first row represents the initail state of the model (time = 0)
+    # the first column shows times (we drop it from the results)
     ode.results=as.matrix(ode.results)[,-1]
     
     dimnames(ode.results)[[1]]=(start.year-1):end.year  
