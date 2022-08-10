@@ -22,10 +22,10 @@ initial.state = get.initial.population(year = "1970",
 
 # Run it
 sim = run.model(parameters=parameters,
-              initial.state=initial.state,
-              start.year=1970,
-              end.year=2020,
-              keep.years=c(1970:2020))
+                initial.state=initial.state,
+                start.year=1970,
+                end.year=2020,
+                keep.years=c(1970:2020))
 
 # sim$population[1,,,,]
 # sim$years
@@ -54,18 +54,18 @@ print(simplot(sim,
 
 # code for testing births/deaths - this no longer works 
 if (1==2){
-        births.test = sapply(parameters$time.varying.parameters$FERTILITY.RATES$values, function(z){z[1]})
-        qplot(1:30,births.test)+ylim(0,NA) # testing out births plot
-        qplot(1:30,log(births.test)) # log transformed births 
-        logit = function(p){log(p)-log(1-p)} 
-        qplot(1:30,logit(births.test)) # logit births 
-        qplot(1:30,logit(births.test/.06)) # relative to max birth rate 
-        
-        deaths.test = sapply(parameters$time.varying.parameters$NON.HIV.MORTALITY.RATES$values, function(z){z[,1,1,1]})
-        deaths.years = parameters$time.varying.parameters$NON.HIV.MORTALITY.RATES$times
-        qplot(deaths.years[6:14],deaths.test[1,6:14], xlab = "year")+ylim(0,NA) # testing out deaths plot; 1st age group only (11 age groups total)
-        qplot(1:14,log(deaths.test[2,])) # log transformed deaths
-        
-        #AIDS mortality
-        qplot(1990:2020, DATA.MANAGER$AIDSmortality, xlab = "year")
+    births.test = sapply(parameters$time.varying.parameters$FERTILITY.RATES$values, function(z){z[1]})
+    qplot(1:30,births.test)+ylim(0,NA) # testing out births plot
+    qplot(1:30,log(births.test)) # log transformed births 
+    logit = function(p){log(p)-log(1-p)} 
+    qplot(1:30,logit(births.test)) # logit births 
+    qplot(1:30,logit(births.test/.06)) # relative to max birth rate 
+    
+    deaths.test = sapply(parameters$time.varying.parameters$NON.HIV.MORTALITY.RATES$values, function(z){z[,1,1,1]})
+    deaths.years = parameters$time.varying.parameters$NON.HIV.MORTALITY.RATES$times
+    qplot(deaths.years[6:14],deaths.test[1,6:14], xlab = "year")+ylim(0,NA) # testing out deaths plot; 1st age group only (11 age groups total)
+    qplot(1:14,log(deaths.test[2,])) # log transformed deaths
+    
+    #AIDS mortality
+    qplot(1990:2020, DATA.MANAGER$AIDSmortality, xlab = "year")
 }

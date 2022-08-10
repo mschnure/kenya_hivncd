@@ -1,3 +1,6 @@
+# The core part of this code is implemented directly in the parameters file and does not need to be called separately
+# However, there is some code here for comparing plots, etc. that can be useful
+
 # Original non-HIV mortality
 deaths.age.sex = calculate.all.death.rates(data.manager = DATA.MANAGER, 
                                            keep.dimensions = c('year','sex','age'), 

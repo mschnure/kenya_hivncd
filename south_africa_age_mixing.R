@@ -1,4 +1,5 @@
 
+# https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5479933/ 
 
 data = data.frame(
     mean.diff=c(11.5,7.0,1.5,1.7,-0.5),
@@ -44,7 +45,7 @@ pairing.proportions = t(sapply(1:length(age.lowers), function(i){
                                         mean.fit$coefficients[1] + 
                                             (mean.fit$coefficients[2]+mean.fit.slope.skew)*sim.ages,
                                         sd.mult*(sd.fit$coefficients[1] + 
-                                            sd.fit$coefficients[2]*sim.ages))
+                                                     sd.fit$coefficients[2]*sim.ages))
     
     partners = sapply(1:length(age.lowers), function(j){
         sum(sim.partner.ages >= age.lowers[j] & sim.partner.ages <= age.uppers[j])
@@ -80,7 +81,7 @@ calculate.pairing.proportions.by.age <- function(age.lowers,
         {
             p.age.of.ages.in.bracket = rep(1/sum(sexually.active), length(ages.in.bracket))
             p.age.of.ages.in.bracket[!sexually.active] = 0
-    
+            
             p.partner.ages = sapply(1:length(age.lowers), function(j){
                 untruncated.ps.by.ego.age = pnorm(age.uppers[j], partner.dist.means, partner.dist.sds) - 
                     pnorm(age.lowers[j], partner.dist.means, partner.dist.sds)
@@ -92,10 +93,10 @@ calculate.pairing.proportions.by.age <- function(age.lowers,
     }))
 }
 round(100*calculate.pairing.proportions.by.age(age.lowers = age.lowers,
-                                     age.uppers = age.uppers,
-                                     min.sexually.active.age = 15,
-                                     mean.age.diff.intercept = mean.fit$coefficients[1],
-                                     mean.age.diff.slope = mean.fit$coefficients[2],
-                                     sd.age.diff.intercept = sd.fit$coefficients[1],
-                                     sd.age.diff.slope = sd.fit$coefficients[2],
-                                     sd.mult=1))
+                                               age.uppers = age.uppers,
+                                               min.sexually.active.age = 15,
+                                               mean.age.diff.intercept = mean.fit$coefficients[1],
+                                               mean.age.diff.slope = mean.fit$coefficients[2],
+                                               sd.age.diff.intercept = sd.fit$coefficients[1],
+                                               sd.age.diff.slope = sd.fit$coefficients[2],
+                                               sd.mult=1))
