@@ -45,6 +45,8 @@ run.model.for.parameters = function(variable.parameters,
                     end.year=2020,
                     keep.years=c(1970:2020))
     
+    sim$parameters = parameters
+    
     sim
     
 }
