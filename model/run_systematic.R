@@ -1,5 +1,15 @@
+################################################################################################
+# Description: Code that runs from initializing parameters all the way through simulation
+################################################################################################
 
-# High-level function to take us from parameters to simulation 
+source('source_code.R')
+
+# Single function that is analogous to all the code in the test_case file, but also allows for
+# easier manipulation of sampled parameters
+#     1. Creates basic model parameters; maps all parameters to structure needed for diffeq;
+#         sets up the initial state; runs the model
+#     2. Can be passed variable.parameters as an input to override default sampled parameters
+#     3. Called in parameter_optim code
 run.model.for.parameters = function(variable.parameters,
                                     parameters=create.model.parameters()){
     
@@ -21,6 +31,7 @@ run.model.for.parameters = function(variable.parameters,
     
     initial.state = get.initial.population(year = "1970", 
                                            data.manager = DATA.MANAGER, 
+                                           parameters = parameters,
                                            model.age.cutoffs = MODEL.AGE.CUTOFFS, 
                                            ages = parameters$AGES, 
                                            sexes = parameters$SEXES, 
@@ -37,3 +48,15 @@ run.model.for.parameters = function(variable.parameters,
     sim
     
 }
+
+
+variable.parameters=get.default.parameters()
+sim = run.model.for.parameters(variable.parameters = variable.parameters)
+
+
+
+print(simplot(sim,
+              years=c(1980:2020),
+              data.types = c("incidence"),
+              facet.by = 'age')
+)

@@ -1,3 +1,16 @@
+################################################################################################
+# Description: Code to run a test case of the model
+################################################################################################
+
+# This code does not easily facilitate changing values for our sampled parameters (automatically 
+# sets up with default values and not easy to change); in order to change sampled parameter values 
+# and run the model more systematically, use run_systematic code 
+
+# No new functions defined 
+
+# Steps: Create basic model parameters; map all parameters to structure needed for diffeq; set 
+# up the initial state; run the model; plot outputs 
+
 source('source_code.R')
 source('model/plots.R')
 

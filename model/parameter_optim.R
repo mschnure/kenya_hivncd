@@ -1,3 +1,20 @@
+################################################################################################
+# Description: Code for running and scoring simulations using different sampled parameter values
+################################################################################################
+
+# 1. Can set values either manually or using an optimization function 
+# 2. Generic optim function in this code returns optimized parameter values; can then compare simulation 
+#     scores using these optimized parameter values or manually chosen parameter values 
+
+# Functions
+# 1. run.and.score.sim
+#     Runs a simulation given set of sampled parameters; returns a score by calling score.sim function
+#     This function is fed to a generic optimization function to be minimized 
+# 2. score.sim
+#     Calculates the log sum of squared errors between the simulated population and surveillance data for 
+#     population (to be minimized via optimization); called by run.and.score.sim 
+
+
 source('source_code.R')
 source('model/plots.R')
 

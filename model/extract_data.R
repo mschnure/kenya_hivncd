@@ -1,33 +1,29 @@
-################################################################################################
-#Description: These functions are used to extract different information from the ODE result
-################################################################################################
+#################################################################################################
+# Description: Functions to extract different information from the ODE result; called in plotting 
+# functions but can be used on their own 
+#################################################################################################
 
-# GENERAL FORMAT
-# extract.data = function(sim,
-#                         #ODE result
-#                         data.type,
-#                         #type of reported data (states, diagnosis, etc)
-#                         years = sim$years,
-#                         ages = sim$AGES,
-#                         subgroups = sim$SUBGROUPS,
-#                         sexes = sim$SEXES,
-#                         hiv.status = sim$HIV.STATUS,
-#                         keep.dimensions = 'year' #data is summed for each element in this dimention (year: return total data for each year)))
-# )
-# {
-#         
-# }
+# Functions 
+#     1. extract.data
+#     2. do.extract.4D
+#     3. do.extract.3D
+#     4. extract.population
+#     5. extract.incidence
+#     6. extract.prevalence
+#     7. extract.new.diagnoses
 
-#### CORE FUNCTIONS #### 
+
+# General function to extract data based on data type; calls lower-level functions (e.g., extract 
+# incidence) based on which data type is given 
 extract.data = function(sim,
                         data.type,
                         data.manager = DATA.MANAGER,
-                        years = sim$years, #years to include in the report (other years are excluded)
+                        years = sim$years, # years to include in the report (other years are excluded)
                         ages = sim$AGES, 
                         sexes = sim$SEXES,
                         subgroups = sim$SUBGROUPS, 
                         hiv.status = sim$HIV.STATUS,
-                        keep.dimensions = 'year', #collapse all other dimensions & report the data as total value over this dimension
+                        keep.dimensions = 'year', # collapse all other dimensions & report the data as total value over this dimension
                         scale.population = F # change once I'm pulling population data
 ){
     if(all(keep.dimensions!='year'))
@@ -74,7 +70,8 @@ extract.data = function(sim,
     rv
 }
 
-
+# Used to pull four-dimensional results from the simulation (i.e., population) that are indexed 
+# age, sex, subgroup, HIV status (also includes year as the first dimension) 
 do.extract.4D <- function(sim,
                           arr, #specific subset array that is needed for the reporting
                           years = sim$years, #years to include in the report (other years are excluded)
@@ -158,7 +155,8 @@ do.extract.4D <- function(sim,
 }
 
 
-
+# Used to pull three-dimensional results from the simulation (i.e., incidence) that is only 
+# within the HIV population and is indexed age, sex, subgroup (again includes year as first dimension) 
 do.extract.3D <- function(sim,
                           arr,
                           years = sim$years,
@@ -235,7 +233,7 @@ do.extract.3D <- function(sim,
     rv                
 }
 
-#### FUNCTIONS TO EXTRACT SPECIFIC OUTPUTS #### 
+# Call to do.extract.4D; pulls population 
 extract.population <- function(sim,
                                years = sim$years,
                                ages = sim$AGES,
@@ -257,6 +255,7 @@ extract.population <- function(sim,
     
 }
 
+# Call to do.extract.3D; pulls incidence
 extract.incidence <- function(sim,
                               years = sim$years,
                               ages = sim$AGES,
@@ -274,6 +273,8 @@ extract.incidence <- function(sim,
     )
 }
 
+# Call to extract.population with HIV status set only to HIV states (need to keep fourth dimension of 
+# HIV status to differentiate between cascade states, but only pull those with HIV); pulls prevalence 
 extract.prevalence <- function(sim,
                                years = sim$years,
                                ages = sim$AGES,
@@ -292,6 +293,7 @@ extract.prevalence <- function(sim,
     
 }
 
+# Call to do.extract.3D; pulls new diagnoses 
 extract.new.diagnoses <- function(sim,
                                   years = sim$years,
                                   ages = sim$AGES,

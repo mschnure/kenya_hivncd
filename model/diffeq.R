@@ -1,6 +1,19 @@
 ################################################################################################
-#Description: The core differential equation functions modeling the disease dynamic
+# Description: Core differential equation functions to model disease dynamics/changes in states
 ################################################################################################
+
+# Functions
+#     1. compute.dx
+#         Called at every iteration; takes a vector form of the model state at this time, computes the changes
+#         in state we are interested in, returns a flattened vector of the changes in each element we are interested in
+#     2. set.up.initial.diffeq.vector
+#         Builds initial vector
+#     3. run.model
+#         Uses odeintr package to integrate the ODE system
+#     4. process.ode.results
+#         Separates out and saves the ode results in a meaningful data structure (list of results with class
+#         “hiv_simulation,” indexed by time, including states/incidence/diagnoses, etc.)
+
 
 library(odeintr)
 
