@@ -1,3 +1,16 @@
+################################################################################################
+# Description: Code to run a test case of the model
+################################################################################################
+
+# This code does not easily facilitate changing values for our sampled parameters (automatically 
+# sets up with default values and not easy to change); in order to change sampled parameter values 
+# and run the model more systematically, use run_systematic code 
+
+# No new functions defined 
+
+# Steps: Create basic model parameters; map all parameters to structure needed for diffeq; set 
+# up the initial state; run the model; plot outputs 
+
 source('source_code.R')
 source('model/plots.R')
 
@@ -63,7 +76,7 @@ if (1==2){
     
     deaths.test = sapply(parameters$time.varying.parameters$NON.HIV.MORTALITY.RATES$values, function(z){z[,1,1,1]})
     deaths.years = parameters$time.varying.parameters$NON.HIV.MORTALITY.RATES$times
-    qplot(deaths.years[6:14],deaths.test[1,6:14], xlab = "year")+ylim(0,NA) # testing out deaths plot; 1st age group only (11 age groups total)
+    qplot(deaths.years[6:14],deaths.test[1,6:14], xlab = "year")+ylim(0,NA) # testing deaths plot; 1st age group only (11 age groups total)
     qplot(1:14,log(deaths.test[2,])) # log transformed deaths
     
     #AIDS mortality

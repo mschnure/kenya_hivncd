@@ -1,11 +1,26 @@
-################################################################################################
-#Description: These functions are used to extract surveillance data used to calibrate the model
-################################################################################################
+####################################################################################################
+# Description: Functions used to read in and extract surveillance data for model calibration/inputs; 
+# also used in plotting functions (analog to extract_data functions for simulation data) 
+####################################################################################################
 
 library(data.table)
 
-# Add in what are the eligible values for each of the arguments below; as a comment
-# Add in protections against bad inputs - warnings, etc. (although this should be robust; can pass anything)
+# Higher-level core functions 
+#     1. get.surveillance.data 
+#     2. read.surveillance.data 
+# Lower-level helper functions 
+#     1. read.surveillance.data.type
+#     2. read.surveillance.data.stratified 
+#     3. read.surveillance.data.files 
+# Specialty functions
+#     1. combine.pdf.years 
+#     2. read.pdf.data.files
+#     3. read.population.data.files.model.ages 
+#     4. read.population.data.files.all.ages 
+#     5. read.fertility.data.files
+#     6. read.death.data.files
+#     7. read.birth.data.files (no longer using)
+
 
 # Each data.manager[[data.type]] is a list with the following elements:  
 # $AGES
@@ -16,6 +31,19 @@ library(data.table)
 # $total, $age, $age.sex, etc. (this is the actual data - will vary by data type) 
 # DON'T HAVE AGES/SEXES/SUBGROUPS FOR BIRTHS 
 
+
+# TO DO NOTES: 
+# Add in what are the eligible values for each of the arguments below; as a comment
+# Add in protections against bad inputs - warnings, etc. (although this should be robust; can pass anything)
+
+
+##---------------------------------##
+##-- HIGHER-LEVEL/CORE FUNCTIONS --##
+##---------------------------------##
+
+# Extracts data from data.manager object (created using call to read.surveillance.data function); called in 
+# plotting functions but can be used on its own; allows user to specify which dimensions to look at and/or 
+# stratify by (see simplot function) 
 get.surveillance.data = function(data.manager,
                                  data.type,
                                  years = 2010:2015,
@@ -122,8 +150,8 @@ get.surveillance.data = function(data.manager,
     rv
 }
 
-#### Read in all data types ####
-# Calls lower-level functions: e.g., read.surveillance.data.type
+# Creates data.manager object; called in source code; calls different lower-level functions for each data 
+# type (based on input file type) 
 read.surveillance.data = function(dir = 'data/raw_data'){
     rv = list(date.created = Sys.Date()
     )
@@ -193,8 +221,14 @@ read.surveillance.data = function(dir = 'data/raw_data'){
     rv
 }
 
-#### Read by data type (e.g., incidence, prevalence, etc.) ####
-# Calls lower-level function, either read.surveillance.data.files (no stratification) or read.surveillance.data.stratified
+
+##----------------------------------##
+##-- LOWER-LEVEL/HELPER FUNCTIONS --##
+##----------------------------------##
+
+# Called once for each data type within read.surveillance.data function; creates list with an array for 
+# each data stratification (i.e., total, by age, by sex, by subgroup, by age and subgroup, etc.); calls 
+# lower-level function, either read.surveillance.data.files (no stratification) or read.surveillance.data.stratified
 read.surveillance.data.type = function(data.type){
     rv=list()
     
@@ -225,8 +259,11 @@ read.surveillance.data.type = function(data.type){
     rv
 }
 
-#### Read individual data files WITH stratification ####
-# Calls lower-level function, read.surveillance.data.files
+
+# Called once for each dimension (age/sex) within read.surveillance.data.type; loops through lower-level 
+# function for each stratum of that dimension (i.e., calls function once for every age group) 
+#     Age: read.surveillance.data.files
+#     Sex: combine.pdf.years
 read.surveillance.data.stratified = function(data.type,
                                              strata,
                                              regions=T){
@@ -308,7 +345,9 @@ read.surveillance.data.stratified = function(data.type,
     
 } 
 
-#### Read individual data files without stratification (lowest-level function) ####
+# Called once for each stratum of specified dimension within read.surveillance.data.stratified 
+# Reads in csv files; formats data; returns an array of data with correct dimensions based on strata; 
+# option to read in lower/upper bound files  
 read.surveillance.data.files = function(dir = 'data/raw_data',
                                         data.type,
                                         regions = F,
@@ -367,7 +406,14 @@ read.surveillance.data.files = function(dir = 'data/raw_data',
     
 }
 
-#### Combine multiple pdfs from different years (for sex-specific incidence, prevalence data) ####
+
+##-------------------------##
+##-- SPECIALTY FUNCTIONS --##
+##-------------------------##
+
+
+# 1. Called for sex-specific incidence/prevalence data in read.surveillance.data.stratified
+# 2. Combines multiple pdfs from different years; calls read.pdf.data.files for each year
 combine.pdf.years = function(dir = 'data/raw_data/pdfs',
                              data.type,
                              pdf.years.to.combine = 2018:2019,
@@ -399,7 +445,9 @@ combine.pdf.years = function(dir = 'data/raw_data/pdfs',
     rv
 }
 
-#### Read sex data from pdfs #### THIS IS 15+ DATA - NEED TO CHANGE 
+
+#### THIS IS 15+ DATA - NEED TO CHANGE 
+# For each pdf year, read in csv file from tabula, return sex-specific incidence or prevalence 
 read.pdf.data.files = function(dir = 'data/raw_data/pdfs',
                                data.type,
                                pdf.year,
@@ -445,7 +493,9 @@ read.pdf.data.files = function(dir = 'data/raw_data/pdfs',
     rv
 }
 
-#### Read population data - KEEP MODEL AGE GROUPS ONLY (lowest-level function) ####
+
+# Reads in population data files and returns data in the AGE BRACKETS FOR MODEL; returns list with 
+# an array for each stratification (total, age, sex, age*sex) 
 read.population.data.files.model.ages = function(dir = 'data/raw_data',
                                                  data.type = "population",
                                                  model.age.cutoffs){
@@ -578,7 +628,8 @@ read.population.data.files.model.ages = function(dir = 'data/raw_data',
     rv
 }
 
-#### Read population data - KEEP ALL AGE GROUPS (lowest-level function) ####
+# Reads in population data files and returns data in the AGE BRACKETS AS REPORTED; returns list with 
+# an array for each stratification (total, age, sex, age*sex) 
 read.population.data.files.all.ages = function(dir = 'data/raw_data',
                                                data.type = "population"){
     sub.dir = file.path(dir, data.type)
@@ -666,7 +717,7 @@ read.population.data.files.all.ages = function(dir = 'data/raw_data',
     rv
 }
 
-#### Read age-specific fertility rate (lowest-level function) ####
+# Reads in age-specific fertility rate
 read.fertility.data.files = function(dir = 'data/raw_data',
                                      data.type = "population"){
     sub.dir = file.path(dir, data.type)
@@ -709,7 +760,7 @@ read.fertility.data.files = function(dir = 'data/raw_data',
     rv
 }
 
-#### Read death data (lowest-level function) ####
+# Reads in age/sex-specific death data 
 read.death.data.files = function(dir = 'data/raw_data',
                                  data.type = "population"){
     sub.dir = file.path(dir, data.type)
@@ -801,7 +852,7 @@ read.death.data.files = function(dir = 'data/raw_data',
     rv
 }
 
-#### Read crude birth rate (lowest-level function) ####
+# No longer using; read in total births to create a crude birth rate 
 read.birth.data.files = function(dir = 'data/raw_data',
                                  data.type = "population"){
     sub.dir = file.path(dir, data.type)

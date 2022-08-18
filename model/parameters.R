@@ -1,11 +1,30 @@
-################################################################################################
-#Description: Functions to set up the parameter object with constant and time-varying parameters
-################################################################################################
+#################################################################################################
+# Description: Functions to set up the parameter object with constant and time-varying parameters
+#################################################################################################
 
-# age.cutoffs - the lower limit for each bracket
-create.model.parameters <- function(age.cutoffs=MODEL.AGE.CUTOFFS,
+# Core functions 
+#     1. create.model.parameters 
+#     2. get.default.parameters 
+#     3. map.model.parameters 
+#     4. add.time.varying.parameter.value
+#     5. compute.time.varying.parameters
+# Other/helper functions 
+#     1. calculate.all.death.rates 
+#     2. get.initial.population 
+#     3. make.transmission.array
+#     4. map.birth.rates (no longer in use)
+
+
+##--------------------##
+##-- CORE FUNCTIONS --##
+##--------------------##
+
+# Sets up the basic parameters (sexes, ages, subgroups, HIV status); 
+# call this function with no arguments when first setting up a test case 
+create.model.parameters <- function(age.cutoffs=MODEL.AGE.CUTOFFS, #the lower limit for each bracket
                                     sexes = c('female','male'),
-                                    subgroups = 'all'){
+                                    subgroups = 'all',
+                                    min.sexually.active.age=14){
     parameters = list()
     
     #-- SET UP THE BASICS --#
@@ -19,6 +38,11 @@ create.model.parameters <- function(age.cutoffs=MODEL.AGE.CUTOFFS,
     
     parameters$AGES = parsed.ages$labels
     parameters$AGE.SPANS = parsed.ages$spans
+    parameters$AGE.LOWERS = parsed.ages$lowers
+    names(parameters$AGE.LOWERS) = parameters$AGES
+    parameters$AGE.UPPERS = parsed.ages$uppers
+    names(parameters$AGE.UPPERS) = parameters$AGES
+    
     
     # hiv status
     parameters$HIV.STATUS = c('hiv_negative','undiagnosed','diagnosed_unengaged','engaged_unsuppressed','engaged_suppressed')
@@ -26,11 +50,16 @@ create.model.parameters <- function(age.cutoffs=MODEL.AGE.CUTOFFS,
     parameters$DIAGNOSED.STATES = c('diagnosed_unengaged','engaged_unsuppressed','engaged_suppressed')
     parameters$ENGAGED.STATES = c('engaged_unsuppressed','engaged_suppressed')
     
+    parameters$min.sexually.active.age = min.sexually.active.age
+    parameters$male.to.female.age.model = get.male.to.female.age.model()
+    parameters$female.to.male.age.model = get.female.to.male.age.model()
     
     #- Return --#
     parameters  
 }
 
+# Sets default values for parameters we will sample; 
+# called in “run_systematic” code with the option to change values
 get.default.parameters = function(){
     rv = c(fertility.multiplier=1.2,
            over.80.mortality.multiplier=1.5,
@@ -55,10 +84,18 @@ get.default.parameters = function(){
            age.20.to.29.multiplier=1,
            age.40.to.49.multiplier=1,
            age.50.and.over.multiplier=1,
+           age.assortativity=1, 
            relative.transmission.from.diagnosis=0.33) #repeat this
 }
 
-#-- Map all parameters --#
+
+#-- MAP ALL PARAMETERS --#
+#   1. Uses parameters object (set up via create.model.parameters) and sampled parameters 
+#       (set up via get.default.parameters) to set up full set of parameters needed for diffeq 
+#       (all dimensions of age/sex, etc., all years) 
+#   2. Types of parameters: fertility, aging, mortality (HIV/non-HIV), diagnoses, transmission rates, 
+#       infectiousness, engagement/disengagement, suppression/unsuppression
+#   3. Everything technically added as a time-varying parameter even if it doesn’t vary 
 map.model.parameters <- function(parameters,
                                  sampled.parameters=get.default.parameters(),
                                  project.to.year=2040){
@@ -253,7 +290,8 @@ map.model.parameters <- function(parameters,
             
             # then, for that sex-sex combination what proportion are in each age group
             sapply(parameters$SEXES, function(sex.from){
-                sex.proportions[sex.from]*get.age.mixing.proportions(sex.to=sex.to,
+                sex.proportions[sex.from]*get.age.mixing.proportions(parameters=parameters,
+                                                                     sex.to=sex.to,
                                                                      age.to=age.to,
                                                                      sex.from=sex.from,
                                                                      ages=parameters$AGES,
@@ -403,7 +441,7 @@ map.model.parameters <- function(parameters,
 #-- TIME VARYING PARAMETERS --#
 # parameters$time.varying.parameters: list of time varying parameters
 
-# This function adds a time point and value to the spline for a parameter
+# Adds a time point and a value to the spline for a parameter; added to parameters$time.varying.parameters;
 # cannot have multiple entries for the same time
 add.time.varying.parameter.value <- function(parameters,
                                              parameter.name,
@@ -437,7 +475,8 @@ add.time.varying.parameter.value <- function(parameters,
 }
 
 
-# This function computes the parameter value at a specific time
+# Computes the parameter value at a specific time; called at beginning of compute.dx function in diffeq code; 
+# applied across all parameters$time.varying.parameters
 compute.time.varying.parameters <- function(parameters, time){
     lapply(parameters$time.varying.parameters, function(params){
         # params is a list with two components
@@ -475,7 +514,13 @@ compute.time.varying.parameters <- function(parameters, time){
     })
 }
 
-## Calculates death rates (total, by age, by sex, or by age/sex)
+
+
+##---------------------------##
+#-- OTHER/HELPER FUNCTIONS --#
+##---------------------------##
+
+# Calculates death rates for correct model age stratifications, based on surveillance data
 calculate.all.death.rates = function(data.manager,
                                      keep.dimensions = c('year','age','sex'),
                                      model.age.cutoffs){
@@ -629,8 +674,12 @@ calculate.all.death.rates = function(data.manager,
 }
 
 
+# Sets up initial population by mapping surveillance data age brackets to model age brackets (using 
+# map.population.ages function); adds all initial population to HIV negative status in 1970 except
+# for specified seed cases 
 get.initial.population = function(year,
                                   data.manager,
+                                  parameters,
                                   model.age.cutoffs,
                                   ages,
                                   sexes,
@@ -687,6 +736,8 @@ get.initial.population = function(year,
     rv
 }
 
+# Multiplies global transmission rate by age and sex multipliers; called in map.model.parameters function 
+# when setting up transmission rates; age and sex multipliers come from sampled.parameters 
 make.transmission.array = function(parameters,
                                    global.trate,
                                    male.to.male.multiplier,
@@ -713,10 +764,7 @@ make.transmission.array = function(parameters,
 }
 
 
-
-
-
-## Create crude birth rate array - NO LONGER USING (using age-specific fertility)
+# Create crude birth rate array - NO LONGER USING (using age-specific fertility)
 map.birth.rates = function(data.manager,
                            model.age.cutoffs){
     

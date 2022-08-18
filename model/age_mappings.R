@@ -1,8 +1,16 @@
 ################################################################################################
-#Description: Code to combine model age brackets and map them to surveillance age brackets
+# Description: Code to map finer age brackets to wider ones; either by aggregating model age 
+# groups to create surveillance age groups or vice versa
 ################################################################################################
 
-# Model age cutoffs are created so that they can combine into the surveillance age groups
+# Functions 
+#     1. parse.age.brackets 
+#     2. map.ages 
+#     3. map.population.ages 
+#     4. map.all.ages
+#     5. map.ages.by.cutoffs
+
+
 # UNAIDS surveillance age groups: '0-14','10-19','15-24','15-49','15+','50 and over'
 # Population data age groups: '0-4', '5-9','10-14','15-19','20-24','25-29','30-34',
 # '35-39','40-44','45-49','50-54','55-59','60-64','65-69',
@@ -11,6 +19,7 @@
 
 MODEL.AGE.CUTOFFS = c(0,10,15,20,25,30,40,50,60,70,80,Inf)
 
+# Using age cutoffs, creates age bracket labels
 parse.age.brackets = function(age.cutoffs) {
     
     n.ages = length(age.cutoffs)-1
@@ -28,9 +37,9 @@ parse.age.brackets = function(age.cutoffs) {
 }
 
 
-## Combine model age groups to create surveillance age groups ##
 
 ## SPECIFIC VERSION ##
+# Hard coded; created a generic version below but not really using it
 MODEL.TO.SURVEILLANCE.AGE.MAPPING = list(
     "0-14" = c("0-9","10-14"),
     "10-19" = c("10-14", "15-19"),
@@ -54,6 +63,8 @@ POPULATION.AGE.MAPPING.HARD.CODE = list(
     "80 and over" = c("80-84","85-89","90-94","95-99","100 and over")
 )
 
+# Creates list of necessary age brackets based on mapping list; called in extract_data functions 
+# For now, uses hard-coded/specific mappings; created generic functions below but these are not really being used fully 
 map.ages = function(to.map,
                     mapping = MODEL.TO.SURVEILLANCE.AGE.MAPPING,
                     map.to.options = unique(unlist(mapping))){
@@ -73,9 +84,10 @@ map.ages = function(to.map,
     rv
 }
 
-#REVERSE OF BELOW FUNCTION, because population age brackets are FINER than model age brackets
-# Loops through below function (map.ages.by.cutoffs) for all MODEL brackets
-# Returns a list where each item of the list is a MODEL age bracket and the POPULATION surveillance age brackets that go into it
+
+# 1. Used when surveillance age brackets are finer than model age brackets (only for population data) 
+# 2. Calls maps.ages.by.cutoffs once for each model age bracket
+# 3. Currently only being used to create initial population and calculate death rates 
 map.population.ages = function(data.manager,
                                data.type,
                                model.age.cutoffs = MODEL.AGE.CUTOFFS){
@@ -105,8 +117,9 @@ map.population.ages = function(data.manager,
 
 
 
-# Loops through below function (map.ages.by.cutoffs) for ALL surveillance brackets
-# Returns a list where each item of the list is a surveillance age bracket and the model age brackets that go into it
+# 1. Used when model age brackets are finer than surveillance age brackets (everything except for population data) 
+# 2. Calls map.ages.by.cutoffs once for each surveillance age bracket 
+# 3. Currently not being used 
 map.all.ages = function(data.manager,
                         data.type,
                         model.age.cutoffs = MODEL.AGE.CUTOFFS){
@@ -135,10 +148,10 @@ map.all.ages = function(data.manager,
 }
 
 
-## Given ONE surveillance age bracket, returns the model age brackets to include
-## E.g., given surveillance age bracket of 15-24, would return 15-19, 20-24
-## this is reversed for population data (above) because it is finer than model brackets
-## --> e.g., given MODEL bracket of 0-9, returns pop brackets 0-4, 5-9
+
+# 1. Called once for each wider age bracket in map.population.ages and map.all.ages
+# 2. Given each wider age bracket, returns the finer age brackets to include 
+# (e.g., given age bracket of 15-24, would return 15-19, 20-24) 
 map.ages.by.cutoffs = function(target.lower, # surveillance lower
                                target.upper, # surveillance upper
                                from.lowers, # model lowers
@@ -154,13 +167,6 @@ map.ages.by.cutoffs = function(target.lower, # surveillance lower
     rv$labels[is.infinite(rv$uppers)] = paste0(rv$lowers[is.infinite(rv$uppers)], " and over")
     
     rv
-    
-    # (Notes from before writing this: 
-    # returns a set of indices which is a subset of 1:length(from.lowers)
-    
-    # e.g., model age bracket is 0-10; from.lowers are 0,5,10, etc.
-    # so indices would be the first two from.lowers
-    # or, if it's 10-20, the lowers would be 3:4)
 }
 
 

@@ -1,6 +1,19 @@
 ################################################################################################
-#Description: The core differential equation functions modeling the disease dynamic
+# Description: Core differential equation functions to model disease dynamics/changes in states
 ################################################################################################
+
+# Functions
+#     1. compute.dx
+#         Called at every iteration; takes a vector form of the model state at this time, computes the changes
+#         in state we are interested in, returns a flattened vector of the changes in each element we are interested in
+#     2. set.up.initial.diffeq.vector
+#         Builds initial vector
+#     3. run.model
+#         Uses odeintr package to integrate the ODE system
+#     4. process.ode.results
+#         Separates out and saves the ode results in a meaningful data structure (list of results with class
+#         “hiv_simulation,” indexed by time, including states/incidence/diagnoses, etc.)
+
 
 library(odeintr)
 
@@ -8,7 +21,8 @@ library(odeintr)
 ##-- THE COMPUTE DIFFERENTIAL FUNCTION --##
 ##---------------------------------------##
 # This function is called at every iteration
-# y is 1-D aray including the model state and main transitions that we are interested in (incidence, diagnosis, hiv/non-hiv mortality)
+# y is 1-D aray including the model state and main transitions that we are interested in (incidence, diagnosis, 
+# hiv/non-hiv mortality)
 compute.dx <- function(time,
                        y, #the vector-form model state at this time
                        parameters){
@@ -220,7 +234,8 @@ compute.dx <- function(time,
 }
 
 
-# Building up the initial vector, including the initial.states and placeholder for the statistics that are recorded (e.g.,incidence, diagnosis, etc)
+# Building up the initial vector, including the initial.states and placeholder for the statistics that are 
+# recorded (e.g.,incidence, diagnosis, etc)
 set.up.initial.diffeq.vector <- function(initial.state,
                                          parameters){
     # y is 1-D aray including the model state and main transitions that we are interested in (incidence, diagnosis, hiv/non-hiv mortality)

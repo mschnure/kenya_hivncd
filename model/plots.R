@@ -1,16 +1,20 @@
 ################################################################################################
-#Description: Plotting functions
+# Description: Plotting functions that pull data from both the simulation and surveillance data 
 ################################################################################################
+
+# Functions 
+#     1. simplot
+#         Generate plot comparing simulation results to surveillance data; allows the user to specify which 
+#         dimensions they’d like to look at (i.e., only look at data among women) and/or which dimensions they’d 
+#         like to stratify by (i.e., separate panels or shapes by age group)
+#     2. simplot.basic
+#         Generate plot comparing simulation results to surveillance data; only allowed to facet by data type 
+
+
 
 library(ggplot2)        
 library(reshape2)
 source('model/extract_data.R')
-
-#General structure: 
-# ... can include more that one simulation  
-# data.type: e.g., incidence, diagnosis,...
-# facet.by: how to categorize data 
-# split.by: ??
 
 
 simplot = function(...,
@@ -23,8 +27,6 @@ simplot = function(...,
                    sexes = data.manager[[data.types[1]]]$SEXES
                    #subgroups = data.manager$SUBGROUPS
 ){
-    
-    
     # data frame will need columns from basic function; plus column for every facet.by and every split.by
     # then combine all the split.by and sim id's into one column 
     
@@ -110,7 +112,6 @@ simplot = function(...,
     
 }
 
-#Basic plotting function regardless of subgroups
 simplot.basic = function(..., 
                          data.manager = DATA.MANAGER,
                          years = 2010:2020,
