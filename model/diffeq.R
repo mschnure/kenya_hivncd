@@ -87,10 +87,18 @@ compute.dx <- function(time,
     
     #-- BIRTH --#
     births = state * pp$FERTILITY.RATES
-    births = apply(births, 3, sum) # assuming the subgroups represent various locations
+    hiv.births = births*pp$MATERNAL.FETAL.TRANSMISSION
+    non.hiv.births = births*(1-pp$MATERNAL.FETAL.TRANSMISSION)
     
-    dx.state[1,'male',,'hiv_negative'] = births*pp$MALE.BIRTHS
-    dx.state[1,'female',,'hiv_negative'] = births*(1-pp$MALE.BIRTHS)
+    # assuming the subgroups represent various locations
+    hiv.births = apply(hiv.births, 3, sum)
+    non.hiv.births = apply(non.hiv.births, 3, sum) 
+    
+    dx.state[1,'male',,'undiagnosed'] = hiv.births*pp$MALE.BIRTHS
+    dx.state[1,'female',,'undiagnosed'] = hiv.births*(1-pp$MALE.BIRTHS)
+    
+    dx.state[1,'male',,'hiv_negative'] = non.hiv.births*pp$MALE.BIRTHS
+    dx.state[1,'female',,'hiv_negative'] = non.hiv.births*(1-pp$MALE.BIRTHS)
     
     
     #-- AGING --#
@@ -182,13 +190,20 @@ compute.dx <- function(time,
     dx.incidence.rate = pp$TRANSMISSION.RATES %*% as.numeric(infectiousness.from)
     
     dx.incidence = state[,,,'hiv_negative'] * as.numeric(dx.incidence.rate)
+    dim(dx.incidence) = sapply(trans.dim.names, length)
+    dimnames(dx.incidence) = trans.dim.names
     
-    
+
     
     
     #-- NEW INFECTIONS --#
     dx.state[,,,'hiv_negative'] = as.numeric(dx.state[,,,'hiv_negative']) - dx.incidence
     dx.state[,,,'undiagnosed'] = as.numeric(dx.state[,,,'undiagnosed']) + dx.incidence
+    
+    # Record new HIV births as new infections
+    dx.incidence[1,'male',] = dx.incidence[1,'male',] + hiv.births*pp$MALE.BIRTHS
+    dx.incidence[1,'female',] = dx.incidence[1,'female',] + hiv.births*(1-pp$MALE.BIRTHS)
+
     
     #-- ENGAGEMENT --#
     engaged = pp$ENGAGEMENT.RATES * as.numeric(state[,,,'diagnosed_unengaged'])
