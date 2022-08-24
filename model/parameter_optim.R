@@ -15,51 +15,69 @@
 #     population (to be minimized via optimization); called by run.and.score.sim 
 
 
-source('source_code.R')
-source('model/plots.R')
+source('model/run_systematic.R')
 
-par = c(fertility.multiplier=1,
-        over.80.mortality.multiplier=1)
+par = c( #testing.time.0=1986,
+        #testing.time.1=2000,
+        # testing.rate.0=0.5,
+        # testing.rate.1=1,
+        #engagement.time.0=2014,
+        #engagement.time.1=2016,
+        # engagement.rate.0=0.15,
+        # engagement.rate.1=0.33,
+        # engagement.rate.2=3,
+        #suppression.time.0=1986,
+        #suppression.time.1=2003,
+        # suppression.rate.0=0.8,
+        # suppression.rate.1=3,
+        trate.0=0.88,
+        trate.1=0.2)
+
 
 run.and.score.sim = function(par,
-                             data.manager=DATA.MANAGER) {
+                             data.manager=DATA.MANAGER,
+                             data.type="incidence") {
     
     sim = run.model.for.parameters(variable.parameters=par)
     
-    score.sim(sim)
+    score.sim(sim, data.type = data.type, data.manager=DATA.MANAGER)
     
 }
 
-score.sim = function(sim){
-    sim.pop = extract.data(sim,
-                           years=2010:2020, 
-                           data.type = "population",
-                           keep.dimensions = c("year","age"))
+score.sim = function(sim,
+                     data.type,
+                     data.manager){
     
-    true.pop = get.surveillance.data(data.manager = DATA.MANAGER, 
-                                     years=2010:2020, 
-                                     data.type = "population",
-                                     keep.dimensions = c("year","age"))
+    sim.output = as.numeric(extract.data(sim,
+                                         years=2010:2020, 
+                                         data.type = data.type,
+                                         age=data.manager[[data.type[1]]]$AGES,
+                                         keep.dimensions = c("year","age")))
+    
+    true = as.numeric(get.surveillance.data(data.manager = DATA.MANAGER, 
+                                            years=2010:2020, 
+                                            data.type = data.type,
+                                            keep.dimensions = c("year","age")))
     
     # sum of squared errors of the population proportion - I think 
     #sum(((sim.pop/rowSums(sim.pop)) - (true.pop/rowSums(true.pop)))^2)
     
     # sum of squared errors of the population itself 
-    log(sum((sim.pop - true.pop)^2))
+    log(sum((sim.output - true)^2))
 }
 
-rv = optim(par = par, fn = run.and.score.sim)
+rv = optim(par = par, fn = run.and.score.sim, method = "BFGS")
 
 sim.test.optim=run.model.for.parameters(variable.parameters = rv$par)
 sim.test.manual = run.model.for.parameters(variable.parameters = c(rv$par[1]))
 
 print(simplot(sim.test.optim, 
               years=c(2010:2020),
-              data.types = "population", facet.by = 'age'))
+              data.types = "incidence", facet.by = 'age'))
 
 print(simplot(sim.test.manual, 
               years=c(2010:2020),
-              data.types = "population", facet.by = 'age'))
+              data.types = "incidence", facet.by = 'age'))
 
 # lower score better 
 score.sim(sim.test.manual)
@@ -68,6 +86,14 @@ score.sim(sim.test.optim)
 
 
 
+
+print(simplot(sim.test.optim, 
+              years=c(2010:2020),
+              data.types = "population", facet.by = 'age'))
+
+print(simplot(sim.test.manual, 
+              years=c(2010:2020),
+              data.types = "population", facet.by = 'age'))
 
 
 # Online example (https://jootse84.github.io/notes/optim-in-R)

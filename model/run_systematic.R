@@ -52,13 +52,46 @@ run.model.for.parameters = function(variable.parameters,
 }
 
 
-variable.parameters=get.default.parameters()
-sim = run.model.for.parameters(variable.parameters = variable.parameters)
+if(1==2){
+    
+    variable.parameters=get.default.parameters()
+    variable.parameters['suppression.rate.0']=0.6
+    variable.parameters['testing.rate.0']=0.4
+    variable.parameters['trate.0']=.95
+    variable.parameters['trate.1']=0.3
+    variable.parameters['age.50.and.over.transmission.multiplier']=0.4
+    variable.parameters['age.50.to.79.mortality.multiplier']=1.6
+    variable.parameters['over.80.mortality.multiplier']=2
+    sim = run.model.for.parameters(variable.parameters = variable.parameters)
+    
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("incidence"),
+                  facet.by = 'age')
+    )
+    
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("prevalence"),
+                  facet.by = 'age')
+    )
+    
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("incidence"),
+                  facet.by = 'sex')
+    )
+    
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("incidence"))
+    )
+    
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("population"),
+                  facet.by = 'age')
+    )
+    
+}
 
-
-
-print(simplot(sim,
-              years=c(1980:2020),
-              data.types = c("incidence"),
-              facet.by = 'age')
-)
