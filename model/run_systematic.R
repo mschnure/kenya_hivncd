@@ -57,11 +57,12 @@ if(1==2){
     variable.parameters=get.default.parameters()
     variable.parameters['suppression.rate.0']=0.6
     variable.parameters['testing.rate.0']=0.4
-    variable.parameters['trate.0']=.95
-    variable.parameters['trate.1']=0.3
+    variable.parameters['trate.0']=.85
+    variable.parameters['trate.1']=0.2
     variable.parameters['age.50.and.over.transmission.multiplier']=0.4
     variable.parameters['age.50.to.79.mortality.multiplier']=1.6
     variable.parameters['over.80.mortality.multiplier']=2
+    variable.parameters['birth.transmission.risk']=.8
     sim = run.model.for.parameters(variable.parameters = variable.parameters)
     
     print(simplot(sim,
@@ -74,6 +75,13 @@ if(1==2){
                   years=c(1980:2020),
                   data.types = c("prevalence"),
                   facet.by = 'age')
+    )
+    
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("prevalence"),
+                  facet.by = 'age',
+                  ages = c('10-14','15-19'))+ geom_hline(yintercept=130000)
     )
     
     print(simplot(sim,

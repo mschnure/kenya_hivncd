@@ -70,14 +70,15 @@ get.default.parameters = function(){
            testing.time.1=2000,
            testing.rate.0=0.3,
            testing.rate.1=1,
-           engagement.time.0=2014,
-           engagement.time.1=2016,
+           engagement.time.0=1986,
+           engagement.time.1=2014,
+           engagement.time.2=2016,
            engagement.rate.0=0.15,
            engagement.rate.1=0.33,
            engagement.rate.2=3,
            unsuppressed.disengagement.rates=0.2,
            suppressed.disengagement.rates=0.2,
-           suppression.time.0=1986,
+           suppression.time.0=1993,
            suppression.time.1=2003,
            suppression.rate.0=0.5,
            suppression.rate.1=3,
@@ -94,7 +95,7 @@ get.default.parameters = function(){
            age.40.to.49.transmission.multiplier=1,
            age.50.and.over.transmission.multiplier=0.5,
            age.assortativity=1, 
-           relative.transmission.from.diagnosis=0.33, #repeat this
+           relative.transmission.from.diagnosis=0.33, 
            birth.transmission.risk=0.25) 
 }
 
@@ -256,7 +257,7 @@ map.model.parameters <- function(parameters,
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='TESTING.RATES',
                                                   value = 0,
-                                                  time = (sampled.parameters['start.time']-0.001))
+                                                  time = (sampled.parameters['testing.time.0']-0.001))
     
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='TESTING.RATES',
@@ -426,7 +427,7 @@ map.model.parameters <- function(parameters,
                                                   value = array(sampled.parameters['engagement.rate.0'],
                                                                 dim=sapply(trans.dim.names, length),
                                                                 dimnames=trans.dim.names),
-                                                  time = sampled.parameters['start.time']-0.001)
+                                                  time = sampled.parameters['engagement.time.0'])
     
     # 2014-2016, initiate at CD4 <500
     parameters = add.time.varying.parameter.value(parameters,
@@ -434,14 +435,14 @@ map.model.parameters <- function(parameters,
                                                   value = array(sampled.parameters['engagement.rate.1'],
                                                                 dim=sapply(trans.dim.names, length),
                                                                 dimnames=trans.dim.names),
-                                                  time = sampled.parameters['engagement.time.0'])
+                                                  time = sampled.parameters['engagement.time.1'])
     # Initiation of test and treat 
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='ENGAGEMENT.RATES',
                                                   value = array(sampled.parameters['engagement.rate.2'],
                                                                 dim=sapply(trans.dim.names, length),
                                                                 dimnames=trans.dim.names),
-                                                  time = sampled.parameters['engagement.time.1'])
+                                                  time = sampled.parameters['engagement.time.2'])
     
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='UNSUPPRESSED.DISENGAGEMENT.RATES',
@@ -462,7 +463,7 @@ map.model.parameters <- function(parameters,
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='SUPPRESSION.RATES',
                                                   value = 0,
-                                                  time = (sampled.parameters['start.time']-0.001))
+                                                  time = (sampled.parameters['suppression.time.0']-0.001))
     
     # First ART available; slower to suppression
     parameters = add.time.varying.parameter.value(parameters,
