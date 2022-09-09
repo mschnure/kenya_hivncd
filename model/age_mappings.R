@@ -17,7 +17,7 @@
 # '70-74','75-79','80-84','85-89','90-94','95-99','100+','Total'
 # Deaths age groups has same as population, but 95+ instead of 95-99 and 100+
 
-MODEL.AGE.CUTOFFS = c(0,10,15,20,25,30,40,50,60,70,80,Inf)
+MODEL.AGE.CUTOFFS = c(0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,Inf)
 
 # Using age cutoffs, creates age bracket labels
 parse.age.brackets = function(age.cutoffs) {
@@ -36,30 +36,51 @@ parse.age.brackets = function(age.cutoffs) {
     rv
 }
 
+get.age.brackets.in.range = function(age.cutoffs = MODEL.AGE.CUTOFFS,
+                                     lower,
+                                     upper){
+    
+    # e.g., if I pass 50 as lower and Inf as upper, it returns all the age brackets within 
+    model.age.brackets = parse.age.brackets(age.cutoffs = age.cutoffs)
+    
+    mask = model.age.brackets$lowers>=lower & model.age.brackets$uppers<=upper
+    
+    rv = model.age.brackets$labels[mask]
+    
+    rv
+    
+}
 
 
 ## SPECIFIC VERSION ##
 # Hard coded; created a generic version below but not really using it
 MODEL.TO.SURVEILLANCE.AGE.MAPPING = list(
-    "0-14" = c("0-9","10-14"),
-    "10-19" = c("10-14", "15-19"),
-    "15-24" = c("15-19", "20-24"),
-    "15-49" = c("15-19", "20-24","25-29","30-39","40-49"),
-    "15+" = c("15-19", "20-24","25-29","30-39","40-49","50-59","60-69","70-79","80 and over"),
-    "50 and over" = c("50-59","60-69","70-79","80 and over")
+    "0-14" = c("0-4","5-9","10-14"),
+    "10-19" = c("10-14","15-19"),
+    "15-24" = c("15-19","20-24"),
+    "15-49" = c("15-19","20-24","25-29","30-34","35-39","40-44","45-49"),
+    "15+" = c("15-19", "20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59",
+              "60-64","65-69","70-74","75-79","80 and over"),
+    "50 and over" = c("50-54","55-59","60-64","65-69","70-74","75-79","80 and over")
 )
 
 POPULATION.AGE.MAPPING.HARD.CODE = list(
-    "0-9" = c("0-4","5-9"),
+    "0-4"= c("0-4"),
+    "5-9" = c("5-9"),
     "10-14" = c("10-14"),
     "15-19" = c("15-19"),
     "20-24" = c("20-24"),
     "25-29" = c("25-29"),
-    "30-39" = c("30-34", "35-39"),
-    "40-49" = c("40-44","45-49"),
-    "50-59" = c("50-54","55-59"),
-    "60-69" = c("60-64","65-69"),
-    "70-79" = c("70-74","75-79"),
+    "30-34" = c("30-34"),
+    "35-39" = c("35-39"),
+    "40-44" = c("40-44"),
+    "45-49" = c("45-49"),
+    "50-54" = c("50-54"),
+    "55-59" = c("55-59"),
+    "60-64" = c("60-64"),
+    "65-69" = c("65-69"),
+    "70-74" = c("70-74"),
+    "75-79" = c("75-79"),
     "80 and over" = c("80-84","85-89","90-94","95-99","100 and over")
 )
 
