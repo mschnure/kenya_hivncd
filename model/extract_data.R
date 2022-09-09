@@ -59,6 +59,14 @@ extract.data = function(sim,
                                 subgroups=subgroups,
                                 keep.dimensions=keep.dimensions)
     
+    else if (data.type=='hiv.mortality')
+        rv = extract.hiv.mortality(sim,
+                                   years=years, 
+                                   ages=ages,
+                                   sexes=sexes,
+                                   subgroups=subgroups,
+                                   keep.dimensions=keep.dimensions)
+    
     else stop("not a valid data type")
     # fill in other ones
     
@@ -312,7 +320,25 @@ extract.new.diagnoses <- function(sim,
 }
 
 
-
+# Call to do.extract.4D; pulls hiv mortality
+extract.hiv.mortality <- function(sim,
+                                  years = sim$years,
+                                  ages = sim$AGES,
+                                  subgroups = sim$SUBGROUPS,
+                                  sexes = sim$SEXES,
+                                  hiv.status = sim$HIV.STATUS,
+                                  keep.dimensions = 'year'){
+    do.extract.4D(
+        sim = sim,
+        arr = sim$hiv.mortality,
+        years = years,
+        ages = ages,
+        subgroups = subgroups,
+        sexes = sexes,
+        hiv.status = hiv.status,
+        keep.dimensions = keep.dimensions
+    )
+}
 
 
 
