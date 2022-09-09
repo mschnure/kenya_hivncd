@@ -174,9 +174,11 @@ read.surveillance.data = function(dir = 'data/raw_data'){
     
     # Population data aggregated into model age groups 
     rv$population = read.population.data.files.model.ages(data.type = "population", model.age.cutoffs = MODEL.AGE.CUTOFFS)
-    rv$population$AGES = c("0-9","10-14","15-19","20-24","25-29","30-39","40-49","50-59","60-69","70-79","80 and over")
-    rv$population$AGE.LOWERS = c(0,10,15,20,25,30,40,50,60,70,80)
-    rv$population$AGE.UPPERS = c(10,15,20,25,30,40,50,60,70,80,Inf)
+    rv$population$AGES = c("0-4","5-9","10-14","15-19","20-24","25-29","30-34",
+                           "35-39","40-44","45-49","50-54","55-59","60-64","65-69",
+                           "70-74","75-79","80 and over")
+    rv$population$AGE.LOWERS = c(0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80)
+    rv$population$AGE.UPPERS = c(5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,Inf)
     rv$population$SEXES = c('male','female')
     rv$population$SUBGROUPS = dimnames(rv$incidence$subgroup)$subgroup ## NO POPULATION SUBGROUPS FOR NOW
     
@@ -195,9 +197,9 @@ read.surveillance.data = function(dir = 'data/raw_data'){
     rv$fertility$YEARS = c("1953","1958","1963","1968","1973","1978","1983","1988","1993","1998","2003",
                            "2008","2013","2018","2023","2028","2033","2038","2043","2048","2053","2058",
                            "2063","2068","2073","2078","2083","2088","2093","2098")
-    rv$fertility$AGES = c("15-19","20-24","25-29","30-39","40-49")
-    rv$fertility$AGE.LOWERS = c(15,20,25,30,40)
-    rv$fertility$AGE.UPPERS = c(20,25,30,40,50)
+    rv$fertility$AGES = c("15-19","20-24","25-29","30-34","35-39","40-44","45-49")
+    rv$fertility$AGE.LOWERS = c(15,20,25,30,35,40,45)
+    rv$fertility$AGE.UPPERS = c(20,25,30,35,40,45,50)
     
     # Crude birth rate
     rv$births = read.birth.data.files(data.type = "population")
@@ -745,17 +747,17 @@ read.fertility.data.files = function(dir = 'data/raw_data',
     
     fertility.rate = t(fertility.rate) # transpose so that year dimension is now first
     
-    # combine 30-34 and 35-39 into 30-39; same for 40-49
-    ages.new = c(ages[1:3], "30-39","40-49")
-    new.dim.names = list(year = as.character(years),
-                         age = ages.new)
-    
-    fertility.rate.new = array(c(fertility.rate[,c(1:3)],(fertility.rate[,4]+fertility.rate[,5])/2,(fertility.rate[,6]+fertility.rate[,7])/2),
-                               dim = sapply(new.dim.names, length),
-                               dimnames = new.dim.names)
+    # combine 30-34 and 35-39 into 30-39; same for 40-49 - REMOVING THIS BECAUSE RETURNING TO JUST 5-YEAR AGE GROUPS
+    # ages.new = c(ages[1:3], "30-39","40-49")
+    # new.dim.names = list(year = as.character(years),
+    #                      age = ages.new)
+    # 
+    # fertility.rate.new = array(c(fertility.rate[,c(1:3)],(fertility.rate[,4]+fertility.rate[,5])/2,(fertility.rate[,6]+fertility.rate[,7])/2),
+    #                            dim = sapply(new.dim.names, length),
+    #                            dimnames = new.dim.names)
     
     rv = list()
-    rv$age = fertility.rate.new
+    rv$age = fertility.rate
     
     rv
 }
