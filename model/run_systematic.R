@@ -35,7 +35,7 @@ run.model.for.parameters = function(variable.parameters,
                                            model.age.cutoffs = MODEL.AGE.CUTOFFS, 
                                            ages = parameters$AGES, 
                                            sexes = parameters$SEXES, 
-                                           seed.to.ages = c(4,5,6), 
+                                           seed.to.ages = c(5,6,7,8), 
                                            seed.to.sexes = c(1,2), 
                                            seed.n = 1)
     
@@ -57,12 +57,17 @@ if(1==2){
     variable.parameters=get.default.parameters()
     variable.parameters['suppression.rate.0']=0.6
     variable.parameters['testing.rate.0']=0.4
-    variable.parameters['trate.0']=.85
-    variable.parameters['trate.1']=0.2
-    variable.parameters['age.50.and.over.transmission.multiplier']=0.4
-    variable.parameters['age.50.to.79.mortality.multiplier']=1.6
-    variable.parameters['over.80.mortality.multiplier']=2
-    variable.parameters['birth.transmission.risk']=.8
+    variable.parameters['trate.0']=.985
+    variable.parameters['trate.1']=0.29
+    variable.parameters['age.15.to.19.transmission.multiplier']=.66
+    variable.parameters['age.20.to.29.transmission.multiplier']=1.27
+    variable.parameters['age.40.to.49.transmission.multiplier']=1.15
+    variable.parameters['age.50.and.over.transmission.multiplier']=0.36
+    variable.parameters['female.to.male.multiplier']=1.03
+    variable.parameters['age.50.to.79.mortality.multiplier']=2.1
+    variable.parameters['over.80.mortality.multiplier']=1
+    variable.parameters['birth.transmission.risk']=.24
+    variable.parameters['age.assortativity']=.8
     sim = run.model.for.parameters(variable.parameters = variable.parameters)
     
     print(simplot(sim,
@@ -74,6 +79,18 @@ if(1==2){
     print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("prevalence"),
+                  facet.by = 'age')
+    )
+    
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("hiv.mortality"),
+                  facet.by = 'age')
+    )
+    
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("population"),
                   facet.by = 'age')
     )
     
@@ -93,12 +110,6 @@ if(1==2){
     print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("incidence"))
-    )
-    
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("population"),
-                  facet.by = 'age')
     )
     
 }
