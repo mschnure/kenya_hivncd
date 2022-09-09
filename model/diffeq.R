@@ -78,6 +78,18 @@ compute.dx <- function(time,
     dx.non.hiv.mortality = array(0, 
                                  dim = sapply(state.dim.names, length), 
                                  dimnames = state.dim.names)#indexed [age, sex, subgroup, hiv-status]
+    dx.engagement = array(0,
+                          dim = sapply(trans.dim.names, length),
+                          dimnames = trans.dim.names)#indexed [age, sex, subgroup]
+    dx.disengagement.suppressed = array(0,
+                                        dim = sapply(trans.dim.names, length),
+                                        dimnames = trans.dim.names)#indexed [age, sex, subgroup]
+    dx.disengagement.unsuppressed = array(0,
+                                          dim = sapply(trans.dim.names, length),
+                                          dimnames = trans.dim.names)#indexed [age, sex, subgroup]
+    dx.suppression = array(0,
+                           dim = sapply(trans.dim.names, length),
+                           dimnames = trans.dim.names)#indexed [age, sex, subgroup]
     
     ##----------------------------------##
     ##-- COMPUTE THE CHANGES IN STATE --##
@@ -209,21 +221,25 @@ compute.dx <- function(time,
     engaged = pp$ENGAGEMENT.RATES * as.numeric(state[,,,'diagnosed_unengaged'])
     dx.state[,,,'diagnosed_unengaged'] = as.numeric(dx.state[,,,'diagnosed_unengaged']) - engaged
     dx.state[,,,'engaged_unsuppressed'] = as.numeric(dx.state[,,,'engaged_unsuppressed']) + engaged
+    dx.engagement = engaged
     
     #-- DISENGAGED FROM UNSUPPRESSED --#
     disengaged.unsuppressed = pp$UNSUPPRESSED.DISENGAGEMENT.RATES * as.numeric(state[,,,'engaged_unsuppressed'])
     dx.state[,,,'engaged_unsuppressed'] = as.numeric(dx.state[,,,'engaged_unsuppressed']) - disengaged.unsuppressed
     dx.state[,,,'diagnosed_unengaged'] = as.numeric(dx.state[,,,'diagnosed_unengaged']) + disengaged.unsuppressed
+    dx.disengagement.unsuppressed = disengaged.unsuppressed
     
     #-- DISENGAGED FROM SUPPRESSED --#
     disengaged.suppressed = pp$SUPPRESSED.DISENGAGEMENT.RATES * as.numeric(state[,,,'engaged_suppressed'])
     dx.state[,,,'engaged_suppressed'] = as.numeric(dx.state[,,,'engaged_suppressed']) - disengaged.suppressed
     dx.state[,,,'diagnosed_unengaged'] = as.numeric(dx.state[,,,'diagnosed_unengaged']) + disengaged.suppressed
+    dx.disengagement.suppressed = disengaged.suppressed
     
     #-- SUPPRESSION --#
     suppressed = pp$SUPPRESSION.RATES * as.numeric(state[,,,'engaged_unsuppressed'])
     dx.state[,,,'engaged_unsuppressed'] = as.numeric(dx.state[,,,'engaged_unsuppressed']) - suppressed
     dx.state[,,,'engaged_suppressed'] = as.numeric(dx.state[,,,'engaged_suppressed']) + suppressed
+    dx.suppression = suppressed
     
     #-- UNSUPPRESSION --#
     unsuppressed = pp$UNSUPPRESSION.RATES * as.numeric(state[,,,'engaged_suppressed'])
@@ -243,7 +259,12 @@ compute.dx <- function(time,
       as.numeric(dx.incidence), 
       as.numeric(dx.diagnoses), 
       as.numeric(dx.hiv.mortality), 
-      as.numeric(dx.non.hiv.mortality))
+      as.numeric(dx.non.hiv.mortality),
+      as.numeric(dx.engagement),
+      as.numeric(dx.disengagement.unsuppressed),
+      as.numeric(dx.disengagement.suppressed),
+      as.numeric(dx.suppression)
+)
     
     
 }
@@ -258,7 +279,9 @@ set.up.initial.diffeq.vector <- function(initial.state,
     trans.length = length(parameters$AGES)*length(parameters$SEXES)*length(parameters$SUBGROUPS)
     
     total.length = 3 * state.length + #state plus two mortality arrays
-        2 * trans.length #incidence plus new diagnoses
+        2 * trans.length + #incidence plus new diagnoses
+        4 * trans.length #engagement, disengagement x2, suppression
+    
     
     rv = numeric(total.length) #opens a 1-D vector of 0s to this length
     rv[1:state.length] = as.numeric(initial.state)  
@@ -337,7 +360,7 @@ process.ode.results <- function(ode.results,
                         dimnames = state.dim.names)
     index=index+state.length
     
-    #incidence (reported as cumulative value)
+    #incidence
     rv$incidence=array(ode.results[keep.years,index+1:trans.length]-ode.results[previous.years,index+1:trans.length],
                        dim = sapply(trans.dim.names,length),
                        dimnames = trans.dim.names)
@@ -361,6 +384,29 @@ process.ode.results <- function(ode.results,
                                dimnames = state.dim.names)
     index=index+state.length
     
+    #engagement
+    rv$engagement=array(ode.results[keep.years,index+1:trans.length]-ode.results[previous.years,index+1:trans.length],
+                       dim = sapply(trans.dim.names,length),
+                       dimnames = trans.dim.names)
+    index=index+trans.length
+
+    #disengagement unsuppressed
+    rv$disengagement.unsuppressed=array(ode.results[keep.years,index+1:trans.length]-ode.results[previous.years,index+1:trans.length],
+                                        dim = sapply(trans.dim.names,length),
+                                        dimnames = trans.dim.names)
+    index=index+trans.length
+    
+    #disengagement suppressed
+    rv$disengagement.suppressed=array(ode.results[keep.years,index+1:trans.length]-ode.results[previous.years,index+1:trans.length],
+                                      dim = sapply(trans.dim.names,length),
+                                      dimnames = trans.dim.names)
+    index=index+trans.length
+    
+    #suppression
+    rv$suppression=array(ode.results[keep.years,index+1:trans.length]-ode.results[previous.years,index+1:trans.length],
+                       dim = sapply(trans.dim.names,length),
+                       dimnames = trans.dim.names)
+    index=index+trans.length
     
     class(rv)="hiv_simulation" 
     
