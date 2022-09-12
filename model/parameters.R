@@ -197,7 +197,7 @@ map.model.parameters <- function(parameters,
                               dimnames=state.dim.names)
     
     # add a spline to this parameter
-    HIV.MORTALITY.RATES[,,,c('undiagnosed', 'diagnosed_unengaged', 'engaged_unsuppressed')] = sampled.parameters['hiv.specific.mortality']
+    HIV.MORTALITY.RATES[,,,c('undiagnosed', 'diagnosed_unengaged', 'engaged_unsuppressed')] = sampled.parameters['hiv.specific.mortality.rates']
     
     
     parameters = add.time.varying.parameter.value(parameters,
