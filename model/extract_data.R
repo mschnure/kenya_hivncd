@@ -11,6 +11,12 @@
 #     5. extract.incidence
 #     6. extract.prevalence
 #     7. extract.new.diagnoses
+#     8. extract.hiv.mortality
+#     9. extract.suppression
+#     10. extract.engagement
+#     11. extract.disengagement.suppressed
+#     12. extract.disengagement.unsuppressed
+
 
 
 # General function to extract data based on data type; calls lower-level functions (e.g., extract 
@@ -66,6 +72,38 @@ extract.data = function(sim,
                                    sexes=sexes,
                                    subgroups=subgroups,
                                    keep.dimensions=keep.dimensions)
+    
+    else if (data.type=='suppression')
+        rv = extract.suppression(sim,
+                                 years=years, 
+                                 ages=ages,
+                                 sexes=sexes,
+                                 subgroups=subgroups,
+                                 keep.dimensions=keep.dimensions)
+    
+    else if (data.type=='engagement')
+        rv = extract.engagement(sim,
+                                years=years, 
+                                ages=ages,
+                                sexes=sexes,
+                                subgroups=subgroups,
+                                keep.dimensions=keep.dimensions)
+    
+    else if (data.type=='disengagement.suppressed')
+        rv = extract.disengagement.suppressed(sim,
+                                              years=years, 
+                                              ages=ages,
+                                              sexes=sexes,
+                                              subgroups=subgroups,
+                                              keep.dimensions=keep.dimensions)
+    
+    else if (data.type=='disengagement.unsuppressed')
+        rv = extract.disengagement.unsuppressed(sim,
+                                                years=years, 
+                                                ages=ages,
+                                                sexes=sexes,
+                                                subgroups=subgroups,
+                                                keep.dimensions=keep.dimensions)
     
     else stop("not a valid data type")
     # fill in other ones
@@ -340,6 +378,76 @@ extract.hiv.mortality <- function(sim,
     )
 }
 
+# Call to do.extract.3D; pulls suppression
+extract.suppression <- function(sim,
+                                years = sim$years,
+                                ages = sim$AGES,
+                                subgroups = sim$SUBGROUPS,
+                                sexes = sim$SEXES,
+                                keep.dimensions = 'year'){
+    do.extract.3D(
+        sim = sim,
+        arr = sim$suppression,
+        years = years,
+        ages = ages,
+        subgroups = subgroups,
+        sexes = sexes,
+        keep.dimensions = keep.dimensions
+    )
+}
 
+# Call to do.extract.3D; pulls engagement
+extract.engagement <- function(sim,
+                               years = sim$years,
+                               ages = sim$AGES,
+                               subgroups = sim$SUBGROUPS,
+                               sexes = sim$SEXES,
+                               keep.dimensions = 'year'){
+    do.extract.3D(
+        sim = sim,
+        arr = sim$engagement,
+        years = years,
+        ages = ages,
+        subgroups = subgroups,
+        sexes = sexes,
+        keep.dimensions = keep.dimensions
+    )
+}
+
+# Call to do.extract.3D; pulls disengagement from suppressed
+extract.disengagement.suppressed <- function(sim,
+                                             years = sim$years,
+                                             ages = sim$AGES,
+                                             subgroups = sim$SUBGROUPS,
+                                             sexes = sim$SEXES,
+                                             keep.dimensions = 'year'){
+    do.extract.3D(
+        sim = sim,
+        arr = sim$disengagement.suppressed,
+        years = years,
+        ages = ages,
+        subgroups = subgroups,
+        sexes = sexes,
+        keep.dimensions = keep.dimensions
+    )
+}
+
+# Call to do.extract.3D; pulls disengagement from unsuppressed
+extract.disengagement.unsuppressed <- function(sim,
+                                               years = sim$years,
+                                               ages = sim$AGES,
+                                               subgroups = sim$SUBGROUPS,
+                                               sexes = sim$SEXES,
+                                               keep.dimensions = 'year'){
+    do.extract.3D(
+        sim = sim,
+        arr = sim$disengagement.unsuppressed,
+        years = years,
+        ages = ages,
+        subgroups = subgroups,
+        sexes = sexes,
+        keep.dimensions = keep.dimensions
+    )
+}
 
 
