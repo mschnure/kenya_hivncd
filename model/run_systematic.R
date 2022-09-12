@@ -42,8 +42,8 @@ run.model.for.parameters = function(variable.parameters,
     sim = run.model(parameters=parameters,
                     initial.state=initial.state,
                     start.year=1970, # later make these arguments that I pass to the function, with these as defaults 
-                    end.year=2020,
-                    keep.years=c(1970:2020))
+                    end.year=2030,
+                    keep.years=c(1970:2030))
     
     sim$parameters = parameters
     
@@ -52,28 +52,77 @@ run.model.for.parameters = function(variable.parameters,
 }
 
 
+## Run model with sampled parameters
+variable.parameters=get.default.parameters()
+variable.parameters['suppression.rate.0']=0.6
+variable.parameters['testing.rate.0']=0.4
+variable.parameters['trate.0']=.8
+variable.parameters['trate.1']=0.25
+variable.parameters['age.15.to.19.transmission.multiplier']=.66
+variable.parameters['age.20.to.29.transmission.multiplier']=1.3
+variable.parameters['age.40.to.49.transmission.multiplier']=1.1
+variable.parameters['age.50.and.over.transmission.multiplier']=0.5
+variable.parameters['female.to.male.multiplier']=1.03
+variable.parameters['age.50.to.79.mortality.multiplier']=2.1
+variable.parameters['over.80.mortality.multiplier']=1
+variable.parameters['birth.transmission.risk']=.6
+variable.parameters['age.assortativity']=.8
+sim = run.model.for.parameters(variable.parameters = variable.parameters)
+
+
+## Extract data for NCD model
+extract.hiv.data.for.ncd = function(sim,
+                                    years){
+    rv = list()
+    rv$population = extract.data(sim, 
+                                 data.type = "population",
+                                 years = years,
+                                 keep.dimensions = c("year","age","sex","hiv.status"))
+    rv$incidence = extract.data(sim, 
+                                data.type = "incidence",
+                                years = years,
+                                keep.dimensions = c("year","age","sex"))
+    rv$hiv.mortality = extract.data(sim, 
+                                    data.type = "hiv.mortality",
+                                    years = years,
+                                    keep.dimensions = c("year","age","sex"))
+    rv$diagnosis = extract.data(sim, 
+                                data.type = "diagnoses",
+                                years = years,
+                                keep.dimensions = c("year","age","sex"))
+    rv$engagement = extract.data(sim, 
+                                 data.type = "engagement",
+                                 years = years,
+                                 keep.dimensions = c("year","age","sex"))
+    rv$disengagement.suppressed = extract.data(sim, 
+                                               data.type = "disengagement.suppressed",
+                                               years = years,
+                                               keep.dimensions = c("year","age","sex"))
+    rv$disengagement.unsuppressed = extract.data(sim, 
+                                                 data.type = "disengagement.unsuppressed",
+                                                 years = years,
+                                                 keep.dimensions = c("year","age","sex"))
+    
+    rv
+}
+
+hiv.output.for.ncd = extract.hiv.data.for.ncd(sim=sim,years = 2010:2030)
+
+
 if(1==2){
-    
-    variable.parameters=get.default.parameters()
-    variable.parameters['suppression.rate.0']=0.6
-    variable.parameters['testing.rate.0']=0.4
-    variable.parameters['trate.0']=.985
-    variable.parameters['trate.1']=0.29
-    variable.parameters['age.15.to.19.transmission.multiplier']=.66
-    variable.parameters['age.20.to.29.transmission.multiplier']=1.27
-    variable.parameters['age.40.to.49.transmission.multiplier']=1.15
-    variable.parameters['age.50.and.over.transmission.multiplier']=0.36
-    variable.parameters['female.to.male.multiplier']=1.03
-    variable.parameters['age.50.to.79.mortality.multiplier']=2.1
-    variable.parameters['over.80.mortality.multiplier']=1
-    variable.parameters['birth.transmission.risk']=.24
-    variable.parameters['age.assortativity']=.8
-    sim = run.model.for.parameters(variable.parameters = variable.parameters)
-    
+    ## Plot results
     print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("incidence"),
                   facet.by = 'age')
+    )
+    
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("incidence"),
+                  facet.by = 'age',
+                  ages = c('55-59','60-64','65-69',
+                           '70-74','75-79','80 and over'))
     )
     
     print(simplot(sim,
@@ -110,7 +159,8 @@ if(1==2){
     print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("incidence"))
-    )
-    
+    )  
 }
+   
 
+  
