@@ -5,10 +5,11 @@
 
 # Functions 
 #     1. parse.age.brackets 
-#     2. map.ages 
-#     3. map.population.ages 
-#     4. map.all.ages
-#     5. map.ages.by.cutoffs
+#     2. get.age.brackets.in.range 
+#     3. map.ages 
+#     4. map.population.ages 
+#     5. map.all.ages
+#     6. map.ages.by.cutoffs
 
 
 # UNAIDS surveillance age groups: '0-14','10-19','15-24','15-49','15+','50 and over'
@@ -36,6 +37,7 @@ parse.age.brackets = function(age.cutoffs) {
     rv
 }
 
+# Given a lower and upper value, returns all age brackets within range
 get.age.brackets.in.range = function(age.cutoffs = MODEL.AGE.CUTOFFS,
                                      lower,
                                      upper){
