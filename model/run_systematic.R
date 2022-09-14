@@ -2,7 +2,13 @@
 # Description: Code that runs from initializing parameters all the way through simulation
 ################################################################################################
 
+# Functions 
+#     1. run.model.for.parameters 
+#     2. extract.hiv.data.for.ncd 
+
 source('source_code.R')
+
+
 
 # Single function that is analogous to all the code in the test_case file, but also allows for
 # easier manipulation of sampled parameters
@@ -70,9 +76,20 @@ variable.parameters['age.assortativity']=.8
 sim = run.model.for.parameters(variable.parameters = variable.parameters)
 
 
-## Extract data for NCD model
+## Extracts outputs needed for NCD model
 extract.hiv.data.for.ncd = function(sim,
                                     years){
+    
+    # These will be combined into one "disengagement" output (Parastu's request)
+    disengagement.suppressed = extract.data(sim, 
+                                            data.type = "disengagement.suppressed",
+                                            years = years,
+                                            keep.dimensions = c("year","age","sex"))
+    disengagement.unsuppressed = extract.data(sim, 
+                                              data.type = "disengagement.unsuppressed",
+                                              years = years,
+                                              keep.dimensions = c("year","age","sex"))
+    
     rv = list()
     rv$population = extract.data(sim, 
                                  data.type = "population",
@@ -94,20 +111,22 @@ extract.hiv.data.for.ncd = function(sim,
                                  data.type = "engagement",
                                  years = years,
                                  keep.dimensions = c("year","age","sex"))
-    rv$disengagement.suppressed = extract.data(sim, 
-                                               data.type = "disengagement.suppressed",
-                                               years = years,
-                                               keep.dimensions = c("year","age","sex"))
-    rv$disengagement.unsuppressed = extract.data(sim, 
-                                                 data.type = "disengagement.unsuppressed",
-                                                 years = years,
-                                                 keep.dimensions = c("year","age","sex"))
+    rv$disengagement = disengagement.suppressed + disengagement.unsuppressed
+    rv$suppression = extract.data(sim,
+                                  data.type = "suppression",
+                                  years = years,
+                                  keep.dimensions = c("year","age","sex"))
     
     rv
 }
 
 hiv.output.for.ncd = extract.hiv.data.for.ncd(sim=sim,years = 2010:2030)
 
+
+print(simplot(sim,
+              years=c(1980:2020),
+              data.types = c("engagement"))
+)
 
 if(1==2){
     ## Plot results
