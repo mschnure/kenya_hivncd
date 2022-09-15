@@ -23,6 +23,7 @@ simplot = function(...,
                    data.types = c('incidence','prevalence'),
                    facet.by = NULL,
                    split.by = NULL,
+                   proportion = F, # default denominator for engagement/suppression is awareness
                    ages = data.manager[[data.types[1]]]$AGES, #use what's in the data as the default - there is a problem here if you have multiple data types
                    sexes = data.manager[[data.types[1]]]$SEXES
                    #subgroups = data.manager$SUBGROUPS
@@ -33,6 +34,12 @@ simplot = function(...,
     sims = list(...)
     
     keep.dimensions = union('year',union(facet.by, split.by))
+    
+    if(any(data.types=="hiv.mortality"))
+        sexes = sim$SEXES
+    
+    if(any(data.types=="hiv.mortality") & any(keep.dimensions=="sex"))
+        stop("no hiv mortality data by sex")
     
     #empty dataframe to combine different simulations
     df.sim = NULL
@@ -53,6 +60,48 @@ simplot = function(...,
             df.sim = rbind(df.sim, one.df)   
         }
     }
+    if(proportion)
+    {
+        df.sim.denominator = NULL
+        
+        for(d in data.types){
+            for(i in 1:length(sims)){
+                #select a simulation, and add it to the df        
+                sim = sims[[i]]
+                
+                # Extract denominator from simulation
+                if(any(data.types==c("engagement","suppression"))){
+                    denominator = extract.data(sim, 
+                                               years = years, 
+                                               age=ages, 
+                                               sex = sexes, 
+                                               data.type="awareness", 
+                                               keep.dimensions = keep.dimensions)
+                }
+
+                if(any(data.types==c("awareness","hiv.mortality"))){
+                    denominator = extract.data(sim, 
+                                               years = years, 
+                                               age=ages, 
+                                               sex = sexes, 
+                                               data.type="prevalence", 
+                                               keep.dimensions = keep.dimensions)
+                }
+                
+                # set up a dataframe with columns: year, value, sim id, data.type 
+                one.df = reshape2::melt(denominator) 
+                one.df$sim.id = i
+                one.df$data.type = d
+                
+                df.sim.denominator = rbind(df.sim.denominator, one.df)   
+            }
+        }
+        
+        
+        df.sim$value = (df.sim$value/df.sim.denominator$value)*100
+        
+    }
+    
     df.sim$sim.id = as.character(df.sim$sim.id)
     df.sim$group.id = paste0("sim ",df.sim$sim.id)
     
@@ -81,6 +130,33 @@ simplot = function(...,
         df.truth = rbind(df.truth, one.df)   
         
     }
+    
+    if(proportion & any(data.types=="hiv.mortality"))
+    {
+        df.truth.denominator = NULL
+        
+        for(d in data.types){
+            # Extract denominator from data
+            denominator = get.surveillance.data(data.manager = data.manager, 
+                                                years = years, 
+                                                age = ages, 
+                                                sex = sexes, 
+                                                data.type="prevalence", 
+                                                keep.dimensions = keep.dimensions)
+            
+            # set up a dataframe with columns: year, value, sim id, data.type 
+            one.df = reshape2::melt(denominator) 
+            one.df$sim.id = "truth"
+            one.df$data.type = d
+            
+            df.truth.denominator = rbind(df.truth.denominator, one.df)   
+            
+            
+            df.truth$value = (df.truth$value/df.truth.denominator$value)*100
+        }
+ 
+    }
+
     
     df.truth$group.id = "truth"
     
