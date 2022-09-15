@@ -61,8 +61,8 @@ run.model.for.parameters = function(variable.parameters,
 ## Run model with sampled parameters
 variable.parameters=get.default.parameters()
 variable.parameters['suppression.rate.0']=0.6
-variable.parameters['testing.rate.0']=0.4
-variable.parameters['trate.0']=.8
+variable.parameters['testing.rate.1']=0.5
+variable.parameters['trate.0']=.77
 variable.parameters['trate.1']=0.25
 variable.parameters['age.15.to.19.transmission.multiplier']=.66
 variable.parameters['age.20.to.29.transmission.multiplier']=1.3
@@ -108,12 +108,12 @@ extract.hiv.data.for.ncd = function(sim,
                                 years = years,
                                 keep.dimensions = c("year","age","sex"))
     rv$engagement = extract.data(sim, 
-                                 data.type = "engagement",
+                                 data.type = "annual.engagement",
                                  years = years,
                                  keep.dimensions = c("year","age","sex"))
     rv$disengagement = disengagement.suppressed + disengagement.unsuppressed
     rv$suppression = extract.data(sim,
-                                  data.type = "suppression",
+                                  data.type = "annual.suppression",
                                   years = years,
                                   keep.dimensions = c("year","age","sex"))
     
@@ -123,62 +123,96 @@ extract.hiv.data.for.ncd = function(sim,
 hiv.output.for.ncd = extract.hiv.data.for.ncd(sim=sim,years = 2010:2030)
 
 
-print(simplot(sim,
-              years=c(1980:2020),
-              data.types = c("engagement"))
-)
+
 
 if(1==2){
     ## Plot results
+    
+    ## Engagement - default denominator is total aware
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("engagement"),
+                  proportion = T,
+                  facet.by = c("age","sex"))) 
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("engagement"),
+                  proportion = T) + geom_vline(xintercept = c(1986,2014,2016)-1) + ylim(0,100))
+    
+    ## Suppression - default denominator is total aware
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("suppression"),
+                  proportion = T))
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("suppression"),
+                  proportion = T,
+                  facet.by = c("age","sex"))) 
+    
+    ## Awareness 
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("awareness"),
+                  proportion = T))
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("awareness"),
+                  proportion = T,
+                  facet.by = c("age","sex")))
+    
+    ## Incidence
     print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("incidence"),
-                  facet.by = 'age')
-    )
-    
+                  facet.by = 'age'))
     print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("incidence"),
                   facet.by = 'age',
                   ages = c('55-59','60-64','65-69',
-                           '70-74','75-79','80 and over'))
-    )
+                           '70-74','75-79','80 and over')))
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("incidence"),
+                  facet.by = 'sex'))
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("incidence"))) 
     
+    ## Prevalence
     print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("prevalence"),
-                  facet.by = 'age')
-    )
-    
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("hiv.mortality"),
-                  facet.by = 'age')
-    )
-    
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("population"),
-                  facet.by = 'age')
-    )
-    
+                  facet.by = 'age'))
     print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("prevalence"),
                   facet.by = 'age',
-                  ages = c('10-14','15-19'))+ geom_hline(yintercept=130000)
-    )
+                  ages = c('10-14','15-19'))+ geom_hline(yintercept=130000))
     
+    ## Population
     print(simplot(sim,
                   years=c(1980:2020),
-                  data.types = c("incidence"),
-                  facet.by = 'sex')
-    )
-    
+                  data.types = c("population"),
+                  facet.by = 'age'))
     print(simplot(sim,
                   years=c(1980:2020),
-                  data.types = c("incidence"))
-    )  
+                  data.types = c("population"),
+                  facet.by = 'hiv.status'))     #THIS ISN'T RIGHT
+    
+    ## HIV mortality
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("hiv.mortality"),
+                  facet.by = "age",
+                  proportion = F)) 
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("hiv.mortality"),
+                  facet.by = "age",
+                  proportion = T)) 
+ 
 }
    
 
