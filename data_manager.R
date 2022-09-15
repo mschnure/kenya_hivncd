@@ -170,28 +170,59 @@ read.surveillance.data = function(dir = 'data/raw_data'){
     rv$prevalence$SEXES = c('male','female')
     rv$prevalence$SUBGROUPS = dimnames(rv$prevalence$subgroup)$subgroup
     
-    rv$AIDSdeaths = read.surveillance.data.files(data.type = "AIDS mortality", age = "All")
+    rv$hiv.mortality = read.surveillance.data.type(data.type = 'hiv.mortality')
+    rv$hiv.mortality$AGES = c('0-14','10-19','15-24','15-49','15+','50 and over')
+    rv$hiv.mortality$AGE.LOWERS = c(0,10,15,15,15,50)
+    rv$hiv.mortality$AGE.UPPERS = c(15,20,25,50,Inf,Inf)
+    rv$hiv.mortality$SEXES = NULL
+    rv$hiv.mortality$SUBGROUPS = dimnames(rv$hiv.mortality$subgroup)$subgroup
     
-    rv$awareness = read.cascade.data.type(sub.data.type = "status")
+    rv$awareness = read.cascade.data.type(sub.data.type = "status",
+                                          denominator = "allPLHIV")
     rv$awareness$AGES = c('15+')
     rv$awareness$AGE.LOWERS = c(15)
     rv$awareness$AGE.UPPERS = c(Inf)
     rv$awareness$SEXES = c('male','female')
     rv$awareness$SUBGROUPS = dimnames(rv$awareness$subgroup)$subgroup
-    
-    rv$engagement = read.cascade.data.type(sub.data.type = "ART")
+
+    ## Default engagement denominator = all aware PLHIV (option for all PLHIV below)
+    rv$engagement = read.cascade.data.type(sub.data.type = "ART",
+                                           denominator = "aware")
     rv$engagement$AGES = c('15+')
     rv$engagement$AGE.LOWERS = c(15)
     rv$engagement$AGE.UPPERS = c(Inf)
     rv$engagement$SEXES = c('male','female')
     rv$engagement$SUBGROUPS = dimnames(rv$engagement$subgroup)$subgroup
+        
+    rv$engagement.allPLHIV = read.cascade.data.type(sub.data.type = "ART",
+                                                    denominator = "allPLHIV")
+    rv$engagement.allPLHIV$AGES = c('15+')
+    rv$engagement.allPLHIV$AGE.LOWERS = c(15)
+    rv$engagement.allPLHIV$AGE.UPPERS = c(Inf)
+    rv$engagement.allPLHIV$SEXES = c('male','female')
+    rv$engagement.allPLHIV$SUBGROUPS = dimnames(rv$engagement.allPLHIV$subgroup)$subgroup
     
-    rv$suppression = read.cascade.data.type(sub.data.type = "suppress")
+    ## Default suppression denominator = all aware PLHIV (option for all PLHIV below)
+    rv$suppression = read.cascade.data.type(sub.data.type = "suppress",
+                                            denominator = "aware")
+    rv$suppression$total = (rv$suppression$total*rv$awareness$total)/100
+    rv$suppression$subgroup = (rv$suppression$subgroup*rv$awareness$subgroup)/100
+    rv$suppression$age.sex = (rv$suppression$age.sex*rv$awareness$age.sex)/100
+    rv$suppression$age.sex.subgroup = (rv$suppression$age.sex.subgroup*rv$awareness$age.sex.subgroup)/100
+    
     rv$suppression$AGES = c('15+')
     rv$suppression$AGE.LOWERS = c(15)
     rv$suppression$AGE.UPPERS = c(Inf)
     rv$suppression$SEXES = c('male','female')
     rv$suppression$SUBGROUPS = dimnames(rv$suppression$subgroup)$subgroup
+    
+    rv$suppression.allPLHIV = read.cascade.data.type(sub.data.type = "suppress",
+                                                      denominator = "allPLHIV")
+    rv$suppression.allPLHIV$AGES = c('15+')
+    rv$suppression.allPLHIV$AGE.LOWERS = c(15)
+    rv$suppression.allPLHIV$AGE.UPPERS = c(Inf)
+    rv$suppression.allPLHIV$SEXES = c('male','female')
+    rv$suppression.allPLHIV$SUBGROUPS = dimnames(rv$suppression.allPLHIV$subgroup)$subgroup
     
     # Population data aggregated into model age groups 
     rv$population = read.population.data.files.model.ages(data.type = "population", model.age.cutoffs = MODEL.AGE.CUTOFFS)
@@ -273,11 +304,14 @@ read.surveillance.data.type = function(data.type){
                                                         regions = T)
     
     ## Sexes ##
-    rv$sex = read.surveillance.data.stratified(data.type=data.type,
-                                               strata = 'sex',
-                                               regions = F) 
-    
-    rv$sex.subgroup = NULL
+    if(data.type!="hiv.mortality")
+    {
+        rv$sex = read.surveillance.data.stratified(data.type=data.type,
+                                                   strata = 'sex',
+                                                   regions = F) 
+        
+        rv$sex.subgroup = NULL
+    }
     
     rv
 }
@@ -429,17 +463,20 @@ read.surveillance.data.files = function(dir = 'data/raw_data',
 }
 
 read.cascade.data.type = function(data.type="cascade",
+                                  denominator,
                                   sub.data.type){
     rv=list()
     
     rv$total = read.cascade.data.files(data.type=data.type, 
                                        sub.data.type=sub.data.type,
+                                       denominator=denominator,
                                        age='All ages',
                                        sex="All")
     
     
     rv$subgroup = read.cascade.data.files(data.type=data.type,
                                           sub.data.type=sub.data.type,
+                                          denominator=denominator,
                                           age='All ages',
                                           sex="All",
                                           regions = T)
@@ -447,10 +484,12 @@ read.cascade.data.type = function(data.type="cascade",
     ## Age.Sex ##
     rv$age.sex = read.cascade.data.stratified(data.type=data.type,
                                               sub.data.type=sub.data.type,
+                                              denominator=denominator,
                                               regions = F)
     ## Age.Sex.Subgroup ##
     rv$age.sex.subgroup = read.cascade.data.stratified(data.type=data.type,
                                                        sub.data.type=sub.data.type,
+                                                       denominator=denominator,
                                                        regions = T)
     
     rv
@@ -458,18 +497,20 @@ read.cascade.data.type = function(data.type="cascade",
 
 read.cascade.data.stratified = function(data.type,
                                         sub.data.type,
+                                        denominator,
                                         regions=T){
     ## Pull AGE array by REGION
     if(regions)
     {
         age.sex.subgroup = read.cascade.data.files(data.type=data.type,
                                                    sub.data.type = sub.data.type,
+                                                   denominator = denominator,
                                                    age="15+",
-                                                   sex = "Male",
+                                                   sex = "Female",
                                                    regions = T)
         
-        dim.names = c(dimnames(age.sex.subgroup), list(sex=c("male","female")))
-        dim.names = dim.names[c(1,3,2)]
+        dim.names = c(dimnames(age.sex.subgroup),list(age = "15+"),list(sex=c("male","female")))
+        dim.names = dim.names[c(1,3,4,2)]
         
         rv = array(NA,
                    dim = sapply(dim.names, length),
@@ -477,47 +518,51 @@ read.cascade.data.stratified = function(data.type,
         
         
         
-        rv[,"male",] = age.sex.subgroup
-        rv[,"female",] = read.cascade.data.files(data.type=data.type,
-                                                 sub.data.type = sub.data.type,
-                                                 age="15+",
-                                                 sex = "Female",
-                                                 regions = T)
+        rv[,,"female",] = age.sex.subgroup
+        rv[,,"male",] = read.cascade.data.files(data.type=data.type,
+                                                sub.data.type = sub.data.type,
+                                                denominator = denominator,
+                                                age="15+",
+                                                sex = "Male",
+                                                regions = T)
     }
     ## Pull TOTAL AGE array
     else 
     {
         age.sex = read.cascade.data.files(data.type=data.type,
                                           sub.data.type = sub.data.type,
+                                          denominator = denominator,
                                           age="15+",
                                           sex = "Male",
                                           regions = F)
         
-        dim.names = c(dimnames(age.sex), list(sex=c("male","female")))
+        dim.names = c(dimnames(age.sex),list(age = "15+"),list(sex=c("male","female")))
         
         rv = array(NA,
                    dim = sapply(dim.names, length),
                    dimnames = dim.names)
         
-        rv[,"male"] = age.sex
-        rv[,"female"] = read.cascade.data.files(data.type=data.type,
+        rv[,,"male"] = age.sex
+        rv[,,"female"] = read.cascade.data.files(data.type=data.type,
                                                  sub.data.type = sub.data.type,
+                                                 denominator = denominator,
                                                  age="15+",
                                                  sex = "Female",
                                                  regions = F)  
     }
     
-    
+    rv
 }
 
 read.cascade.data.files = function(dir = 'data/raw_data',
                                    data.type,
                                    sub.data.type,
+                                   denominator,
                                    regions = F,
                                    age,
                                    sex,
                                    suffix = ""){
-    sub.dir = file.path(dir, data.type)
+    sub.dir = file.path(dir, paste0(data.type,"_",denominator))
     
     files = list.files(file.path(sub.dir))
     
@@ -534,11 +579,11 @@ read.cascade.data.files = function(dir = 'data/raw_data',
     subgroup.names = rownames(one.df)[c(-1,-nrow(one.df))]
     
     sub.data.types = unique(trimws(one.df[1,]))
+    one.df[1,] = rep(c(rep("status",3),rep("ART",3),rep("suppress",3)),length(years))
     one.df = one.df[,grepl(sub.data.type,one.df[1,])]
     one.df = one.df[-1,]
     if(sub.data.type!="status")
         colnames(one.df) = substring(colnames(one.df),1,nchar(colnames(one.df))-2)
-    
     one.df.t = transpose(one.df)
     rownames(one.df.t) = colnames(one.df)
     colnames(one.df.t) = rownames(one.df)
