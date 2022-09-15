@@ -10,12 +10,15 @@
 #     4. extract.population
 #     5. extract.incidence
 #     6. extract.prevalence
-#     7. extract.new.diagnoses
-#     8. extract.hiv.mortality
-#     9. extract.suppression
-#     10. extract.engagement
-#     11. extract.disengagement.suppressed
-#     12. extract.disengagement.unsuppressed
+#     7. extract.total.aware
+#     8. extract.new.diagnoses
+#     9. extract.hiv.mortality
+#     10. extract.total.suppressed
+#     11. extract.annual.suppression
+#     12. extract.total.engaged
+#     13. extract.annual.engagement
+#     14. extract.disengagement.suppressed
+#     15. extract.disengagement.unsuppressed
 
 
 
@@ -42,6 +45,13 @@ extract.data = function(sim,
                                sexes=sexes,
                                subgroups=subgroups,
                                keep.dimensions=keep.dimensions)
+    else if (data.type=='awareness')
+        rv = extract.total.aware(sim,
+                                 years=years, 
+                                 ages=ages,
+                                 sexes=sexes,
+                                 subgroups=subgroups,
+                                 keep.dimensions=keep.dimensions)
     else if (data.type=='diagnoses')
         rv = extract.new.diagnoses(sim,
                                    years=years, 
@@ -74,20 +84,35 @@ extract.data = function(sim,
                                    keep.dimensions=keep.dimensions)
     
     else if (data.type=='suppression')
-        rv = extract.suppression(sim,
-                                 years=years, 
-                                 ages=ages,
-                                 sexes=sexes,
-                                 subgroups=subgroups,
-                                 keep.dimensions=keep.dimensions)
-    
+        rv = extract.total.suppressed(sim,
+                                      years=years, 
+                                      ages=ages,
+                                      sexes=sexes,
+                                      subgroups=subgroups,
+                                      keep.dimensions=keep.dimensions)
+        
+    else if (data.type=='annual.suppression')
+        rv = extract.annual.suppression(sim,
+                                        years=years, 
+                                        ages=ages,
+                                        sexes=sexes,
+                                        subgroups=subgroups,
+                                        keep.dimensions=keep.dimensions)
     else if (data.type=='engagement')
-        rv = extract.engagement(sim,
-                                years=years, 
-                                ages=ages,
-                                sexes=sexes,
-                                subgroups=subgroups,
-                                keep.dimensions=keep.dimensions)
+        rv = extract.total.engaged(sim,
+                                   years=years, 
+                                   ages=ages,
+                                   sexes=sexes,
+                                   subgroups=subgroups,
+                                   keep.dimensions=keep.dimensions)
+    
+    else if (data.type=='annual.engagement')
+        rv = extract.annual.engagement(sim,
+                                       years=years, 
+                                       ages=ages,
+                                       sexes=sexes,
+                                       subgroups=subgroups,
+                                       keep.dimensions=keep.dimensions)
     
     else if (data.type=='disengagement.suppressed')
         rv = extract.disengagement.suppressed(sim,
@@ -339,6 +364,25 @@ extract.prevalence <- function(sim,
     
 }
 
+# Call to extract.population with HIV status set only to diagnosed states; pulls prevalence 
+extract.total.aware <- function(sim,
+                                  years = sim$years,
+                                  ages = sim$AGES,
+                                  subgroups = sim$SUBGROUPS,
+                                  sexes = sim$SEXES,
+                                  keep.dimensions = 'year'){
+    extract.population(
+        sim = sim,
+        years = years,
+        ages = ages,
+        subgroups = subgroups,
+        sexes = sexes,
+        keep.dimensions = keep.dimensions,
+        hiv.status = sim$DIAGNOSED.STATES
+    )
+}
+
+
 # Call to do.extract.3D; pulls new diagnoses 
 extract.new.diagnoses <- function(sim,
                                   years = sim$years,
@@ -378,8 +422,26 @@ extract.hiv.mortality <- function(sim,
     )
 }
 
-# Call to do.extract.3D; pulls suppression
-extract.suppression <- function(sim,
+# Call to extract.population with HIV status set only to suppressed states; pulls prevalence 
+extract.total.suppressed <- function(sim,
+                                  years = sim$years,
+                                  ages = sim$AGES,
+                                  subgroups = sim$SUBGROUPS,
+                                  sexes = sim$SEXES,
+                                  keep.dimensions = 'year'){
+    extract.population(
+        sim = sim,
+        years = years,
+        ages = ages,
+        subgroups = subgroups,
+        sexes = sexes,
+        keep.dimensions = keep.dimensions,
+        hiv.status = "engaged_suppressed"
+    )
+}
+
+# Call to do.extract.3D; pulls annual suppression
+extract.annual.suppression <- function(sim,
                                 years = sim$years,
                                 ages = sim$AGES,
                                 subgroups = sim$SUBGROUPS,
@@ -396,8 +458,27 @@ extract.suppression <- function(sim,
     )
 }
 
-# Call to do.extract.3D; pulls engagement
-extract.engagement <- function(sim,
+# Call to extract.population with HIV status set only to engaged states; pulls prevalence 
+extract.total.engaged <- function(sim,
+                                      years = sim$years,
+                                      ages = sim$AGES,
+                                      subgroups = sim$SUBGROUPS,
+                                      sexes = sim$SEXES,
+                                      keep.dimensions = 'year'){
+    extract.population(
+        sim = sim,
+        years = years,
+        ages = ages,
+        subgroups = subgroups,
+        sexes = sexes,
+        keep.dimensions = keep.dimensions,
+        hiv.status = sim$ENGAGED.STATES
+    )
+}
+
+
+# Call to do.extract.3D; pulls annual engagement
+extract.annual.engagement <- function(sim,
                                years = sim$years,
                                ages = sim$AGES,
                                subgroups = sim$SUBGROUPS,
