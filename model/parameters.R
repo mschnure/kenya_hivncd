@@ -61,43 +61,68 @@ create.model.parameters <- function(age.cutoffs=MODEL.AGE.CUTOFFS, #the lower li
 # Sets default values for parameters we will sample; 
 # called in “run_systematic” code with the option to change values
 get.default.parameters = function(){
-    rv = c(fertility.multiplier=1,
-           age.50.to.79.mortality.multiplier=1,
-           over.50.mortality.slope.multiplier=1,
-           over.80.mortality.multiplier=1,
-           over.70.mortality.intercept.multiplier=1,
-           hiv.specific.mortality.rates=0.087,  
-           testing.time.0=1986,
-           testing.time.1=2000,
-           testing.rate.0=0.3,
-           testing.rate.1=1,
-           engagement.time.0=1986,
-           engagement.time.1=2014,
-           engagement.time.2=2016,
-           engagement.rate.0=0.15,
-           engagement.rate.1=0.33,
-           engagement.rate.2=3,
-           unsuppressed.disengagement.rates=0.2,
-           suppressed.disengagement.rates=0.2,
-           suppression.time.0=1993,
-           suppression.time.1=2003,
-           suppression.rate.0=0.5,
-           suppression.rate.1=3,
-           unsuppression.rates=0.2,
-           start.time=1975,
-           time.0=1990,
-           time.1=1998,
-           trate.0=1.35,
-           trate.1=0.35,
-           male.to.male.multiplier=1,
-           female.to.male.multiplier=1,
-           age.15.to.19.transmission.multiplier=1,
-           age.20.to.29.transmission.multiplier=1,
-           age.40.to.49.transmission.multiplier=1,
-           age.50.and.over.transmission.multiplier=0.5,
-           age.assortativity=1, 
-           relative.transmission.from.diagnosis=0.33, 
-           birth.transmission.risk=0.25) 
+    rv = c(
+        ## Transmission parameters ##
+        # general
+        start.time=1975,
+        time.0=1990,
+        time.1=1997,
+        time.2=2015,
+        trate.0=1.35,
+        trate.1=0.35,
+        trate.2=0.2,
+        # sex transmission multipliers
+        male.to.male.multiplier=1,
+        female.to.male.multiplier=1,
+        # age transmission multipliers
+        age.15.to.19.transmission.multiplier=1,
+        age.20.to.29.transmission.multiplier=1,
+        age.40.to.49.transmission.multiplier=1,
+        age.50.and.over.transmission.multiplier.0=0.5,
+        age.50.and.over.transmission.multiplier.1=0.5,
+        age.50.and.over.transmission.multiplier.2=0.5,
+        # other transmission multipliers
+        relative.transmission.from.diagnosis=0.33, 
+        age.assortativity=1, 
+        birth.transmission.risk=0.25,
+        
+        ## Cascade parameters ##
+        testing.time.0=1986,
+        testing.time.1=2000,
+        testing.rate.0=0.3,
+        testing.rate.1=1,
+        engagement.time.0=1986,
+        engagement.time.1=2014,
+        engagement.time.2=2016,
+        engagement.rate.0=0.15,
+        engagement.rate.1=0.33,
+        engagement.rate.2=3,
+        unsuppressed.disengagement.rates=0.2,
+        suppressed.disengagement.rates=0.2,
+        suppression.time.0=1993,
+        suppression.time.1=2003,
+        suppression.rate.0=0.5,
+        suppression.rate.1=3,
+        unsuppression.rates=0.2,
+        male.cascade.multiplier=1,
+        
+        ## Mortality/fertility parameters ##
+        # multiplies intercept or slope before projecting
+        age.45.to.65.mortality.intercept.multiplier=1,
+        age.45.to.65.mortality.slope.multiplier=1,
+        over.65.mortality.intercept.multiplier=1, 
+        over.65.mortality.slope.multiplier=1, 
+        hiv.mortality.time.1=1990,
+        hiv.mortality.time.2=2005,
+        hiv.mortality.time.3=2020,
+        hiv.specific.mortality.rates.1=0.02,  
+        hiv.specific.mortality.rates.2=0.08,  
+        hiv.specific.mortality.rates.3=0.01,
+        age.0.to.14.hiv.mortality.multiplier.1=1,
+        age.15.to.24.hiv.mortality.multiplier=1,
+        over.50.hiv.mortality.multiplier=1,
+        fertility.multiplier=1
+    ) 
 }
 
 
@@ -192,26 +217,68 @@ map.model.parameters <- function(parameters,
     
     
     #-- MORTALITY --#
-    HIV.MORTALITY.RATES=array(0, #assume 0 for non-hiv states
+    ## HIV MORTALITY ## 
+    age.0.to.14.age.brackets = get.age.brackets.in.range(lower = 0, 
+                                                         upper = 15) 
+    age.15.to.24.age.brackets = get.age.brackets.in.range(lower = 15, 
+                                                         upper = 25) 
+    over.50.age.brackets = get.age.brackets.in.range(lower = 50, 
+                                                    upper = Inf) 
+    # Set up initial HIV mortality rates 
+    HIV.MORTALITY.RATES.1=array(0, #assume 0 for non-hiv states
                               dim=sapply(state.dim.names, length),
                               dimnames=state.dim.names)
+    HIV.MORTALITY.RATES.3 = HIV.MORTALITY.RATES.2 = HIV.MORTALITY.RATES.1
     
-    # add a spline to this parameter
-    HIV.MORTALITY.RATES[,,,c('undiagnosed', 'diagnosed_unengaged', 'engaged_unsuppressed')] = sampled.parameters['hiv.specific.mortality.rates']
+    # Set up time-specific HIV mortality rates 
+    HIV.MORTALITY.RATES.1[,,,c('undiagnosed', 'diagnosed_unengaged', 'engaged_unsuppressed')] = 
+        sampled.parameters['hiv.specific.mortality.rates.1']
+    HIV.MORTALITY.RATES.2[,,,c('undiagnosed', 'diagnosed_unengaged', 'engaged_unsuppressed')] = 
+        sampled.parameters['hiv.specific.mortality.rates.2']
+    HIV.MORTALITY.RATES.3[,,,c('undiagnosed', 'diagnosed_unengaged', 'engaged_unsuppressed')] = 
+        sampled.parameters['hiv.specific.mortality.rates.3']
     
+    # Set up age-specific HIV mortality multipliers
+    HIV.MORTALITY.RATES.1[age.15.to.24.age.brackets,,,] = HIV.MORTALITY.RATES.1[age.15.to.24.age.brackets,,,]*
+        sampled.parameters["age.15.to.24.hiv.mortality.multiplier"]
+    HIV.MORTALITY.RATES.2[age.15.to.24.age.brackets,,,] = HIV.MORTALITY.RATES.2[age.15.to.24.age.brackets,,,]*
+        sampled.parameters["age.15.to.24.hiv.mortality.multiplier"]
+    HIV.MORTALITY.RATES.3[age.15.to.24.age.brackets,,,] = HIV.MORTALITY.RATES.3[age.15.to.24.age.brackets,,,]*
+        sampled.parameters["age.15.to.24.hiv.mortality.multiplier"]
+    
+    HIV.MORTALITY.RATES.1[over.50.age.brackets,,,] = HIV.MORTALITY.RATES.1[over.50.age.brackets,,,]*
+        sampled.parameters["over.50.hiv.mortality.multiplier"]
+    HIV.MORTALITY.RATES.2[over.50.age.brackets,,,] = HIV.MORTALITY.RATES.2[over.50.age.brackets,,,]*
+        sampled.parameters["over.50.hiv.mortality.multiplier"]
+    HIV.MORTALITY.RATES.3[over.50.age.brackets,,,] = HIV.MORTALITY.RATES.3[over.50.age.brackets,,,]*
+        sampled.parameters["over.50.hiv.mortality.multiplier"]
+    
+    # Set up age- and time-specific HIV mortality multipliers 
+    HIV.MORTALITY.RATES.1[age.0.to.14.age.brackets,,,] = HIV.MORTALITY.RATES.1[age.0.to.14.age.brackets,,,]*
+        sampled.parameters["age.0.to.14.hiv.mortality.multiplier.1"]
     
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='HIV.MORTALITY.RATES',
-                                                  value = HIV.MORTALITY.RATES,
-                                                  time = 2000)
+                                                  value = HIV.MORTALITY.RATES.1,
+                                                  time = sampled.parameters['hiv.mortality.time.1'])
+    parameters = add.time.varying.parameter.value(parameters,
+                                                  parameter.name='HIV.MORTALITY.RATES',
+                                                  value = HIV.MORTALITY.RATES.2,
+                                                  time = sampled.parameters['hiv.mortality.time.2'])
+    parameters = add.time.varying.parameter.value(parameters,
+                                                  parameter.name='HIV.MORTALITY.RATES',
+                                                  value = HIV.MORTALITY.RATES.3,
+                                                  time = sampled.parameters['hiv.mortality.time.3'])
     
     
+    
+    ## NON-HIV MORTALITY ## 
     deaths.age.sex = calculate.all.death.rates(data.manager = DATA.MANAGER, 
                                                keep.dimensions = c('year','sex','age'), 
                                                model.age.cutoffs = MODEL.AGE.CUTOFFS)
     
     #setting up code to smooth/project death rate into future 
-    anchor.year = 2020
+    anchor.year = 1980
     years = as.numeric(dimnames(deaths.age.sex)$year) - anchor.year
     years.label = as.numeric(dimnames(deaths.age.sex)$year) # for plotting
     
@@ -232,11 +299,22 @@ map.model.parameters <- function(parameters,
         rv
     })
 
-    over.50.age.brackets = get.age.brackets.in.range(lower = 50, 
+    age.45.to.65.age.brackets = get.age.brackets.in.range(lower = 45, 
+                                                     upper = 65) 
+    over.65.age.brackets = get.age.brackets.in.range(lower = 65, 
                                                      upper = Inf) 
     
-    mortality.intercepts.slopes.age.sex["slope",over.50.age.brackets,] = mortality.intercepts.slopes.age.sex["slope",over.50.age.brackets,] +
-        log(sampled.parameters['over.50.mortality.slope.multiplier'])
+    mortality.intercepts.slopes.age.sex["intercept",age.45.to.65.age.brackets,] = mortality.intercepts.slopes.age.sex["intercept",age.45.to.65.age.brackets,] +
+        log(sampled.parameters['age.45.to.65.mortality.intercept.multiplier'])
+    
+    mortality.intercepts.slopes.age.sex["slope",age.45.to.65.age.brackets,] = mortality.intercepts.slopes.age.sex["slope",age.45.to.65.age.brackets,] +
+        log(sampled.parameters['age.45.to.65.mortality.slope.multiplier'])
+    
+    mortality.intercepts.slopes.age.sex["intercept",over.65.age.brackets,] = mortality.intercepts.slopes.age.sex["intercept",over.65.age.brackets,] +
+        log(sampled.parameters['over.65.mortality.intercept.multiplier'])
+    
+    mortality.intercepts.slopes.age.sex["slope",over.65.age.brackets,] = mortality.intercepts.slopes.age.sex["slope",over.65.age.brackets,] +
+        log(sampled.parameters['over.65.mortality.slope.multiplier'])
     
     # Smoothed non-HIV mortality: fit regression on desired years only (using mask above)
     smooth.deaths.age.sex = apply(mortality.intercepts.slopes.age.sex,c('age','sex'),function(intercept.slope){
@@ -255,12 +333,6 @@ map.model.parameters <- function(parameters,
                    dim = sapply(state.dim.names, length),
                    dimnames = state.dim.names)
         
-        # tune older mortality
-        age.50.79.age.brackets = get.age.brackets.in.range(lower = 50, 
-                                                           upper = 80) 
-        rv[age.50.79.age.brackets,,,] = rv[age.50.79.age.brackets,,,]*sampled.parameters["age.50.to.79.mortality.multiplier"]
-        rv["80 and over",,,] = rv["80 and over",,,]*sampled.parameters["over.80.mortality.multiplier"]
-        
         parameters = add.time.varying.parameter.value(parameters,
                                                       parameter.name='NON.HIV.MORTALITY.RATES',
                                                       value = rv,
@@ -275,18 +347,24 @@ map.model.parameters <- function(parameters,
                                                   value = 0,
                                                   time = (sampled.parameters['testing.time.0']-0.001))
     
-    parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='TESTING.RATES',
-                                                  value = array(sampled.parameters['testing.rate.0'],
-                                                                dim=sapply(trans.dim.names, length),
-                                                                dimnames=trans.dim.names),
-                                                  time = sampled.parameters['testing.time.0'])
+    testing.rates.0 = array(sampled.parameters['testing.rate.0'],
+                            dim=sapply(trans.dim.names, length),
+                            dimnames=trans.dim.names)
+    testing.rates.0[,"male",] = testing.rates.0[,"male",]*sampled.parameters["male.cascade.multiplier"]
     
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='TESTING.RATES',
-                                                  value = array(sampled.parameters['testing.rate.1'],
-                                                                dim=sapply(trans.dim.names, length),
-                                                                dimnames=trans.dim.names),
+                                                  value = testing.rates.0,
+                                                  time = sampled.parameters['testing.time.0'])
+
+    testing.rates.1 = array(sampled.parameters['testing.rate.1'],
+                            dim=sapply(trans.dim.names, length),
+                            dimnames=trans.dim.names)
+    testing.rates.1[,"male",] = testing.rates.1[,"male",]*sampled.parameters["male.cascade.multiplier"]
+    
+    parameters = add.time.varying.parameter.value(parameters,
+                                                  parameter.name='TESTING.RATES',
+                                                  value = testing.rates.1,
                                                   time = sampled.parameters['testing.time.1'])
     
     
@@ -362,7 +440,7 @@ map.model.parameters <- function(parameters,
                                                                       rep(1,length(get.age.brackets.in.range(age.cutoffs = age.cutoffs, lower = 30, upper = 40))),
                                                                       rep(sampled.parameters["age.40.to.49.transmission.multiplier"],
                                                                           length(get.age.brackets.in.range(age.cutoffs = age.cutoffs, lower = 40, upper = 50))),
-                                                                      rep(sampled.parameters["age.50.and.over.transmission.multiplier"],
+                                                                      rep(sampled.parameters["age.50.and.over.transmission.multiplier.0"],
                                                                           length(get.age.brackets.in.range(age.cutoffs = age.cutoffs, lower = 50, upper = Inf)))))
 
     transmission.rates.0=transmission.rates.0*mixing.proportions.0
@@ -383,10 +461,10 @@ map.model.parameters <- function(parameters,
                                                   time = sampled.parameters['time.0'])
     
     
-    # Set transmission rate to a low level (trate.1) at time.1
+    # Set transmission rate to a lower level (trate.1) at time.1
     transmission.rates.1 = make.transmission.array(parameters = parameters,
                                                    global.trate = sampled.parameters["trate.1"],
-                                                   male.to.male.multiplier = sampled.parameters["male.to.male.multiplier"], # add this above
+                                                   male.to.male.multiplier = sampled.parameters["male.to.male.multiplier"], 
                                                    female.to.male.multiplier = sampled.parameters["female.to.male.multiplier"],
                                                    age.multipliers = c(rep(0,length(get.age.brackets.in.range(age.cutoffs = age.cutoffs, lower = 0, upper = 15))),
                                                                        rep(sampled.parameters["age.15.to.19.transmission.multiplier"],
@@ -396,7 +474,7 @@ map.model.parameters <- function(parameters,
                                                                        rep(1,length(get.age.brackets.in.range(age.cutoffs = age.cutoffs, lower = 30, upper = 40))),
                                                                        rep(sampled.parameters["age.40.to.49.transmission.multiplier"],
                                                                            length(get.age.brackets.in.range(age.cutoffs = age.cutoffs, lower = 40, upper = 50))),
-                                                                       rep(sampled.parameters["age.50.and.over.transmission.multiplier"],
+                                                                       rep(sampled.parameters["age.50.and.over.transmission.multiplier.1"],
                                                                            length(get.age.brackets.in.range(age.cutoffs = age.cutoffs, lower = 50, upper = Inf)))))
     
     mixing.proportions.1 = mixing.proportions.0 # keep this the same for now
@@ -410,6 +488,34 @@ map.model.parameters <- function(parameters,
                                                   parameter.name='TRANSMISSION.RATES',
                                                   value = transmission.rates.1,
                                                   time = sampled.parameters['time.1'])
+    
+    # Set transmission rate to another level (trate.2) at time.2
+    transmission.rates.2 = make.transmission.array(parameters = parameters,
+                                                   global.trate = sampled.parameters["trate.2"],
+                                                   male.to.male.multiplier = sampled.parameters["male.to.male.multiplier"], 
+                                                   female.to.male.multiplier = sampled.parameters["female.to.male.multiplier"],
+                                                   age.multipliers = c(rep(0,length(get.age.brackets.in.range(age.cutoffs = age.cutoffs, lower = 0, upper = 15))),
+                                                                       rep(sampled.parameters["age.15.to.19.transmission.multiplier"],
+                                                                           length(get.age.brackets.in.range(age.cutoffs = age.cutoffs, lower = 15, upper = 20))),
+                                                                       rep(sampled.parameters["age.20.to.29.transmission.multiplier"],
+                                                                           length(get.age.brackets.in.range(age.cutoffs = age.cutoffs, lower = 20, upper = 30))),
+                                                                       rep(1,length(get.age.brackets.in.range(age.cutoffs = age.cutoffs, lower = 30, upper = 40))),
+                                                                       rep(sampled.parameters["age.40.to.49.transmission.multiplier"],
+                                                                           length(get.age.brackets.in.range(age.cutoffs = age.cutoffs, lower = 40, upper = 50))),
+                                                                       rep(sampled.parameters["age.50.and.over.transmission.multiplier.2"],
+                                                                           length(get.age.brackets.in.range(age.cutoffs = age.cutoffs, lower = 50, upper = Inf)))))
+    
+    mixing.proportions.2 = mixing.proportions.0 # keep this the same for now
+    transmission.rates.2=transmission.rates.2*mixing.proportions.2
+    
+    dim(transmission.rates.2) = c(n.trans.states, n.trans.states)
+    transmission.rates.2 = as.matrix(transmission.rates.2)
+    
+    
+    parameters = add.time.varying.parameter.value(parameters,
+                                                  parameter.name='TRANSMISSION.RATES',
+                                                  value = transmission.rates.2,
+                                                  time = sampled.parameters['time.2'])
     
     infectiousness.h = array(0,
                              dim=sapply(state.dim.names, length),
@@ -439,26 +545,34 @@ map.model.parameters <- function(parameters,
     
     #-- ENGAGEMENT/DISENGAGEMENT --#
     # Before 2014, initiate at CD4 <350
+    engagement.rates.0 = array(sampled.parameters['engagement.rate.0'],
+                            dim=sapply(trans.dim.names, length),
+                            dimnames=trans.dim.names)
+    engagement.rates.0[,"male",] = engagement.rates.0[,"male",]*sampled.parameters["male.cascade.multiplier"]
+    
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='ENGAGEMENT.RATES',
-                                                  value = array(sampled.parameters['engagement.rate.0'],
-                                                                dim=sapply(trans.dim.names, length),
-                                                                dimnames=trans.dim.names),
+                                                  value = engagement.rates.0,
                                                   time = sampled.parameters['engagement.time.0'])
     
     # 2014-2016, initiate at CD4 <500
+    engagement.rates.1 = array(sampled.parameters['engagement.rate.1'],
+                               dim=sapply(trans.dim.names, length),
+                               dimnames=trans.dim.names)
+    engagement.rates.1[,"male",] = engagement.rates.1[,"male",]*sampled.parameters["male.cascade.multiplier"]
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='ENGAGEMENT.RATES',
-                                                  value = array(sampled.parameters['engagement.rate.1'],
-                                                                dim=sapply(trans.dim.names, length),
-                                                                dimnames=trans.dim.names),
+                                                  value = engagement.rates.1,
                                                   time = sampled.parameters['engagement.time.1'])
+    
     # Initiation of test and treat 
+    engagement.rates.2 = array(sampled.parameters['engagement.rate.2'],
+                               dim=sapply(trans.dim.names, length),
+                               dimnames=trans.dim.names)
+    engagement.rates.2[,"male",] = engagement.rates.2[,"male",]*sampled.parameters["male.cascade.multiplier"]
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='ENGAGEMENT.RATES',
-                                                  value = array(sampled.parameters['engagement.rate.2'],
-                                                                dim=sapply(trans.dim.names, length),
-                                                                dimnames=trans.dim.names),
+                                                  value = engagement.rates.2,
                                                   time = sampled.parameters['engagement.time.2'])
     
     parameters = add.time.varying.parameter.value(parameters,
@@ -483,19 +597,23 @@ map.model.parameters <- function(parameters,
                                                   time = (sampled.parameters['suppression.time.0']-0.001))
     
     # First ART available; slower to suppression
+    suppression.rates.0 = array(sampled.parameters['suppression.rate.0'],
+                               dim=sapply(trans.dim.names, length),
+                               dimnames=trans.dim.names)
+    suppression.rates.0[,"male",] = suppression.rates.0[,"male",]*sampled.parameters["male.cascade.multiplier"]
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='SUPPRESSION.RATES',
-                                                  value = array(sampled.parameters['suppression.rate.0'],
-                                                                dim=sapply(trans.dim.names, length),
-                                                                dimnames=trans.dim.names),
+                                                  value = suppression.rates.0,
                                                   time = sampled.parameters['suppression.time.0'])
     
     # More effective ART available
+    suppression.rates.1 = array(sampled.parameters['suppression.rate.1'],
+                                dim=sapply(trans.dim.names, length),
+                                dimnames=trans.dim.names)
+    suppression.rates.1[,"male",] = suppression.rates.1[,"male",]*sampled.parameters["male.cascade.multiplier"]
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='SUPPRESSION.RATES',
-                                                  value = array(sampled.parameters['suppression.rate.1'],
-                                                                dim=sapply(trans.dim.names, length),
-                                                                dimnames=trans.dim.names),
+                                                  value = suppression.rates.1,
                                                   time = sampled.parameters['suppression.time.1'])
      
     
