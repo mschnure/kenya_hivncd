@@ -12,6 +12,9 @@ library(data.table)
 #     1. read.surveillance.data.type
 #     2. read.surveillance.data.stratified 
 #     3. read.surveillance.data.files 
+#     4. read.cascade.data.type
+#     5. read.cascade.data.stratified 
+#     6. read.cascade.data.files 
 # Specialty functions
 #     1. combine.pdf.years 
 #     2. read.pdf.data.files
@@ -156,29 +159,30 @@ read.surveillance.data = function(dir = 'data/raw_data'){
     rv = list(date.created = Sys.Date()
     )
     
-    rv$incidence = read.surveillance.data.type(data.type = 'incidence')
+    ## MAIN POINT ESTIMATES (no upper/lower suffix) ##
+    rv$incidence = read.surveillance.data.type(data.type = 'incidence', suffix = "")
     rv$incidence$AGES = c('0-14','10-19','15-24','15-49','15+','50 and over')
     rv$incidence$AGE.LOWERS = c(0,10,15,15,15,50)
     rv$incidence$AGE.UPPERS = c(15,20,25,50,Inf,Inf)
     rv$incidence$SEXES = c('male','female')
     rv$incidence$SUBGROUPS = dimnames(rv$incidence$subgroup)$subgroup
     
-    rv$prevalence = read.surveillance.data.type(data.type = 'prevalence')
+    rv$prevalence = read.surveillance.data.type(data.type = 'prevalence', suffix = "")
     rv$prevalence$AGES = c('0-14','10-19','15-24','15-49','15+','50 and over')
     rv$prevalence$AGE.LOWERS = c(0,10,15,15,15,50)
     rv$prevalence$AGE.UPPERS = c(15,20,25,50,Inf,Inf)
     rv$prevalence$SEXES = c('male','female')
     rv$prevalence$SUBGROUPS = dimnames(rv$prevalence$subgroup)$subgroup
     
-    rv$hiv.mortality = read.surveillance.data.type(data.type = 'hiv.mortality')
+    rv$hiv.mortality = read.surveillance.data.type(data.type = 'hiv.mortality', suffix = "")
     rv$hiv.mortality$AGES = c('0-14','10-19','15-24','15-49','15+','50 and over')
     rv$hiv.mortality$AGE.LOWERS = c(0,10,15,15,15,50)
     rv$hiv.mortality$AGE.UPPERS = c(15,20,25,50,Inf,Inf)
     rv$hiv.mortality$SEXES = NULL
     rv$hiv.mortality$SUBGROUPS = dimnames(rv$hiv.mortality$subgroup)$subgroup
     
-    rv$awareness = read.cascade.data.type(sub.data.type = "status",
-                                          denominator = "allPLHIV")
+    ## Awareness denominator = all PLHIV
+    rv$awareness = read.cascade.data.type(sub.data.type = "status", denominator = "allPLHIV", suffix = "")
     rv$awareness$AGES = c('15+')
     rv$awareness$AGE.LOWERS = c(15)
     rv$awareness$AGE.UPPERS = c(Inf)
@@ -186,16 +190,14 @@ read.surveillance.data = function(dir = 'data/raw_data'){
     rv$awareness$SUBGROUPS = dimnames(rv$awareness$subgroup)$subgroup
 
     ## Default engagement denominator = all aware PLHIV (option for all PLHIV below)
-    rv$engagement = read.cascade.data.type(sub.data.type = "ART",
-                                           denominator = "aware")
+    rv$engagement = read.cascade.data.type(sub.data.type = "ART", denominator = "aware", suffix = "")
     rv$engagement$AGES = c('15+')
     rv$engagement$AGE.LOWERS = c(15)
     rv$engagement$AGE.UPPERS = c(Inf)
     rv$engagement$SEXES = c('male','female')
     rv$engagement$SUBGROUPS = dimnames(rv$engagement$subgroup)$subgroup
         
-    rv$engagement.allPLHIV = read.cascade.data.type(sub.data.type = "ART",
-                                                    denominator = "allPLHIV")
+    rv$engagement.allPLHIV = read.cascade.data.type(sub.data.type = "ART", denominator = "allPLHIV", suffix = "")
     rv$engagement.allPLHIV$AGES = c('15+')
     rv$engagement.allPLHIV$AGE.LOWERS = c(15)
     rv$engagement.allPLHIV$AGE.UPPERS = c(Inf)
@@ -203,12 +205,11 @@ read.surveillance.data = function(dir = 'data/raw_data'){
     rv$engagement.allPLHIV$SUBGROUPS = dimnames(rv$engagement.allPLHIV$subgroup)$subgroup
     
     ## Default suppression denominator = all aware PLHIV (option for all PLHIV below)
-    rv$suppression = read.cascade.data.type(sub.data.type = "suppress",
-                                            denominator = "aware")
-    rv$suppression$total = (rv$suppression$total*rv$awareness$total)/100
-    rv$suppression$subgroup = (rv$suppression$subgroup*rv$awareness$subgroup)/100
-    rv$suppression$age.sex = (rv$suppression$age.sex*rv$awareness$age.sex)/100
-    rv$suppression$age.sex.subgroup = (rv$suppression$age.sex.subgroup*rv$awareness$age.sex.subgroup)/100
+    rv$suppression = read.cascade.data.type(sub.data.type = "suppress", denominator = "aware", suffix = "")
+    rv$suppression$total = (rv$suppression$total*rv$engagement$total)/100
+    rv$suppression$subgroup = (rv$suppression$subgroup*rv$engagement$subgroup)/100
+    rv$suppression$age.sex = (rv$suppression$age.sex*rv$engagement$age.sex)/100
+    rv$suppression$age.sex.subgroup = (rv$suppression$age.sex.subgroup*rv$engagement$age.sex.subgroup)/100
     
     rv$suppression$AGES = c('15+')
     rv$suppression$AGE.LOWERS = c(15)
@@ -216,14 +217,97 @@ read.surveillance.data = function(dir = 'data/raw_data'){
     rv$suppression$SEXES = c('male','female')
     rv$suppression$SUBGROUPS = dimnames(rv$suppression$subgroup)$subgroup
     
-    rv$suppression.allPLHIV = read.cascade.data.type(sub.data.type = "suppress",
-                                                      denominator = "allPLHIV")
+    rv$suppression.allPLHIV = read.cascade.data.type(sub.data.type = "suppress", denominator = "allPLHIV", suffix = "")
     rv$suppression.allPLHIV$AGES = c('15+')
     rv$suppression.allPLHIV$AGE.LOWERS = c(15)
     rv$suppression.allPLHIV$AGE.UPPERS = c(Inf)
     rv$suppression.allPLHIV$SEXES = c('male','female')
     rv$suppression.allPLHIV$SUBGROUPS = dimnames(rv$suppression.allPLHIV$subgroup)$subgroup
     
+    
+    
+    
+    ## UPPER/LOWER ESTIMATES ##
+    rv$incidence.lowers = read.surveillance.data.type(data.type = 'incidence', suffix = "_lower")
+    rv$incidence.uppers = read.surveillance.data.type(data.type = 'incidence', suffix = "_upper")
+    rv$incidence.lowers$AGES = rv$incidence.uppers$AGES = c('0-14','10-19','15-24','15-49','15+','50 and over')
+    rv$incidence.lowers$AGE.LOWERS = rv$incidence.uppers$AGE.LOWERS = c(0,10,15,15,15,50)
+    rv$incidence.lowers$AGE.UPPERS = rv$incidence.uppers$AGE.UPPERS = c(15,20,25,50,Inf,Inf)
+    rv$incidence.lowers$SEXES = rv$incidence.uppers$SEXES = c('male','female')
+    rv$incidence.lowers$SUBGROUPS = rv$incidence.uppers$SUBGROUPS = dimnames(rv$incidence.lowers$subgroup)$subgroup
+
+    rv$prevalence.lowers = read.surveillance.data.type(data.type = 'prevalence', suffix = "_lower")
+    rv$prevalence.uppers = read.surveillance.data.type(data.type = 'prevalence', suffix = "_upper")
+    rv$prevalence.lowers$AGES = rv$prevalence.uppers$AGES = c('0-14','10-19','15-24','15-49','15+','50 and over')
+    rv$prevalence.lowers$AGE.LOWERS = rv$prevalence.uppers$AGE.LOWERS = c(0,10,15,15,15,50)
+    rv$prevalence.lowers$AGE.UPPERS = rv$prevalence.uppers$AGE.UPPERS = c(15,20,25,50,Inf,Inf)
+    rv$prevalence.lowers$SEXES = rv$prevalence.uppers$SEXES = c('male','female')
+    rv$prevalence.lowers$SUBGROUPS = rv$prevalence.uppers$SUBGROUPS = dimnames(rv$prevalence.lowers$subgroup)$subgroup
+    
+    rv$hiv.mortality.lowers = read.surveillance.data.type(data.type = 'hiv.mortality', suffix = "_lower")
+    rv$hiv.mortality.uppers = read.surveillance.data.type(data.type = 'hiv.mortality', suffix = "_upper")
+    rv$hiv.mortality.lowers$AGES = rv$hiv.mortality.uppers$AGES = c('0-14','10-19','15-24','15-49','15+','50 and over')
+    rv$hiv.mortality.lowers$AGE.LOWERS = rv$hiv.mortality.uppers$AGE.LOWERS = c(0,10,15,15,15,50)
+    rv$hiv.mortality.lowers$AGE.UPPERS = rv$hiv.mortality.uppers$AGE.UPPERS = c(15,20,25,50,Inf,Inf)
+    rv$hiv.mortality.lowers$SEXES = rv$hiv.mortality.uppers$SEXES = NULL
+    rv$hiv.mortality.lowers$SUBGROUPS = rv$hiv.mortality.uppers$SUBGROUPS = dimnames(rv$hiv.mortality.lowers$subgroup)$subgroup
+    
+    rv$awareness.lowers = read.cascade.data.type(sub.data.type = "status", denominator = "allPLHIV", suffix = "_lower")
+    rv$awareness.uppers = read.cascade.data.type(sub.data.type = "status", denominator = "allPLHIV", suffix = "_upper")
+    rv$awareness.lowers$AGES = rv$awareness.uppers$AGES = c('15+')
+    rv$awareness.lowers$AGE.LOWERS = rv$awareness.uppers$AGE.LOWERS = c(15)
+    rv$awareness.lowers$AGE.UPPERS = rv$awareness.uppers$AGE.UPPERS = c(Inf)
+    rv$awareness.lowers$SEXES = rv$awareness.uppers$SEXES = c('male','female')
+    rv$awareness.lowers$SUBGROUPS = rv$awareness.uppers$SUBGROUPS = dimnames(rv$awareness.lowers$subgroup)$subgroup
+    
+    ## Default engagement denominator = all aware PLHIV (option for all PLHIV below)
+    rv$engagement.lowers = read.cascade.data.type(sub.data.type = "ART", denominator = "aware", suffix = "_lower")
+    rv$engagement.uppers = read.cascade.data.type(sub.data.type = "ART", denominator = "aware", suffix = "_upper")
+    rv$engagement.lowers$AGES = rv$engagement.uppers$AGES = c('15+')
+    rv$engagement.lowers$AGE.LOWERS = rv$engagement.uppers$AGE.LOWERS = c(15)
+    rv$engagement.lowers$AGE.UPPERS = rv$engagement.uppers$AGE.UPPERS = c(Inf)
+    rv$engagement.lowers$SEXES = rv$engagement.uppers$SEXES = c('male','female')
+    rv$engagement.lowers$SUBGROUPS = rv$engagement.uppers$SUBGROUPS = dimnames(rv$engagement.lowers$subgroup)$subgroup
+    
+    rv$engagement.allPLHIV.lowers = read.cascade.data.type(sub.data.type = "ART", denominator = "allPLHIV", suffix = "_lower")
+    rv$engagement.allPLHIV.uppers = read.cascade.data.type(sub.data.type = "ART", denominator = "allPLHIV", suffix = "_upper")
+    rv$engagement.allPLHIV.lowers$AGES = rv$engagement.allPLHIV.uppers$AGES = c('15+')
+    rv$engagement.allPLHIV.lowers$AGE.LOWERS = rv$engagement.allPLHIV.uppers$AGE.LOWERS = c(15)
+    rv$engagement.allPLHIV.lowers$AGE.UPPERS = rv$engagement.allPLHIV.uppers$AGE.UPPERS = c(Inf)
+    rv$engagement.allPLHIV.lowers$SEXES = rv$engagement.allPLHIV.uppers$SEXES = c('male','female')
+    rv$engagement.allPLHIV.lowers$SUBGROUPS = rv$engagement.allPLHIV.uppers$SUBGROUPS = 
+        dimnames(rv$engagement.allPLHIV.lowers$subgroup)$subgroup
+    
+    ## Default suppression denominator = all aware PLHIV (option for all PLHIV below)
+    rv$suppression.lowers = read.cascade.data.type(sub.data.type = "suppress", denominator = "aware", suffix = "_lower")
+    rv$suppression.lowers$total = (rv$suppression.lowers$total*rv$engagement.lowers$total)/100
+    rv$suppression.lowers$subgroup = (rv$suppression.lowers$subgroup*rv$engagement.lowers$subgroup)/100
+    rv$suppression.lowers$age.sex = (rv$suppression.lowers$age.sex*rv$engagement.lowers$age.sex)/100
+    rv$suppression.lowers$age.sex.subgroup = (rv$suppression.lowers$age.sex.subgroup*rv$engagement.lowers$age.sex.subgroup)/100
+    rv$suppression.uppers = read.cascade.data.type(sub.data.type = "suppress", denominator = "aware", suffix = "_upper")
+    rv$suppression.uppers$total = (rv$suppression.uppers$total*rv$engagement.uppers$total)/100
+    rv$suppression.uppers$subgroup = (rv$suppression.uppers$subgroup*rv$engagement.uppers$subgroup)/100
+    rv$suppression.uppers$age.sex = (rv$suppression.uppers$age.sex*rv$engagement.uppers$age.sex)/100
+    rv$suppression.uppers$age.sex.subgroup = (rv$suppression.uppers$age.sex.subgroup*rv$engagement.uppers$age.sex.subgroup)/100
+    
+    rv$suppression.lowers$AGES = rv$suppression.uppers$AGES = c('15+')
+    rv$suppression.lowers$AGE.LOWERS = rv$suppression.uppers$AGE.LOWERS = c(15)
+    rv$suppression.lowers$AGE.UPPERS = rv$suppression.uppers$AGE.UPPERS = c(Inf)
+    rv$suppression.lowers$SEXES = rv$suppression.uppers$SEXES = c('male','female')
+    rv$suppression.lowers$SUBGROUPS = rv$suppression.uppers$SUBGROUPS = dimnames(rv$suppression.lowers$subgroup)$subgroup
+    
+    rv$suppression.allPLHIV.lowers = read.cascade.data.type(sub.data.type = "suppress", denominator = "allPLHIV", suffix = "_lower")
+    rv$suppression.allPLHIV.uppers = read.cascade.data.type(sub.data.type = "suppress", denominator = "allPLHIV", suffix = "_upper")
+    rv$suppression.allPLHIV.lowers$AGES = rv$suppression.allPLHIV.uppers$AGES = c('15+')
+    rv$suppression.allPLHIV.lowers$AGE.LOWERS = rv$suppression.allPLHIV.uppers$AGE.LOWERS = c(15)
+    rv$suppression.allPLHIV.lowers$AGE.UPPERS = rv$suppression.allPLHIV.uppers$AGE.UPPERS = c(Inf)
+    rv$suppression.allPLHIV.lowers$SEXES = rv$suppression.allPLHIV.uppers$SEXES = c('male','female')
+    rv$suppression.allPLHIV.lowers$SUBGROUPS = rv$suppression.allPLHIV.uppers$SUBGROUPS = 
+        dimnames(rv$suppression.allPLHIV.lowers$subgroup)$subgroup
+    
+    
+    
+
     # Population data aggregated into model age groups 
     rv$population = read.population.data.files.model.ages(data.type = "population", model.age.cutoffs = MODEL.AGE.CUTOFFS)
     rv$population$AGES = c("0-4","5-9","10-14","15-19","20-24","25-29","30-34",
@@ -283,32 +367,38 @@ read.surveillance.data = function(dir = 'data/raw_data'){
 # Called once for each data type within read.surveillance.data function; creates list with an array for 
 # each data stratification (i.e., total, by age, by sex, by subgroup, by age and subgroup, etc.); calls 
 # lower-level function, either read.surveillance.data.files (no stratification) or read.surveillance.data.stratified
-read.surveillance.data.type = function(data.type){
+read.surveillance.data.type = function(data.type,
+                                       suffix){
     rv=list()
     
     rv$total = read.surveillance.data.files(data.type=data.type, 
-                                            age='All ages')
+                                            age='All ages',
+                                            suffix = suffix)
     
     
     rv$subgroup = read.surveillance.data.files(data.type=data.type,
                                                age='All ages',
-                                               regions = T)
+                                               regions = T,
+                                               suffix = suffix)
     
     ## Ages ##
     rv$age = read.surveillance.data.stratified(data.type=data.type,
                                                strata = 'age',
-                                               regions = F)
+                                               regions = F,
+                                               suffix = suffix)
     
     rv$age.subgroup = read.surveillance.data.stratified(data.type=data.type,
                                                         strata = 'age',
-                                                        regions = T)
+                                                        regions = T,
+                                                        suffix = suffix)
     
     ## Sexes ##
     if(data.type!="hiv.mortality")
     {
-        rv$sex = read.surveillance.data.stratified(data.type=data.type,
-                                                   strata = 'sex',
-                                                   regions = F) 
+        rv$age.sex = read.surveillance.data.stratified(data.type=data.type,
+                                                   strata = 'age.sex',
+                                                   regions = F,
+                                                   suffix = suffix) 
         
         rv$sex.subgroup = NULL
     }
@@ -322,7 +412,8 @@ read.surveillance.data.type = function(data.type){
 #     Sex: combine.pdf.years
 read.surveillance.data.stratified = function(data.type,
                                              strata,
-                                             regions=T){
+                                             regions=T,
+                                             suffix){
     ages=c('0-14','10-19','15-24','15-49','15+','50 and over','All ages')
     sexes = c("female","male")
     
@@ -334,7 +425,8 @@ read.surveillance.data.stratified = function(data.type,
         {
             age1 = read.surveillance.data.files(data.type=data.type,
                                                 age=ages[1],
-                                                regions = T)
+                                                regions = T,
+                                                suffix = suffix)
             
             dim.names = c(dimnames(age1), list(age=ages))
             dim.names = dim.names[c(1,3,2)]
@@ -346,7 +438,8 @@ read.surveillance.data.stratified = function(data.type,
             for(i in 1:length(ages)){
                 x = read.surveillance.data.files(data.type=data.type,
                                                  age=ages[i],
-                                                 regions = T)
+                                                 regions = T,
+                                                 suffix = suffix)
                 
                 rv[,i,] = x 
             }
@@ -357,7 +450,8 @@ read.surveillance.data.stratified = function(data.type,
         {
             age1 = read.surveillance.data.files(data.type=data.type,
                                                 age=ages[1],
-                                                regions = F)
+                                                regions = F,
+                                                suffix = suffix)
             
             dim.names = c(dimnames(age1), list(age=ages))
             
@@ -369,17 +463,19 @@ read.surveillance.data.stratified = function(data.type,
             for(i in 1:length(ages)){
                 x = read.surveillance.data.files(data.type=data.type,
                                                  age=ages[i],
-                                                 regions = F)
+                                                 regions = F,
+                                                 suffix = suffix)
                 
                 rv[,i] = x }
         }
         
     }
     
-    else if(strata=='sex')
+    else if(strata=='age.sex')
     {
         female = combine.pdf.years(data.type=data.type,
-                                   sex = "female")
+                                   sex = "female",
+                                   suffix=suffix)
         
         dim.names = c(dimnames(female), list(sex=sexes))
         
@@ -389,12 +485,13 @@ read.surveillance.data.stratified = function(data.type,
         
         for(i in 1:length(sexes)){
             x = combine.pdf.years(data.type=data.type,
-                                  sex = sexes[i])
+                                  sex = sexes[i],
+                                  suffix=suffix)
             
-            rv[,i] = x }
+            rv[,,i] = x }
     }
     
-    else stop("only currently set up for age and sex strata")
+    else stop("only currently set up for age and age.sex strata")
     
     rv
     
@@ -408,7 +505,7 @@ read.surveillance.data.files = function(dir = 'data/raw_data',
                                         data.type,
                                         regions = F,
                                         age,
-                                        suffix = ""){
+                                        suffix){
     sub.dir = file.path(dir, data.type)
     
     files = list.files(file.path(sub.dir))
@@ -433,7 +530,7 @@ read.surveillance.data.files = function(dir = 'data/raw_data',
     
     ## Need to put in check for suffix somehow
     ## Total ##
-    dim.names.total = list(year=as.character(paste0(years, suffix))
+    dim.names.total = list(year=as.character(years)
     )
     
     total =  suppressWarnings(array(as.numeric(gsub(" ","",one.df.t[paste0(years, suffix),ncol(one.df.t)])),
@@ -442,7 +539,7 @@ read.surveillance.data.files = function(dir = 'data/raw_data',
     
     
     ## Subgroups ##
-    dim.names.subgroups = list(year=as.character(paste0(years, suffix)),
+    dim.names.subgroups = list(year=as.character(years),
                                subgroup=subgroup.names
     )
     
@@ -464,14 +561,16 @@ read.surveillance.data.files = function(dir = 'data/raw_data',
 
 read.cascade.data.type = function(data.type="cascade",
                                   denominator,
-                                  sub.data.type){
+                                  sub.data.type,
+                                  suffix){
     rv=list()
     
     rv$total = read.cascade.data.files(data.type=data.type, 
                                        sub.data.type=sub.data.type,
                                        denominator=denominator,
                                        age='All ages',
-                                       sex="All")
+                                       sex="All",
+                                       suffix = suffix)
     
     
     rv$subgroup = read.cascade.data.files(data.type=data.type,
@@ -479,18 +578,21 @@ read.cascade.data.type = function(data.type="cascade",
                                           denominator=denominator,
                                           age='All ages',
                                           sex="All",
-                                          regions = T)
+                                          regions = T,
+                                          suffix = suffix)
     
     ## Age.Sex ##
     rv$age.sex = read.cascade.data.stratified(data.type=data.type,
                                               sub.data.type=sub.data.type,
                                               denominator=denominator,
-                                              regions = F)
+                                              regions = F,
+                                              suffix = suffix)
     ## Age.Sex.Subgroup ##
     rv$age.sex.subgroup = read.cascade.data.stratified(data.type=data.type,
                                                        sub.data.type=sub.data.type,
                                                        denominator=denominator,
-                                                       regions = T)
+                                                       regions = T,
+                                                       suffix = suffix)
     
     rv
 }
@@ -498,7 +600,8 @@ read.cascade.data.type = function(data.type="cascade",
 read.cascade.data.stratified = function(data.type,
                                         sub.data.type,
                                         denominator,
-                                        regions=T){
+                                        regions=T,
+                                        suffix){
     ## Pull AGE array by REGION
     if(regions)
     {
@@ -507,7 +610,8 @@ read.cascade.data.stratified = function(data.type,
                                                    denominator = denominator,
                                                    age="15+",
                                                    sex = "Female",
-                                                   regions = T)
+                                                   regions = T,
+                                                   suffix = suffix)
         
         dim.names = c(dimnames(age.sex.subgroup),list(age = "15+"),list(sex=c("male","female")))
         dim.names = dim.names[c(1,3,4,2)]
@@ -524,7 +628,8 @@ read.cascade.data.stratified = function(data.type,
                                                 denominator = denominator,
                                                 age="15+",
                                                 sex = "Male",
-                                                regions = T)
+                                                regions = T,
+                                                suffix = suffix)
     }
     ## Pull TOTAL AGE array
     else 
@@ -534,7 +639,8 @@ read.cascade.data.stratified = function(data.type,
                                           denominator = denominator,
                                           age="15+",
                                           sex = "Male",
-                                          regions = F)
+                                          regions = F,
+                                          suffix = suffix)
         
         dim.names = c(dimnames(age.sex),list(age = "15+"),list(sex=c("male","female")))
         
@@ -548,7 +654,8 @@ read.cascade.data.stratified = function(data.type,
                                                  denominator = denominator,
                                                  age="15+",
                                                  sex = "Female",
-                                                 regions = F)  
+                                                 regions = F,
+                                                 suffix = suffix)  
     }
     
     rv
@@ -561,7 +668,7 @@ read.cascade.data.files = function(dir = 'data/raw_data',
                                    regions = F,
                                    age,
                                    sex,
-                                   suffix = ""){
+                                   suffix){
     sub.dir = file.path(dir, paste0(data.type,"_",denominator))
     
     files = list.files(file.path(sub.dir))
@@ -588,7 +695,7 @@ read.cascade.data.files = function(dir = 'data/raw_data',
     rownames(one.df.t) = colnames(one.df)
     colnames(one.df.t) = rownames(one.df)
     
-    dim.names.total = list(year=as.character(paste0(years, suffix)))
+    dim.names.total = list(year=as.character(years, suffix))
 
     total =  suppressWarnings(array(as.numeric(gsub(" ","",
                                                     gsub(">","",one.df.t[paste0(years, suffix),ncol(one.df.t)]))),
@@ -597,7 +704,7 @@ read.cascade.data.files = function(dir = 'data/raw_data',
     
     
     ## Subgroups ##
-    dim.names.subgroups = list(year=as.character(paste0(years, suffix)),
+    dim.names.subgroups = list(year=as.character(years),
                                subgroup=subgroup.names
     )
     
@@ -628,48 +735,59 @@ read.cascade.data.files = function(dir = 'data/raw_data',
 combine.pdf.years = function(dir = 'data/raw_data/pdfs',
                              data.type,
                              pdf.years.to.combine = 2018:2019,
-                             sex){
+                             sex,
+                             suffix){
     
     # RIGHT NOW HARD-CODED FOR ONLY 2 YEARS OF PDFS
     year.1 = read.pdf.data.files(data.type=data.type,
                                  pdf.year=pdf.years.to.combine[1],
-                                 sex=sex)
+                                 sex=sex,
+                                 suffix=suffix)
     
     year.2 = read.pdf.data.files(data.type=data.type,
                                  pdf.year=pdf.years.to.combine[2],
-                                 sex=sex)
+                                 sex=sex,
+                                 suffix=suffix)
     
     
     other.years = dimnames(year.1)[[1]]
     most.recent.years = dimnames(year.2)[[1]]
     other.years.to.keep = other.years[!(other.years %in% most.recent.years)]
     all.years = c(other.years.to.keep, most.recent.years)
-    dim.names = list(year = all.years)
+    dim.names = list(year = all.years,
+                     age = "15+")
     
     rv = array(c(year.1[other.years.to.keep], year.2),
                dim = sapply(dim.names, length),
                dimnames = dim.names)
     
     years.sorted = sort(all.years)
-    rv = rv[years.sorted]
+    rv = rv[years.sorted,]
+    
+    dim.names.sorted = list(year = years.sorted,
+                     age = "15+")
+    
+    dim(rv) = sapply(dim.names.sorted,length)
+    dimnames(rv) = dim.names.sorted
     
     rv
 }
 
 
-#### THIS IS 15+ DATA - NEED TO CHANGE 
+
 # For each pdf year, read in csv file from tabula, return sex-specific incidence or prevalence 
 read.pdf.data.files = function(dir = 'data/raw_data/pdfs',
                                data.type,
                                pdf.year,
-                               sex){
-    files = list.files(file.path(dir,pdf.year))
+                               sex,
+                               suffix){
+    files = list.files(file.path(dir,paste0(pdf.year,suffix)))
     file = files[grepl(data.type,files)]
     
     if (length(file)!=1)
         stop("can only pull one file at a time")
     
-    df = read.csv(file.path(paste0(dir,"/",as.character(pdf.year)),file))
+    df = read.csv(file.path(paste0(dir,"/",as.character(pdf.year),suffix),file))
     df = df[-1,]
     var.names = df[,1]
     var.names = var.names[var.names!=""]
