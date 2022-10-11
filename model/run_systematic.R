@@ -8,7 +8,9 @@
 
 source('source_code.R')
 
-
+## Added this in so that parameters objects exists without running a sim - need this for likelihood functions 
+parameters = create.model.parameters()
+parameters = map.model.parameters(parameters)
 
 # Single function that is analogous to all the code in the test_case file, but also allows for
 # easier manipulation of sampled parameters
@@ -60,19 +62,42 @@ run.model.for.parameters = function(variable.parameters,
 
 ## Run model with sampled parameters
 variable.parameters=get.default.parameters()
-variable.parameters['suppression.rate.0']=0.6
-variable.parameters['testing.rate.1']=0.5
-variable.parameters['trate.0']=.77
-variable.parameters['trate.1']=0.25
-variable.parameters['age.15.to.19.transmission.multiplier']=.66
-variable.parameters['age.20.to.29.transmission.multiplier']=1.3
-variable.parameters['age.40.to.49.transmission.multiplier']=1.1
-variable.parameters['age.50.and.over.transmission.multiplier']=0.5
+# Transmission parameters
+variable.parameters['trate.0']=.7
+variable.parameters['trate.1']=0.2
+variable.parameters['trate.2']=0.15
 variable.parameters['female.to.male.multiplier']=1.03
-variable.parameters['age.50.to.79.mortality.multiplier']=2.1
-variable.parameters['over.80.mortality.multiplier']=1
-variable.parameters['birth.transmission.risk']=.6
+variable.parameters['age.15.to.19.transmission.multiplier']=.67
+variable.parameters['age.20.to.29.transmission.multiplier']=1.23
+variable.parameters['age.40.to.49.transmission.multiplier']=1.1
+variable.parameters['age.50.and.over.transmission.multiplier.0']=0.55
+variable.parameters['age.50.and.over.transmission.multiplier.1']=0.35
+variable.parameters['age.50.and.over.transmission.multiplier.2']=0.28
 variable.parameters['age.assortativity']=.8
+variable.parameters['birth.transmission.risk']=.6
+# Cascade parameters
+variable.parameters['testing.rate.1']=0.5
+variable.parameters['engagement.rate.2']=1.5
+variable.parameters['suppression.rate.0']=0.7
+variable.parameters['suppression.rate.1']=4
+variable.parameters['unsuppression.rates']=.05
+variable.parameters['male.cascade.multiplier']=.6
+# Mortality parameters
+variable.parameters['age.45.to.65.mortality.intercept.multiplier']= 2.3 # multiplies intercept or slope before projecting
+variable.parameters['age.45.to.65.mortality.slope.multiplier']= 1.01 
+variable.parameters['over.65.mortality.intercept.multiplier']= 1.0 
+variable.parameters['over.65.mortality.slope.multiplier']= 1.01 
+
+variable.parameters['hiv.specific.mortality.rates.1']=0.025
+variable.parameters['hiv.specific.mortality.rates.2']=0.1
+variable.parameters['hiv.specific.mortality.rates.3']=0.03
+
+
+variable.parameters['age.15.to.24.hiv.mortality.multiplier']= 0.4
+variable.parameters['over.50.hiv.mortality.multiplier']= 3
+variable.parameters['age.0.to.14.hiv.mortality.multiplier.1']= 12
+
+
 sim = run.model.for.parameters(variable.parameters = variable.parameters)
 
 
@@ -120,13 +145,52 @@ extract.hiv.data.for.ncd = function(sim,
     rv
 }
 
-hiv.output.for.ncd = extract.hiv.data.for.ncd(sim=sim,years = 2010:2030)
-
-
-
-
+## Plot results
 if(1==2){
-    ## Plot results
+    ## Population
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("population"),
+                  facet.by = 'age'))
+    
+    ## Incidence
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("incidence"),
+                  facet.by = 'age'))
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("incidence"),
+                  ages = "15+",
+                  facet.by = c("age",'sex')))
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("incidence"))) 
+    
+    ## Prevalence
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("prevalence"),
+                  facet.by = 'age'))
+
+    ## HIV mortality
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("hiv.mortality"),
+                  facet.by = "age",
+                  proportion = T)) 
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("hiv.mortality"),
+                  facet.by = "age",
+                  proportion = F)) 
+    
+    ## Awareness - default denominator is PLHIV 
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("awareness"),
+                  proportion = T,
+                  facet.by = c("age","sex")))
     
     ## Engagement - default denominator is total aware
     print(simplot(sim,
@@ -143,77 +207,42 @@ if(1==2){
     print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("suppression"),
-                  proportion = T))
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("suppression"),
-                  proportion = T,
-                  facet.by = c("age","sex"))) 
-    
-    ## Awareness 
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("awareness"),
-                  proportion = T))
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("awareness"),
                   proportion = T,
                   facet.by = c("age","sex")))
     
-    ## Incidence
     print(simplot(sim,
                   years=c(1980:2020),
-                  data.types = c("incidence"),
-                  facet.by = 'age'))
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("incidence"),
-                  facet.by = 'age',
-                  ages = c('55-59','60-64','65-69',
-                           '70-74','75-79','80 and over')))
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("incidence"),
-                  facet.by = 'sex'))
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("incidence"))) 
-    
-    ## Prevalence
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("prevalence"),
-                  facet.by = 'age'))
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("prevalence"),
-                  facet.by = 'age',
-                  ages = c('10-14','15-19'))+ geom_hline(yintercept=130000))
-    
-    ## Population
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("population"),
-                  facet.by = 'age'))
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("population"),
-                  facet.by = 'hiv.status'))     #THIS ISN'T RIGHT
-    
-    ## HIV mortality
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("hiv.mortality"),
-                  facet.by = "age",
-                  proportion = F)) 
-    print(simplot(sim,
-                  years=c(1980:2020),
-                  data.types = c("hiv.mortality"),
-                  facet.by = "age",
-                  proportion = T)) 
- 
+                  data.types = c("engagement","suppression"),
+                  proportion = T,
+                  facet.by = c("age","sex")))
 }
    
+## Save outputs for NCD model 
+if(1==2){
+    hiv.output.for.ncd = extract.hiv.data.for.ncd(sim=sim,years = 2015)
+    hiv.pop.2015 = hiv.output.for.ncd$population[1,,,]
+    
+    ## Combining engaged categories into one 
+    dim.names = list(age = dimnames(hiv.pop.2015)[[1]],
+                    sex = dimnames(hiv.pop.2015)[[2]],
+                    hiv.status = c("hiv_negative","undiagnosed","diagnosed_unengaged","engaged"))
+    
+    hiv.pop.2015.new = array(c(hiv.pop.2015[,,c("hiv_negative","undiagnosed","diagnosed_unengaged")],
+                               hiv.pop.2015[,,"engaged_unsuppressed"] + hiv.pop.2015[,,"engaged_suppressed"]),
+                             dim = sapply(dim.names, length),
+                             dimnames = dim.names)
 
+    write.csv(c(hiv.pop.2015.new),file="hivpop.csv")
+    
+    # Population distribution 
+    pop.2015 = hiv.output.for.ncd$population[1,,,]
+    pop.2015 = apply(pop.2015,c(1:2),sum) # combine over hiv states to only return age/sex distribution 
+    
+    pop.2015.distribution = round(100*apply(pop.2015,2,function(x){x/sum(x)}),2)
+    pop.2015.distribution = rbind(pop.2015.distribution,colSums(pop.2015.distribution))
+    rownames(pop.2015.distribution)[nrow(pop.2015.distribution)] = "Total"
+    
+    write.csv(pop.2015.distribution,file="pop.2015.distribution.csv")
+    
+}
   
