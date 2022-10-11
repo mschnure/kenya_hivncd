@@ -28,11 +28,7 @@ simplot = function(...,
                    sexes = data.manager[[data.types[1]]]$SEXES
                    #subgroups = data.manager$SUBGROUPS
 ){
-    # data frame will need columns from basic function; plus column for every facet.by and every split.by
-    # then combine all the split.by and sim id's into one column 
-    
     sims = list(...)
-    
     keep.dimensions = union('year',union(facet.by, split.by))
     
     if(any(data.types=="hiv.mortality"))
@@ -41,12 +37,14 @@ simplot = function(...,
     if(any(data.types=="hiv.mortality") & any(keep.dimensions=="sex"))
         stop("no hiv mortality data by sex")
     
-    #empty dataframe to combine different simulations
-    df.sim = NULL
     
+    ##----------------------##
+    ##----- SIM OUTPUT -----##
+    ##----------------------##
+    
+    df.sim = NULL
     for(d in data.types){
         for(i in 1:length(sims)){
-            #select a simulation, and add it to the df        
             sim = sims[[i]]
             
             # Extract the data from simulation
@@ -63,13 +61,10 @@ simplot = function(...,
     if(proportion)
     {
         df.sim.denominator = NULL
-        
         for(d in data.types){
             for(i in 1:length(sims)){
-                #select a simulation, and add it to the df        
                 sim = sims[[i]]
-                
-                # Extract denominator from simulation
+                # Extract denominator from simulation (denom for eng/supp is aware; denom for aware/mort is prev)
                 if(any(data.types==c("engagement","suppression"))){
                     denominator = extract.data(sim, 
                                                years = years, 
@@ -109,11 +104,12 @@ simplot = function(...,
         df.sim$group.id = paste0(df.sim$group.id,", ",s,"=",df.sim[,s])
     }
     
-    # Observed (true) data:
-    df.truth = NULL  
+    ##--------------------------------##
+    ##----- OBSERVED (TRUE) DATA -----##
+    ##--------------------------------##
     
+    df.truth = NULL  
     for(d in data.types){
-        
         # Extract the data from simulation
         value = get.surveillance.data(data.manager = data.manager, 
                                       years = years, 
@@ -128,9 +124,10 @@ simplot = function(...,
         one.df$data.type = d
         
         df.truth = rbind(df.truth, one.df)   
-        
     }
     
+    # Other proportions (awareness, engagement, suppression) are reported as proportions, so no need to divide for df.truth
+    # HIV mortality is reported as absolute number of AIDS-related deaths, so need denominator for df.truth
     if(proportion & any(data.types=="hiv.mortality"))
     {
         df.truth.denominator = NULL
@@ -154,12 +151,9 @@ simplot = function(...,
             
             df.truth$value = (df.truth$value/df.truth.denominator$value)*100
         }
- 
     }
-
     
     df.truth$group.id = "truth"
-    
     df.truth$split = "all"
     
     for(s in split.by){
@@ -170,14 +164,11 @@ simplot = function(...,
             df.truth$split = paste0(df.truth$split,", ",s,"=",df.truth[,s])
     }
     
-    
-    
     # setting up facet.by
     facet_string = '~data.type'
     if(length(facet.by)>0)
         facet_string = paste0(facet_string, '+', paste0(facet.by,collapse = '+'))
     facet_formula = as.formula(facet_string)
-    
     
     ggplot() + 
         geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id)) +
