@@ -32,7 +32,7 @@ simplot = function(...,
     keep.dimensions = union('year',union(facet.by, split.by))
     
     if(any(data.types=="hiv.mortality"))
-        sexes = sim$SEXES
+        sexes = sims[[1]]$SEXES
     
     if(any(data.types=="hiv.mortality") & any(keep.dimensions=="sex"))
         stop("no hiv mortality data by sex")
@@ -42,20 +42,36 @@ simplot = function(...,
     ##----- SIM OUTPUT -----##
     ##----------------------##
     
+    # to incorporate MCMC results, wrap this in a for loop for every simulation 
+    
     df.sim = NULL
     for(d in data.types){
         for(i in 1:length(sims)){
-            sim = sims[[i]]
             
-            # Extract the data from simulation
-            value = extract.data(sim, years = years, age=ages, sex = sexes, data.type=d, keep.dimensions = keep.dimensions)
+            if(is(sims[[i]],"simset")) # if this is an MCMC results, i.e., a simset
+                sims.for.i = simset@simulations
             
-            # set up a dataframe with columns: year, value, sim id, data.type 
-            one.df = reshape2::melt(value) 
-            one.df$sim.id = i
-            one.df$data.type = d
+            # for plotting single simulations
+            else {
+                sim = sims[[i]]
+                sims.for.i = list(sim)}
+        
+            for(j in 1:length(sims.for.i)){
+                
+                sim = sims.for.i[[j]]
+                
+                # Extract the data from simulation
+                value = extract.data(sim, years = years, age=ages, sex = sexes, data.type=d, keep.dimensions = keep.dimensions)
+                
+                # set up a dataframe with columns: year, value, sim id, data.type 
+                one.df = reshape2::melt(value) 
+                one.df$sim.id = i
+                one.df$sim.number = j
+                one.df$data.type = d
+                
+                df.sim = rbind(df.sim, one.df)   
+            }
             
-            df.sim = rbind(df.sim, one.df)   
         }
     }
     if(proportion)
@@ -98,7 +114,7 @@ simplot = function(...,
     }
     
     df.sim$sim.id = as.character(df.sim$sim.id)
-    df.sim$group.id = paste0("sim ",df.sim$sim.id)
+    df.sim$group.id = paste0("sim ",df.sim$sim.id,"_",df.sim$sim.number)
     
     for(s in split.by){
         df.sim$group.id = paste0(df.sim$group.id,", ",s,"=",df.sim[,s])
