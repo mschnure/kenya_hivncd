@@ -39,30 +39,37 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                              incidence.years=years,
                              incidence.weight=1, 
                              incidence.obs.correlation=0.5,
+                             incidence.correlation.structure="auto.regressive",
                              #prevalence
                              prevalence.years=years,
-                             prevalence.weight=1,
+                             prevalence.weight=1, # will probably have to downweight just due to magnitude; don't want it to outweight incidence
                              prevalence.obs.correlation=0.5,
+                             prevalence.correlation.structure="auto.regressive",
                              #awareness
                              awareness.years=years,
                              awareness.weight=1,
                              awareness.obs.correlation=0.5,
+                             awareness.correlation.structure="compound.symmetry",
                              #engagement
                              engagement.years=years,
                              engagement.weight=1,
                              engagement.obs.correlation=0.5,
+                             engagement.correlation.structure="compound.symmetry",
                              #suppression
                              suppression.years=years,
                              suppression.weight=1,
                              suppression.obs.correlation=0.5,
+                             suppression.correlation.structure="compound.symmetry",
                              #population
                              population.years=years,
-                             population.weight=1,
+                             population.weight=1/200000, # have to downweight a lot due to large pop size/number of strata
                              population.obs.correlation=0.5,
+                             population.correlation.structure="auto.regressive",
                              #hiv.mortality
-                             hiv.mortality.years=years,
+                             hiv.mortality.years=1980:2020,
                              hiv.mortality.weight=1,
-                             hiv.mortality.obs.correlation=0.5
+                             hiv.mortality.obs.correlation=0.7, # 0.5 would die out very quickly, so making this higher
+                             hiv.mortality.correlation.structure="auto.regressive"
                              ){ 
     
     incidence.lik = create.likelihood.for.data.type(data.type = "incidence",
@@ -71,16 +78,17 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                     denominator.data.type="population", # later maybe make this out of the negative pop
                                                     obs.is.proportion=F,
                                                     weight=incidence.weight,
-                                                    obs.correlation=incidence.obs.correlation)
+                                                    obs.correlation=incidence.obs.correlation,
+                                                    correlation.structure=incidence.correlation.structure)
     
-    # Melissa update these to match incidence 
     prevalence.lik = create.likelihood.for.data.type(data.type = "prevalence",
                                                      data.manager=data.manager,
                                                      years=prevalence.years,
                                                      denominator.data.type="population", 
                                                      obs.is.proportion=F,
                                                      weight=prevalence.weight,
-                                                     obs.correlation=prevalence.obs.correlation)
+                                                     obs.correlation=prevalence.obs.correlation,
+                                                     correlation.structure=prevalence.correlation.structure)
     
     awareness.lik = create.likelihood.for.data.type(data.type = "awareness",
                                                     data.manager=data.manager,
@@ -88,7 +96,9 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                     denominator.data.type="prevalence",
                                                     obs.is.proportion=T, # awareness data is reported as a proportion 
                                                     weight=awareness.weight,
-                                                    obs.correlation=awareness.obs.correlation)
+                                                    obs.correlation=awareness.obs.correlation,
+                                                    correlation.structure=awareness.correlation.structure,
+                                                    )
     
     engagement.lik = create.likelihood.for.data.type(data.type = "engagement",
                                                      data.manager=data.manager,
@@ -96,15 +106,17 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                      denominator.data.type="awareness", # engagement denominator = awareness
                                                      obs.is.proportion=T, # engagement data is reported as a proportion 
                                                      weight=engagement.weight,
-                                                     obs.correlation=engagement.obs.correlation)
+                                                     obs.correlation=engagement.obs.correlation,
+                                                     correlation.structure=engagement.correlation.structure)
     
     suppression.lik = create.likelihood.for.data.type(data.type = "suppression",
                                                       data.manager=data.manager,
-                                                      years=engagement.years,
+                                                      years=suppression.years,
                                                       denominator.data.type="awareness", # suppression denominator = awareness
                                                       obs.is.proportion=T, # suppression data is reported as a proportion 
                                                       weight=suppression.weight,
-                                                      obs.correlation=suppression.obs.correlation)
+                                                      obs.correlation=suppression.obs.correlation,
+                                                      correlation.structure=suppression.correlation.structure)
     
     population.lik = create.likelihood.for.data.type(data.type = "population",
                                                      data.manager=data.manager,
@@ -113,6 +125,7 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                      obs.is.proportion=F,
                                                      weight=population.weight,
                                                      obs.correlation=population.obs.correlation,
+                                                     correlation.structure=population.correlation.structure,
                                                      calculate.sds.from.ci=F,
                                                      use.total=F,
                                                      use.sex=F,
@@ -120,12 +133,17 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                      use.age.sex=T) 
     
     hiv.mortality.lik = create.likelihood.for.data.type(data.type = "hiv.mortality",
-                                                         data.manager=data.manager,
-                                                         years=engagement.years,
-                                                         denominator.data.type=NULL, # technically hiv mortality reported as a number
-                                                         obs.is.proportion=F, 
-                                                         weight=hiv.mortality.weight,
-                                                         obs.correlation=hiv.mortality.obs.correlation)
+                                                        data.manager=data.manager,
+                                                        years=hiv.mortality.years,
+                                                        denominator.data.type=NULL, # technically hiv mortality reported as a number
+                                                        obs.is.proportion=F, 
+                                                        weight=hiv.mortality.weight,
+                                                        obs.correlation=hiv.mortality.obs.correlation,
+                                                        correlation.structure=hiv.mortality.correlation.structure,
+                                                        use.total=T,
+                                                        use.sex=T,
+                                                        use.age=T,
+                                                        use.age.sex=T)
     
     components = list(incidence=incidence.lik,
                       prevalence=prevalence.lik,
@@ -155,6 +173,7 @@ create.likelihood.for.data.type = function(data.type,
                                            obs.is.proportion,
                                            weight,
                                            obs.correlation,
+                                           correlation.structure,
                                            calculate.sds.from.ci=T,
                                            use.total=T,
                                            use.sex=T,
@@ -166,6 +185,7 @@ create.likelihood.for.data.type = function(data.type,
                                                                years=years,
                                                                data.manager=data.manager,
                                                                obs.correlation=obs.correlation,
+                                                               correlation.structure=correlation.structure,
                                                                calculate.sds.from.ci=calculate.sds.from.ci,
                                                                use.total=use.total,
                                                                use.sex=use.sex,
@@ -173,17 +193,20 @@ create.likelihood.for.data.type = function(data.type,
                                                                use.age.sex=use.age.sex
                                                                )
     
-    function(sim){ # this gets called every single time we invoke likelihood on a simulation; which is why we pre-compute above it
+    function(sim,debug=F){ # this gets called every single time we invoke likelihood on a simulation; which is why we pre-compute above it
         
         compute.likelihood(sim=sim,
                            numerator.data.type=data.type,
                            denominator.data.type=denominator.data.type,
                            M=likelihood.elements$M, 
                            obs.is.proportion=obs.is.proportion,
+                           obs.year=likelihood.elements$obs.year,
+                           obs.dimensions=likelihood.elements$obs.dimensions,
                            years=years,
                            obs=likelihood.elements$obs, 
                            obs.cov.mat=likelihood.elements$obs.cov.mat,
-                           weight=weight)
+                           weight=weight,
+                           debug=debug)
         
     }
     
@@ -197,6 +220,7 @@ get.likelihood.elements.by.data.type = function(data.type,
                                                 years,
                                                 data.manager,
                                                 obs.correlation,
+                                                correlation.structure,
                                                 calculate.sds.from.ci=T,
                                                 use.total=T,
                                                 use.sex=T,
@@ -246,20 +270,36 @@ get.likelihood.elements.by.data.type = function(data.type,
     rv$obs.year = c(dim.1$obs.year,dim.2$obs.year, dim.3$obs.year,dim.4$obs.year)
     rv$obs.dimensions = c(dim.1$obs.dimensions,dim.2$obs.dimensions, dim.3$obs.dimensions,dim.4$obs.dimensions)
     
-    obs.corr.mat = sapply(1:length(rv$obs),function(i){
-        sapply(1:length(rv$obs),function(j){
-            
-            # if the same observation (same year and same strata type) --> 1
-            if(i==j) 
-                1
-            # if the dimensions (e.g., year/sex) & strata type (e.g., male) of the observations are the same, but they are different years
-            else if(rv$obs.dimensions[i]==rv$obs.dimensions[j]) 
-                obs.correlation 
-            # if the observations are from different strata --> 0 
-            else 
-                0
-        })
-    }) 
+    # Compound symmetry good for shorter periods (correlations between 1 year apart same as 10 years apart)
+    if(correlation.structure=="compound.symmetry"){
+        obs.corr.mat = sapply(1:length(rv$obs),function(i){
+            sapply(1:length(rv$obs),function(j){
+                
+                # if the same observation (same year and same strata type) --> 1
+                if(i==j) 
+                    1
+                # if the dimensions (e.g., year/sex) & strata type (e.g., male) of the observations are the same, but they are different years
+                else if(rv$obs.dimensions[i]==rv$obs.dimensions[j]) 
+                    obs.correlation 
+                # if the observations are from different strata --> 0 
+                else 
+                    0
+            })
+        }) 
+    }
+
+    # Auto-regressive good for longer periods (correlations between 1 year apart stronger than 10 years apart)
+    else if(correlation.structure=="auto.regressive") {
+        diff = matrix(abs(rep(rv$obs.year,length(rv$obs.year))-rep(rv$obs.year,each=length(rv$obs.year))),
+                      nrow=length(rv$obs.year))
+        obs.corr.mat = obs.correlation^diff
+        
+        # correlation only applies if they're the same stratification of observation; otherwise 0 correlation
+        obs.corr.mat = obs.corr.mat*as.numeric((rep(rv$obs.dimensions,length(rv$obs.dimensions))==rep(rv$obs.dimensions,each=length(rv$obs.dimensions))))
+    }
+    
+    else 
+        stop("incorrect correlation structure")
     
     # SDs * correlation matrix
     rv$obs.cov.mat = (rv$obs.sds %*% t(rv$obs.sds)) * obs.corr.mat
@@ -282,7 +322,6 @@ get.likelihood.elements.by.data.type.and.dimension = function(data.type,
                                                               keep.dimensions,
                                                               calculate.sds.from.ci=T){
     
-    #@ MELISSA PULL IN UPPERS/LOWER
     obs.data = get.surveillance.data(data.manager = data.manager,
                                      data.type = data.type,
                                      years = years,
@@ -324,12 +363,13 @@ get.likelihood.elements.by.data.type.and.dimension = function(data.type,
             years.to.pull = as.character(obs.data.long[i,"year"])
             ages.to.pull = obs.data.long[i,"age"]
             
-            if(any(names(obs.data.long)!="age")){ # if no age strata, assign all ages
+            if(all(names(obs.data.long)!="age")){ # if no age strata, assign all ages
                 ages.to.pull = "All ages"}
             
-            ages.to.pull = MODEL.TO.SURVEILLANCE.AGE.MAPPING[[as.character(ages.to.pull)]] 
+            if(data.type!="population")
+                ages.to.pull = MODEL.TO.SURVEILLANCE.AGE.MAPPING[[as.character(ages.to.pull)]] # MELISSA CHECK IF ALL OTHER DATA TYPES USE THIS
             
-            if(any(names(obs.data.long)!="sex")){ # if no sex strata, assign both sexes
+            if(all(names(obs.data.long)!="sex")){ # if no sex strata, assign both sexes
                 sexes.to.pull = c("male","female")
             } else
                 sexes.to.pull = as.character(obs.data.long[i,"sex"])
@@ -337,10 +377,12 @@ get.likelihood.elements.by.data.type.and.dimension = function(data.type,
             M.row.x = array(0,
                             sapply(dim.names,length),
                             dimnames = dim.names)
+            
             M.row.x[years.to.pull,ages.to.pull,sexes.to.pull] = 1
             M.row.x = as.numeric(M.row.x)
             
             M = rbind(M,M.row.x)
+            
         }
         
         ## For non-population data, use SDS from confidence intervals
@@ -381,11 +423,13 @@ compute.likelihood = function(sim,
                               denominator.data.type,
                               M, # matrix that maps model strata to observed strata; pre-computed
                               obs.is.proportion,
+                              obs.year,
+                              obs.dimensions,
                               years,
                               obs, # pre-computed vector of observations 
                               obs.cov.mat, # pre-computed variance-covariance matrix
-                              weight){
-    
+                              weight,
+                              debug=F){
     
     ## Model component## 
     y.star = as.numeric(extract.data(sim = sim,
@@ -420,6 +464,14 @@ compute.likelihood = function(sim,
     
     cov.mat = cov.mat + obs.cov.mat # add in observation error part 
     cov.mat = cov.mat*(1/weight) # higher weight --> smaller variance; (potentially downweight population likelihood)
+    
+    if(debug){
+        df = data.frame(year=obs.year,dimension=obs.dimensions,obs=obs,mean=mu)
+        browser()
+    }
+    if(1==2)
+        if(numerator.data.type=="hiv.mortality")
+            browser()
     
     # compute and return the density of the multivariate normal
     rv = dmvnorm(x = obs,mean = mu,sigma = cov.mat,log = T)
