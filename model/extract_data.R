@@ -73,6 +73,7 @@ extract.data = function(sim,
                                 ages=ages,
                                 sexes=sexes,
                                 subgroups=subgroups,
+                                hiv.status=hiv.status,
                                 keep.dimensions=keep.dimensions)
     
     else if (data.type=='hiv.mortality')
@@ -152,6 +153,11 @@ do.extract.4D <- function(sim,
                           hiv.status = sim$HIV.STATUS,
                           keep.dimensions = 'year', #collapse all other dimensions & report the data as total value over this dimension
                           age.mapping = MODEL.TO.SURVEILLANCE.AGE.MAPPING){
+    
+    # make sure keep dimensions are valid; put them in the right order 
+    keep.dimensions = check.keep.dimensions(keep.dimensions = keep.dimensions,
+                                            arr=arr)
+    
     #making sure that inputs are entered as character and not numerical indexes (if so, return the char values)
     if (!is.character(ages))
         ages = sim$AGES[ages]
@@ -166,7 +172,6 @@ do.extract.4D <- function(sim,
     
     if (!is.character(hiv.status))
         hiv.status = sim$HIV.STATUS[hiv.status]
-    
     
     
     #full names of all dimensions
@@ -237,6 +242,10 @@ do.extract.3D <- function(sim,
                           keep.dimensions = 'year',
                           age.mapping = MODEL.TO.SURVEILLANCE.AGE.MAPPING
 ){
+    # make sure keep dimensions are valid; put them in the right order 
+    keep.dimensions = check.keep.dimensions(keep.dimensions = keep.dimensions,
+                                            arr=arr)
+    
     #making sure that inputs are entered as character and not numerical indexes (if so, return the char values)
     if (!is.character(ages))
         ages = sim$AGES[ages]
@@ -531,4 +540,16 @@ extract.disengagement.unsuppressed <- function(sim,
     )
 }
 
-
+# Function to make sure keep dimensions are valid and returns array in the right order 
+check.keep.dimensions = function(keep.dimensions,
+                                 arr){
+    
+    arr.dimensions = names(dimnames(arr))
+    
+    invalid.keep.dimensions = setdiff(keep.dimensions,arr.dimensions)
+    
+    if(length(invalid.keep.dimensions)>0)
+        stop(paste0("Invalid keep dimensions: ",paste0(invalid.keep.dimensions,collapse = ",")))
+    
+    intersect(arr.dimensions,keep.dimensions) # only keep the dimensions that are in both but put in the order of the array
+}
