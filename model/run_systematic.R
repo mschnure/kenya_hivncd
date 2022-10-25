@@ -18,6 +18,10 @@ parameters = map.model.parameters(parameters)
 #         sets up the initial state; runs the model
 #     2. Can be passed variable.parameters as an input to override default sampled parameters
 #     3. Called in parameter_optim code
+
+## Run model with sampled parameters
+variable.parameters=get.default.parameters()
+
 run.model.for.parameters = function(variable.parameters,
                                     parameters=create.model.parameters()){
     
@@ -60,8 +64,7 @@ run.model.for.parameters = function(variable.parameters,
 }
 
 
-## Run model with sampled parameters
-variable.parameters=get.default.parameters()
+
 # Transmission parameters
 variable.parameters['trate.0']=.7
 variable.parameters['trate.1']=0.2
@@ -98,102 +101,60 @@ variable.parameters['over.50.hiv.mortality.multiplier']= 3
 variable.parameters['age.0.to.14.hiv.mortality.multiplier.1']= 12
 
 
-sim = run.model.for.parameters(variable.parameters = variable.parameters)
-
-
-## Extracts outputs needed for NCD model
-extract.hiv.data.for.ncd = function(sim,
-                                    years){
-    
-    # These will be combined into one "disengagement" output (Parastu's request)
-    disengagement.suppressed = extract.data(sim, 
-                                            data.type = "disengagement.suppressed",
-                                            years = years,
-                                            keep.dimensions = c("year","age","sex"))
-    disengagement.unsuppressed = extract.data(sim, 
-                                              data.type = "disengagement.unsuppressed",
-                                              years = years,
-                                              keep.dimensions = c("year","age","sex"))
-    
-    rv = list()
-    rv$population = extract.data(sim, 
-                                 data.type = "population",
-                                 years = years,
-                                 keep.dimensions = c("year","age","sex","hiv.status"))
-    rv$incidence = extract.data(sim, 
-                                data.type = "incidence",
-                                years = years,
-                                keep.dimensions = c("year","age","sex"))
-    rv$hiv.mortality = extract.data(sim, 
-                                    data.type = "hiv.mortality",
-                                    years = years,
-                                    keep.dimensions = c("year","age","sex"))
-    rv$diagnosis = extract.data(sim, 
-                                data.type = "diagnoses",
-                                years = years,
-                                keep.dimensions = c("year","age","sex"))
-    rv$engagement = extract.data(sim, 
-                                 data.type = "annual.engagement",
-                                 years = years,
-                                 keep.dimensions = c("year","age","sex"))
-    rv$disengagement = disengagement.suppressed + disengagement.unsuppressed
-    rv$suppression = extract.data(sim,
-                                  data.type = "annual.suppression",
-                                  years = years,
-                                  keep.dimensions = c("year","age","sex"))
-    
-    rv
+if(1==2){
+    sim = run.model.for.parameters(variable.parameters = variable.parameters)
 }
+
 
 ## Plot results
 if(1==2){
     ## Population
-    print(simplot(sim,
+    print(simplot(sim1, sim2,
                   years=c(1980:2020),
                   data.types = c("population"),
                   facet.by = 'age'))
     
     ## Incidence
-    print(simplot(sim,
+    print(simplot(sim1, sim2,
                   years=c(1980:2020),
                   data.types = c("incidence"),
                   facet.by = 'age'))
-    print(simplot(sim,
+    print(simplot(sim1, sim2,
                   years=c(1980:2020),
                   data.types = c("incidence"),
                   ages = "15+",
                   facet.by = c("age",'sex')))
-    print(simplot(sim,
+    print(simplot(sim1,sim2,
                   years=c(1980:2020),
                   data.types = c("incidence"))) 
     
     ## Prevalence
-    print(simplot(sim,
+    print(simplot(sim1, sim2,
                   years=c(1980:2020),
                   data.types = c("prevalence"),
                   facet.by = 'age'))
 
     ## HIV mortality
-    print(simplot(sim,
+    print(simplot(sim1, sim2,
                   years=c(1980:2020),
                   data.types = c("hiv.mortality"),
                   facet.by = "age",
                   proportion = T)) 
-    print(simplot(sim,
+    print(simplot(sim1, sim2,
                   years=c(1980:2020),
                   data.types = c("hiv.mortality"),
                   facet.by = "age",
-                  proportion = F)) 
+                  proportion = F)) # likelihood is absolute value so use this one for testing 
     
     ## Awareness - default denominator is PLHIV 
-    print(simplot(sim,
+    print(simplot(sim1, sim2,
                   years=c(1980:2020),
                   data.types = c("awareness"),
                   proportion = T,
                   facet.by = c("age","sex")))
     
     ## Engagement - default denominator is total aware
-    print(simplot(sim,
+    print(simplot(sim1, sim2,
                   years=c(1980:2020),
                   data.types = c("engagement"),
                   proportion = T,
@@ -204,7 +165,7 @@ if(1==2){
                   proportion = T) + geom_vline(xintercept = c(1986,2014,2016)-1) + ylim(0,100))
     
     ## Suppression - default denominator is total aware
-    print(simplot(sim,
+    print(simplot(sim1, sim2,
                   years=c(1980:2020),
                   data.types = c("suppression"),
                   proportion = T,
@@ -217,32 +178,5 @@ if(1==2){
                   facet.by = c("age","sex")))
 }
    
-## Save outputs for NCD model 
-if(1==2){
-    hiv.output.for.ncd = extract.hiv.data.for.ncd(sim=sim,years = 2015)
-    hiv.pop.2015 = hiv.output.for.ncd$population[1,,,]
-    
-    ## Combining engaged categories into one 
-    dim.names = list(age = dimnames(hiv.pop.2015)[[1]],
-                    sex = dimnames(hiv.pop.2015)[[2]],
-                    hiv.status = c("hiv_negative","undiagnosed","diagnosed_unengaged","engaged"))
-    
-    hiv.pop.2015.new = array(c(hiv.pop.2015[,,c("hiv_negative","undiagnosed","diagnosed_unengaged")],
-                               hiv.pop.2015[,,"engaged_unsuppressed"] + hiv.pop.2015[,,"engaged_suppressed"]),
-                             dim = sapply(dim.names, length),
-                             dimnames = dim.names)
 
-    write.csv(c(hiv.pop.2015.new),file="hivpop.csv")
-    
-    # Population distribution 
-    pop.2015 = hiv.output.for.ncd$population[1,,,]
-    pop.2015 = apply(pop.2015,c(1:2),sum) # combine over hiv states to only return age/sex distribution 
-    
-    pop.2015.distribution = round(100*apply(pop.2015,2,function(x){x/sum(x)}),2)
-    pop.2015.distribution = rbind(pop.2015.distribution,colSums(pop.2015.distribution))
-    rownames(pop.2015.distribution)[nrow(pop.2015.distribution)] = "Total"
-    
-    write.csv(pop.2015.distribution,file="pop.2015.distribution.csv")
-    
-}
   
