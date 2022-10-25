@@ -1,4 +1,5 @@
 library(distributions)
+library(boot) # is this the right package for the logit function? 
 
 # for most of these, log normal is fine; maybe logit normal for some; types of parameters: rates, ratios
 # if lognormal, being off by a factor in either direction is equivalent, rather than absolute value (half versus 2x are the same)
@@ -7,6 +8,8 @@ library(distributions)
 # mean value given to function is log of what I think the value should be 
 # without data, best guess would have mean at 0 and then decide how far off I'm willing to be 
 
+
+# for now, filled in with values that I landed at that made curves fit pretty well - need to find actual data-supported values though
 prior = join.distributions(
     
     # general
@@ -27,7 +30,9 @@ prior = join.distributions(
     
     # other transmission multipliers
     age.assortativity = Lognormal.Distribution(log(0.8), log(4)/2),
-    birth.transmission.risk = Lognormal.Distribution(log(0.8), log(4)/2), # change to either logit normal or beta (for any beta, there is a logit normal that approximates)
+    birth.transmission.risk = Logitnormal.Distribution(logit(0.8), logit(4)/2), # is this right? 
+    # because birth transmission risk is a proportion, either logit normal or beta 
+    # (for any beta, there is a logit normal that approximates)
     
     # cascade parameters
     testing.rate.1 = Lognormal.Distribution(log(0.5), log(4)/2),
