@@ -83,8 +83,67 @@ dimnames(hiv.output.for.ncd$disengagement)[[2]][17] = "80-85"
 hiv.output.for.ncd$suppression[,"80 and over",] =hiv.output.for.ncd$suppression[,"80 and over",]/4
 dimnames(hiv.output.for.ncd$suppression)[[2]][17] = "80-85"
 
+hiv.sim = sim
 
-save.image("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/hiv_sim.RData")
+save(hiv.sim,DATA.MANAGER,hiv.output.for.ncd,file="~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/hiv_sim.RData")
+
+# testing plotting hiv distribution 
+if(1==2) {
+    
+    if(hiv.positive.population.only) {
+        pop = hiv.output.for.ncd$population[,-1,,]  
+    } else 
+        pop = hiv.output.for.ncd$population
+    
+    full.dim.names = dimnames(pop)
+    hiv.dim.names =  dimnames(pop)[-1]
+    
+    hiv.distr = array(0,
+                      dim = sapply(full.dim.names,length),
+                      dimnames = full.dim.names)
+    
+    years = full.dim.names[[1]]
+    for(i in 1:length(years)){
+        
+        hiv.probs = 
+            sapply(1:length(hiv.dim.names$age), function(age){
+                sapply(1:length(hiv.dim.names$sex), function(sex){
+                    rowSums(pop[i,,,],1)/sum(pop[i,,,])
+                })
+            })
+        
+        dim(hiv.probs) = sapply(hiv.dim.names,length)
+        dimnames(hiv.probs) = hiv.dim.names
+        
+        # test
+        # colSums(hiv.probs,1)
+        
+        hiv.distr[i,,,] = hiv.probs
+        
+        # test
+        # apply(hiv.distr,c(1,3,4),sum)
+    }
+    
+    df.for.plot = melt(hiv.distr)
+    
+    # total
+    ggplot(df.for.plot, aes(fill=hiv.status, x = year, y = value)) + 
+        geom_bar(position="fill", stat="identity") 
+
+    # age
+    ggplot(df.for.plot, aes(fill=hiv.status, x = year, y = value)) + 
+        geom_bar(position="fill", stat="identity") + 
+        facet_wrap(~age, scales = "free_y")
+    
+    # sex
+    ggplot(df.for.plot, aes(fill=hiv.status, x = year, y = value)) + 
+        geom_bar(position="fill", stat="identity") + 
+        facet_wrap(~sex, scales = "free_y")
+    
+}
+
+
+
 
 # Not sure if I still need this?
 if(1==2){
