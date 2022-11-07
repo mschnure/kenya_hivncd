@@ -42,8 +42,6 @@ simplot = function(...,
     ##----- SIM OUTPUT -----##
     ##----------------------##
     
-    # to incorporate MCMC results, wrap this in a for loop for every simulation 
-    
     df.sim = NULL
     for(d in data.types){
         for(i in 1:length(sims)){
@@ -79,37 +77,54 @@ simplot = function(...,
         df.sim.denominator = NULL
         for(d in data.types){
             for(i in 1:length(sims)){
-                sim = sims[[i]]
-                # Extract denominator from simulation (denom for eng/supp is aware; denom for aware/mort is prev)
-                if(any(data.types==c("engagement","suppression"))){
-                    denominator = extract.data(sim, 
-                                               years = years, 
-                                               age=ages, 
-                                               sex = sexes, 
-                                               data.type="awareness", 
-                                               keep.dimensions = keep.dimensions)
-                }
-
-                if(any(data.types==c("awareness","hiv.mortality"))){
-                    denominator = extract.data(sim, 
-                                               years = years, 
-                                               age=ages, 
-                                               sex = sexes, 
-                                               data.type="prevalence", 
-                                               keep.dimensions = keep.dimensions)
-                }
                 
-                # set up a dataframe with columns: year, value, sim id, data.type 
-                one.df = reshape2::melt(denominator) 
-                one.df$sim.id = i
-                one.df$data.type = d
+                if(is(sims[[i]],"simset")) # if this is an MCMC results, i.e., a simset
+                    sims.for.i = simset@simulations
                 
-                df.sim.denominator = rbind(df.sim.denominator, one.df)   
+                # for plotting single simulations
+                else {
+                    sim = sims[[i]]
+                    sims.for.i = list(sim)}
+                
+                for(j in 1:length(sims.for.i)){
+                    
+                    sim = sims.for.i[[j]]
+                    
+                    # Extract denominator from simulation (denom for eng/supp is aware; denom for aware/mort is prev)
+                    if((d=="engagement") | (d=="suppression")){
+                        denominator = extract.data(sim, 
+                                                   years = years, 
+                                                   age=ages, 
+                                                   sex = sexes, 
+                                                   data.type="awareness", 
+                                                   keep.dimensions = keep.dimensions)
+                    }
+                    
+                    else if((d=="awareness") | (d=="hiv.mortality")){
+                        denominator = extract.data(sim, 
+                                                   years = years, 
+                                                   age=ages, 
+                                                   sex = sexes, 
+                                                   data.type="prevalence", 
+                                                   keep.dimensions = keep.dimensions)
+                    }
+                    
+                    else 
+                        stop("invalid denominator")
+                    
+                    # set up a dataframe with columns: year, value, sim id, data.type 
+                    one.df.denom = reshape2::melt(denominator) 
+                    one.df.denom$sim.id = i
+                    one.df.denom$sim.number = j
+                    one.df.denom$data.type = d
+                    
+                    df.sim.denominator = rbind(df.sim.denominator, one.df.denom)   
+                }
             }
         }
         
         
-        df.sim$value = (df.sim$value/df.sim.denominator$value)*100
+        df.sim$value = (df.sim$value/df.sim.denominator$value)
         
     }
     
