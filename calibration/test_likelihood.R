@@ -7,20 +7,26 @@ variable.parameters.2 = variable.parameters
 variable.parameters.2['trate.0'] = 0.65 # original value is 0.7
 
 # awareness
-variable.parameters.2['testing.rate.1'] = 1 # original value is 0.5
+variable.parameters.2['testing.rate.1'] = 0.2 # original value is 0.5
 
 # engagement
-variable.parameters.2['engagement.rate.2'] = 2 # original value is 1.5
+variable.parameters.2['engagement.rate.2'] = 4 # original value is 1.5
 
 # suppression
-variable.parameters.2['suppression.rate.1'] = 2 # original value is 4
+variable.parameters.2['suppression.rate.1'] = 6 # original value is 4
 
 sim1 = run.model.for.parameters(variable.parameters = variable.parameters)
 sim2 = run.model.for.parameters(variable.parameters = variable.parameters.2)
 
 print(simplot(sim1, sim2,
               years=c(1980:2020),
-              data.types = c("awareness","engagement","suppression"),
+              data.types = c("awareness","engagement","suppression"), 
+              proportion = T,
+              facet.by = c("age","sex")))
+
+print(simplot(sim1, sim2,
+              years=c(1980:2020),
+              data.types = "engagement",
               proportion = T,
               facet.by = c("age","sex")))
 
@@ -40,7 +46,7 @@ round(sapply(lik.components,function(sub.lik){exp(sub.lik(sim2) - sub.lik(sim1))
 round(sapply(lik.components,function(sub.lik){(exp(sub.lik(sim2)))}),2)
 round(sapply(lik.components,function(sub.lik){(exp(sub.lik(sim1)))}),2)
 
-print(lik.components$population(sim2, debug=T))
+print(lik.components$engagement(sim2, debug=T))
 
 # code for debugging likelihood (within browser)
 if(1==2){
