@@ -206,10 +206,10 @@ read.surveillance.data = function(dir = 'data/raw_data'){
     
     ## Default suppression denominator = all aware PLHIV (option for all PLHIV below)
     rv$suppression = read.cascade.data.type(sub.data.type = "suppress", denominator = "aware", suffix = "")
-    rv$suppression$total = (rv$suppression$total*rv$engagement$total)/100
-    rv$suppression$subgroup = (rv$suppression$subgroup*rv$engagement$subgroup)/100
-    rv$suppression$age.sex = (rv$suppression$age.sex*rv$engagement$age.sex)/100
-    rv$suppression$age.sex.subgroup = (rv$suppression$age.sex.subgroup*rv$engagement$age.sex.subgroup)/100
+    rv$suppression$total = (rv$suppression$total*rv$engagement$total)
+    rv$suppression$subgroup = (rv$suppression$subgroup*rv$engagement$subgroup)
+    rv$suppression$age.sex = (rv$suppression$age.sex*rv$engagement$age.sex)
+    rv$suppression$age.sex.subgroup = (rv$suppression$age.sex.subgroup*rv$engagement$age.sex.subgroup)
     
     rv$suppression$AGES = c('15+')
     rv$suppression$AGE.LOWERS = c(15)
@@ -280,15 +280,15 @@ read.surveillance.data = function(dir = 'data/raw_data'){
     
     ## Default suppression denominator = all aware PLHIV (option for all PLHIV below)
     rv$suppression.lowers = read.cascade.data.type(sub.data.type = "suppress", denominator = "aware", suffix = "_lower")
-    rv$suppression.lowers$total = (rv$suppression.lowers$total*rv$engagement.lowers$total)/100
-    rv$suppression.lowers$subgroup = (rv$suppression.lowers$subgroup*rv$engagement.lowers$subgroup)/100
-    rv$suppression.lowers$age.sex = (rv$suppression.lowers$age.sex*rv$engagement.lowers$age.sex)/100
-    rv$suppression.lowers$age.sex.subgroup = (rv$suppression.lowers$age.sex.subgroup*rv$engagement.lowers$age.sex.subgroup)/100
+    rv$suppression.lowers$total = (rv$suppression.lowers$total*rv$engagement.lowers$total)
+    rv$suppression.lowers$subgroup = (rv$suppression.lowers$subgroup*rv$engagement.lowers$subgroup)
+    rv$suppression.lowers$age.sex = (rv$suppression.lowers$age.sex*rv$engagement.lowers$age.sex)
+    rv$suppression.lowers$age.sex.subgroup = (rv$suppression.lowers$age.sex.subgroup*rv$engagement.lowers$age.sex.subgroup)
     rv$suppression.uppers = read.cascade.data.type(sub.data.type = "suppress", denominator = "aware", suffix = "_upper")
-    rv$suppression.uppers$total = (rv$suppression.uppers$total*rv$engagement.uppers$total)/100
-    rv$suppression.uppers$subgroup = (rv$suppression.uppers$subgroup*rv$engagement.uppers$subgroup)/100
-    rv$suppression.uppers$age.sex = (rv$suppression.uppers$age.sex*rv$engagement.uppers$age.sex)/100
-    rv$suppression.uppers$age.sex.subgroup = (rv$suppression.uppers$age.sex.subgroup*rv$engagement.uppers$age.sex.subgroup)/100
+    rv$suppression.uppers$total = (rv$suppression.uppers$total*rv$engagement.uppers$total)
+    rv$suppression.uppers$subgroup = (rv$suppression.uppers$subgroup*rv$engagement.uppers$subgroup)
+    rv$suppression.uppers$age.sex = (rv$suppression.uppers$age.sex*rv$engagement.uppers$age.sex)
+    rv$suppression.uppers$age.sex.subgroup = (rv$suppression.uppers$age.sex.subgroup*rv$engagement.uppers$age.sex.subgroup)
     
     rv$suppression.lowers$AGES = rv$suppression.uppers$AGES = c('15+')
     rv$suppression.lowers$AGE.LOWERS = rv$suppression.uppers$AGE.LOWERS = c(15)
@@ -697,8 +697,7 @@ read.cascade.data.files = function(dir = 'data/raw_data',
     
     dim.names.total = list(year=as.character(years, suffix))
 
-    total =  suppressWarnings(array(as.numeric(gsub(" ","",
-                                                    gsub(">","",one.df.t[paste0(years, suffix),ncol(one.df.t)]))),
+    total =  suppressWarnings(array((as.numeric(gsub(" ","",gsub(">","",one.df.t[paste0(years, suffix),ncol(one.df.t)])))/100),
                                     dim = sapply(dim.names.total, length), 
                                     dimnames = dim.names.total))
     
@@ -709,8 +708,7 @@ read.cascade.data.files = function(dir = 'data/raw_data',
     )
     
     
-    subgroups =  suppressWarnings(array(as.integer(sapply(one.df.t[paste0(years, suffix),1:(length(subgroup.names))], 
-                                                          gsub, pattern = ">",replacement = "")),
+    subgroups =  suppressWarnings(array((as.integer(sapply(one.df.t[paste0(years, suffix),1:(length(subgroup.names))],gsub, pattern = ">",replacement = ""))/100),
                                         dim = sapply(dim.names.subgroups, length), 
                                         dimnames = dim.names.subgroups))
     
