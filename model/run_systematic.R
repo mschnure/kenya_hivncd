@@ -64,41 +64,42 @@ run.model.for.parameters = function(variable.parameters,
 }
 
 
+# Commented out the ones I updated within the main default parameters (setting them here would be redundant)
 
 # Transmission parameters
-variable.parameters['trate.0']=.7
-variable.parameters['trate.1']=0.2
-variable.parameters['trate.2']=0.15
-variable.parameters['female.to.male.multiplier']=1.03
-variable.parameters['age.15.to.19.transmission.multiplier']=.67
-variable.parameters['age.20.to.29.transmission.multiplier']=1.23
-variable.parameters['age.40.to.49.transmission.multiplier']=1.1
-variable.parameters['age.50.and.over.transmission.multiplier.0']=0.55
-variable.parameters['age.50.and.over.transmission.multiplier.1']=0.35
-variable.parameters['age.50.and.over.transmission.multiplier.2']=0.28
+# variable.parameters['trate.0']=.7
+# variable.parameters['trate.1']=0.2
+# variable.parameters['trate.2']=0.15
+variable.parameters['female.to.male.multiplier']=5.65
+# variable.parameters['age.15.to.19.transmission.multiplier']=.67
+# variable.parameters['age.20.to.29.transmission.multiplier']=1.23
+# variable.parameters['age.40.to.49.transmission.multiplier']=1.1
+# variable.parameters['age.50.and.over.transmission.multiplier.0']=0.55
+# variable.parameters['age.50.and.over.transmission.multiplier.1']=0.35
+# variable.parameters['age.50.and.over.transmission.multiplier.2']=0.28
 variable.parameters['age.assortativity']=.8
-variable.parameters['birth.transmission.risk']=.6
+# variable.parameters['birth.transmission.risk.0']=.6
 # Cascade parameters
-variable.parameters['testing.rate.1']=0.5
+# variable.parameters['testing.rate.1']=0.5
 variable.parameters['engagement.rate.2']=1.5
 variable.parameters['suppression.rate.0']=0.7
 variable.parameters['suppression.rate.1']=4
 variable.parameters['unsuppression.rates']=.05
 variable.parameters['male.cascade.multiplier']=.6
 # Mortality parameters
-variable.parameters['age.45.to.65.mortality.intercept.multiplier']= 2.3 # multiplies intercept or slope before projecting
-variable.parameters['age.45.to.65.mortality.slope.multiplier']= 1.01 
-variable.parameters['over.65.mortality.intercept.multiplier']= 1.0 
-variable.parameters['over.65.mortality.slope.multiplier']= 1.01 
+# variable.parameters['age.45.to.65.mortality.intercept.multiplier']= 2.3 # multiplies intercept or slope before projecting
+# variable.parameters['age.45.to.65.mortality.slope.multiplier']= 1.01 
+# variable.parameters['over.65.mortality.intercept.multiplier']= 1.0 
+# variable.parameters['over.65.mortality.slope.multiplier']= 1.01 
 
-variable.parameters['hiv.specific.mortality.rates.1']=0.025
-variable.parameters['hiv.specific.mortality.rates.2']=0.1
-variable.parameters['hiv.specific.mortality.rates.3']=0.03
+variable.parameters['hiv.specific.mortality.rates.0']=0.025
+variable.parameters['hiv.specific.mortality.rates.1']=0.1
+variable.parameters['hiv.specific.mortality.rates.2']=0.03
 
 
 variable.parameters['age.15.to.24.hiv.mortality.multiplier']= 0.4
 variable.parameters['over.50.hiv.mortality.multiplier']= 3
-variable.parameters['age.0.to.14.hiv.mortality.multiplier.1']= 12
+variable.parameters['age.0.to.14.hiv.mortality.multiplier.0']= 12
 
 
 if(1==2){
@@ -115,11 +116,11 @@ if(1==2){
                   facet.by = 'age'))
     
     ## Incidence
-    print(simplot(sim1, sim2,
+    print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("incidence"),
                   facet.by = 'age'))
-    print(simplot(sim1, sim2,
+    print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("incidence"),
                   ages = "15+",
