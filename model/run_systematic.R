@@ -67,18 +67,20 @@ run.model.for.parameters = function(variable.parameters,
 # Commented out the ones I updated within the main default parameters (setting them here would be redundant)
 
 # Transmission parameters
-# variable.parameters['trate.0']=.7
-# variable.parameters['trate.1']=0.2
-# variable.parameters['trate.2']=0.15
-variable.parameters['female.to.male.multiplier']=5.65
-# variable.parameters['age.15.to.19.transmission.multiplier']=.67
+variable.parameters['trate.0']=.54
+variable.parameters['trate.1']=0.08
+variable.parameters['trate.2']=0.1
+variable.parameters['trate.3']=0.1
+variable.parameters['female.to.male.multiplier']=2
+variable.parameters['age.15.to.19.transmission.multiplier']=.8
 # variable.parameters['age.20.to.29.transmission.multiplier']=1.23
 # variable.parameters['age.40.to.49.transmission.multiplier']=1.1
-# variable.parameters['age.50.and.over.transmission.multiplier.0']=0.55
-# variable.parameters['age.50.and.over.transmission.multiplier.1']=0.35
-# variable.parameters['age.50.and.over.transmission.multiplier.2']=0.28
+variable.parameters['age.50.and.over.transmission.multiplier.0']=.7
+variable.parameters['age.50.and.over.transmission.multiplier.1']=1.6
+variable.parameters['age.50.and.over.transmission.multiplier.2']=1.1
+variable.parameters['age.50.and.over.transmission.multiplier.3']=.9
 variable.parameters['age.assortativity']=.8
-# variable.parameters['birth.transmission.risk.0']=.6
+variable.parameters['birth.transmission.risk.0']=.7
 # Cascade parameters
 # variable.parameters['testing.rate.1']=0.5
 variable.parameters['engagement.rate.2']=1.5
@@ -110,7 +112,7 @@ if(1==2){
 ## Plot results
 if(1==2){
     ## Population
-    print(simplot(sim1, sim2,
+    print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("population"),
                   facet.by = 'age'))
@@ -130,25 +132,32 @@ if(1==2){
                   data.types = c("incidence"))) 
     
     ## Prevalence
-    print(simplot(sim1, sim2,
+    print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("prevalence"),
                   facet.by = 'age'))
 
     ## HIV mortality
-    print(simplot(sim1, sim2,
+    print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("hiv.mortality"),
                   facet.by = "age",
-                  proportion = T)) 
-    print(simplot(sim1, sim2,
+                  proportion = T)) # this one doesn't work anymore
+    print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("hiv.mortality"),
                   facet.by = "age",
                   proportion = F)) # likelihood is absolute value so use this one for testing 
     
+    ## Cascade
+    print(simplot(sim,
+                  years=c(1980:2020),
+                  data.types = c("awareness","engagement","suppression"), 
+                  proportion = T,
+                  facet.by = c("age","sex")))
+    
     ## Awareness - default denominator is PLHIV 
-    print(simplot(sim1, sim2,
+    print(simplot(sim,
                   years=c(1980:2020),
                   data.types = c("awareness"),
                   proportion = T,
