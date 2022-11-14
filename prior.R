@@ -17,7 +17,8 @@ prior = join.distributions(
     # general
     trate.0 = Lognormal.Distribution(log(1), log(8)/2), # (log(1) = 0, but leaving this way for clarity)
     trate.1 = Lognormal.Distribution(log(1), log(8)/2),
-    trate.2 = Lognormal.Distribution(log(1), log(8)/2),
+    trate.2 = Lognormal.Distribution(log(1), log(8)/2), 
+    trate.3 = Lognormal.Distribution(log(1), log(8)/2), 
     
     # sex transmission multipliers
     female.to.male.multiplier = Lognormal.Distribution(log(1), log(4)/2), 
@@ -40,26 +41,27 @@ prior = join.distributions(
     # (for any beta, there is a logit normal that approximates)
     
     # cascade parameters
-    testing.rate.1 = Lognormal.Distribution(log(0.5), log(4)/2),
+    log.OR.testing.intercept = Normal.Distribution(0, log(4)/2), 
+    log.OR.testing.slope = Normal.Distribution(0, log(4)/2),
     engagement.rate.2 = Lognormal.Distribution(log(1.5), log(4)/2),
-    suppression.rate.0 = Lognormal.Distribution(log(0.7), log(4)/2),
-    suppression.rate.1 = Lognormal.Distribution(log(4), log(4)/2),
-    unsuppression.rates = Lognormal.Distribution(log(.05), log(4)/2),
-    male.cascade.multiplier = Lognormal.Distribution(log(0.6), log(4)/2),
+    suppression.rate.0 = Lognormal.Distribution(log(0.6732885), log(4)/2),
+    suppression.rate.1 = Lognormal.Distribution(log(0.6732885), log(4)/2),
+    unsuppression.rates = Lognormal.Distribution(log(0.1971601), log(4)/2),
+    male.cascade.multiplier = Lognormal.Distribution(log(1), log(4)/2),
     
     # mortality/fertility parameters 
-    age.45.to.65.mortality.intercept.multiplier = Lognormal.Distribution(log(2.3), log(4)/2),
-    age.45.to.65.mortality.slope.multiplier = Lognormal.Distribution(log(1.01), log(4)/2),
-    over.65.mortality.intercept.multiplier = Lognormal.Distribution(log(1.0), log(4)/2),
-    over.65.mortality.slope.multiplier = Lognormal.Distribution(log(1.01), log(4)/2),
+    age.45.to.65.mortality.intercept.multiplier = Lognormal.Distribution(log(1), log(4)/2),
+    age.45.to.65.mortality.slope.multiplier = Lognormal.Distribution(log(1), log(4)/2),
+    over.65.mortality.intercept.multiplier = Lognormal.Distribution(log(1), log(4)/2),
+    over.65.mortality.slope.multiplier = Lognormal.Distribution(log(1), log(4)/2),
     
-    hiv.specific.mortality.rates.1 = Lognormal.Distribution(log(0.025), log(4)/2),
-    hiv.specific.mortality.rates.2 = Lognormal.Distribution(log(0.1), log(4)/2),
-    hiv.specific.mortality.rates.3 = Lognormal.Distribution(log(0.03), log(4)/2),
+    hiv.specific.mortality.rates.0 = Lognormal.Distribution(log(0.04), log(4)/2),
+    hiv.specific.mortality.rates.1 = Lognormal.Distribution(log(0.07), log(4)/2),
+    hiv.specific.mortality.rates.1 = Lognormal.Distribution(log(0.018), log(4)/2),
     
-    age.0.to.14.hiv.mortality.multiplier.1 = Lognormal.Distribution(log(12), log(4)/2),
-    age.15.to.24.hiv.mortality.multiplier = Lognormal.Distribution(log(0.4), log(4)/2),
-    over.50.hiv.mortality.multiplier = Lognormal.Distribution(log(3), log(4)/2)
+    age.0.to.14.hiv.mortality.multiplier.0 = Lognormal.Distribution(log(1), log(4)/2),
+    age.15.to.24.hiv.mortality.multiplier = Lognormal.Distribution(log(1), log(4)/2),
+    over.50.hiv.mortality.multiplier = Lognormal.Distribution(log(1), log(4)/2)
     
     
 )
