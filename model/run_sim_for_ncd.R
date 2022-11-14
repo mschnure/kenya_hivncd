@@ -60,7 +60,7 @@ extract.hiv.data.for.ncd = function(sim,
 
 hiv.output.for.ncd = extract.hiv.data.for.ncd(sim=sim)
 
-# convert all "80 and over" to "80-85"
+### convert all "80 and over" to "80-85" ####
 hiv.output.for.ncd$population[,"80 and over",,] =hiv.output.for.ncd$population[,"80 and over",,]/4
 dimnames(hiv.output.for.ncd$population)[[2]][17] = "80-85"
 hiv.output.for.ncd$population = aperm(hiv.output.for.ncd$population, c(1,4,2,3))
@@ -83,9 +83,103 @@ dimnames(hiv.output.for.ncd$disengagement)[[2]][17] = "80-85"
 hiv.output.for.ncd$suppression[,"80 and over",] =hiv.output.for.ncd$suppression[,"80 and over",]/4
 dimnames(hiv.output.for.ncd$suppression)[[2]][17] = "80-85"
 
+#####
+
 hiv.sim = sim
 
-save(hiv.sim,DATA.MANAGER,hiv.output.for.ncd,file="~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/hiv_sim.RData")
+## Extract target parameter values for NCD model ## 
+extract.parameter.by.year = function(parameters,
+                                     specific.parameter,
+                                     year){
+    
+    
+    all.params = compute.time.varying.parameters(parameters=parameters,
+                                                 time=year)
+    
+    rv = all.params[[specific.parameter]]
+    
+    rv
+}
+
+calculate.proportion = function(rate,time=1){
+    
+    p = 1-exp(-(rate*time))
+    
+    p
+}
+
+extract.parameter.all.years = function(sim,
+                                       parameters,
+                                       specific.parameter,
+                                       years){
+    
+    dim.names = list(year = years,
+                     age = c(parameters$AGES[-length(parameters$AGES)],"80-85"),
+                     sex = c("FEMALE","MALE"))
+    
+    rv = array(NA,
+               dim = sapply(dim.names,length),
+               dimnames = dim.names)
+    
+    for(year in years){
+        rv[as.character(year),,] = extract.parameter.by.year(parameters=parameters,
+                                                             specific.parameter = specific.parameter,
+                                                             year=year)
+    }
+    
+    # convert from rate to proportion
+    rv = calculate.proportion(rate=rv,time=1)
+    
+    rv
+}
+
+return.all.probabilities = function(sim,
+                                    parameters,
+                                    years){
+    
+    rv = list()
+    
+    rv$prob.diag = extract.parameter.all.years(sim=sim,
+                                               parameters=parameters,
+                                               specific.parameter = "TESTING.RATES",
+                                               years=years)
+    
+    rv$prob.eng = extract.parameter.all.years(sim=sim,
+                                              parameters=parameters,
+                                              specific.parameter = "ENGAGEMENT.RATES",
+                                              years=years)
+    
+    prob.diseng.supp = extract.parameter.all.years(sim=sim,
+                                                   parameters=parameters,
+                                                   specific.parameter = "SUPPRESSED.DISENGAGEMENT.RATES",
+                                                   years=years)
+    prob.diseng.unsupp = extract.parameter.all.years(sim=sim,
+                                                     parameters=parameters,
+                                                     specific.parameter = "UNSUPPRESSED.DISENGAGEMENT.RATES",
+                                                     years=years)
+    
+    disengagement.suppressed = extract.data(sim, 
+                                            data.type = "disengagement.suppressed",
+                                            years = years,
+                                            keep.dimensions = c("year","age","sex"))
+    disengagement.unsuppressed = extract.data(sim, 
+                                              data.type = "disengagement.unsuppressed",
+                                              years = years,
+                                              keep.dimensions = c("year","age","sex"))
+    
+    rv$prob.diseng = ((prob.diseng.supp*disengagement.suppressed) + (prob.diseng.unsupp*disengagement.unsuppressed))/
+        (disengagement.suppressed + disengagement.unsuppressed)
+    
+    rv
+}
+
+target.probabilities = return.all.probabilities(sim=hiv.sim,
+                                                parameters=parameters,
+                                                years=hiv.sim$years)
+
+
+save(hiv.sim,target.probabilities,DATA.MANAGER,hiv.output.for.ncd,
+     file="~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_sim.RData")
 
 # testing plotting hiv distribution 
 if(1==2) {
