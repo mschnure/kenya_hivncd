@@ -64,20 +64,18 @@ run.model.for.parameters = function(variable.parameters,
 }
 
 
-# Commented out the ones I updated within the main default parameters (setting them here would be redundant)
-
 # Transmission parameters
-variable.parameters['trate.0']=.54
-variable.parameters['trate.1']=0.08
-variable.parameters['trate.2']=0.1
-variable.parameters['trate.3']=0.1
+variable.parameters['trate.0']=.5 # 1990
+variable.parameters['trate.1']=0.045 # 1997
+variable.parameters['trate.2']=0.04 # 2008, keep this the same as trate.1
+variable.parameters['trate.3']=0.08 # 2015
 variable.parameters['female.to.male.multiplier']=2
 variable.parameters['age.15.to.19.transmission.multiplier']=.8
-# variable.parameters['age.20.to.29.transmission.multiplier']=1.23
-# variable.parameters['age.40.to.49.transmission.multiplier']=1.1
-variable.parameters['age.50.and.over.transmission.multiplier.0']=.7
-variable.parameters['age.50.and.over.transmission.multiplier.1']=1.6
-variable.parameters['age.50.and.over.transmission.multiplier.2']=1.1
+variable.parameters['age.20.to.29.transmission.multiplier']=1
+variable.parameters['age.40.to.49.transmission.multiplier']=1
+variable.parameters['age.50.and.over.transmission.multiplier.0']=.5
+variable.parameters['age.50.and.over.transmission.multiplier.1']=1.2
+variable.parameters['age.50.and.over.transmission.multiplier.2']=.8
 variable.parameters['age.50.and.over.transmission.multiplier.3']=.9
 variable.parameters['age.assortativity']=.8
 variable.parameters['birth.transmission.risk.0']=.7
@@ -89,19 +87,19 @@ variable.parameters['suppression.rate.1']=4
 variable.parameters['unsuppression.rates']=.05
 variable.parameters['male.cascade.multiplier']=.6
 # Mortality parameters
-# variable.parameters['age.45.to.65.mortality.intercept.multiplier']= 2.3 # multiplies intercept or slope before projecting
-# variable.parameters['age.45.to.65.mortality.slope.multiplier']= 1.01 
-# variable.parameters['over.65.mortality.intercept.multiplier']= 1.0 
-# variable.parameters['over.65.mortality.slope.multiplier']= 1.01 
+variable.parameters['age.45.to.65.mortality.intercept.multiplier']= 2.3 # multiplies intercept or slope before projecting
+variable.parameters['age.45.to.65.mortality.slope.multiplier']= 1.01
+variable.parameters['over.65.mortality.intercept.multiplier']= 1.0
+variable.parameters['over.65.mortality.slope.multiplier']= 1.01
 
-variable.parameters['hiv.specific.mortality.rates.0']=0.025
-variable.parameters['hiv.specific.mortality.rates.1']=0.1
-variable.parameters['hiv.specific.mortality.rates.2']=0.03
+variable.parameters['hiv.specific.mortality.rates.0']=0.04
+variable.parameters['hiv.specific.mortality.rates.1']=0.07
+variable.parameters['hiv.specific.mortality.rates.2']=0.018
 
 
 variable.parameters['age.15.to.24.hiv.mortality.multiplier']= 0.4
-variable.parameters['over.50.hiv.mortality.multiplier']= 3
-variable.parameters['age.0.to.14.hiv.mortality.multiplier.0']= 12
+variable.parameters['over.50.hiv.mortality.multiplier']= .9
+variable.parameters['age.0.to.14.hiv.mortality.multiplier.0']=12
 
 
 if(1==2){
