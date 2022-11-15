@@ -75,7 +75,7 @@ get.default.parameters = function(){
         trate.3=0.15,
         # sex transmission multipliers
         male.to.male.multiplier=1,
-        female.to.male.multiplier=1.03,
+        female.to.male.multiplier=1,
         # age transmission multipliers
         age.15.to.19.transmission.multiplier=1,
         age.20.to.29.transmission.multiplier=1,
@@ -86,7 +86,7 @@ get.default.parameters = function(){
         age.50.and.over.transmission.multiplier.3=1,
         # other transmission multipliers
         relative.transmission.from.diagnosis=0.33, 
-        age.assortativity=0.8, 
+        age.assortativity=1, 
         birth.transmission.time.0=1990,
         birth.transmission.time.1=2020,
         birth.transmission.risk.0=0.42,
