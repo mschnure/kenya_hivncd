@@ -4,7 +4,7 @@ sim = run.model.for.parameters(variable.parameters = variable.parameters)
 
 ## Extracts outputs needed for NCD model
 extract.hiv.data.for.ncd = function(sim,
-                                    years=sim$years){
+                                    years=c(2015:2030)){
     
     # These will be combined into one "disengagement" output (Parastu's request)
     disengagement.suppressed = extract.data(sim, 
@@ -212,7 +212,7 @@ if(1==2) {
         # test
         # colSums(hiv.probs,1)
         
-        hiv.distr[i,,,] = hiv.probs
+        hiv.distr[i,,,] = round(hiv.probs,5)
         
         # test
         # apply(hiv.distr,c(1,3,4),sum)
