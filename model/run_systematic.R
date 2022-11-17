@@ -76,7 +76,7 @@ variable.parameters['age.40.to.49.transmission.multiplier']=1
 variable.parameters['age.50.and.over.transmission.multiplier.0']=.5
 variable.parameters['age.50.and.over.transmission.multiplier.1']=1.2
 variable.parameters['age.50.and.over.transmission.multiplier.2']=.8
-variable.parameters['age.50.and.over.transmission.multiplier.3']=.9
+variable.parameters['age.50.and.over.transmission.multiplier.3']=.5
 variable.parameters['age.assortativity']=.8
 variable.parameters['birth.transmission.risk.0']=.7
 # Cascade parameters
