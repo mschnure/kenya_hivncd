@@ -4,7 +4,7 @@ sim = run.model.for.parameters(variable.parameters = variable.parameters)
 
 ## Extracts outputs needed for NCD model
 extract.hiv.data.for.ncd = function(sim,
-                                    years=c(2015:2030)){
+                                    years=c(2014:2030)){
     
     # These will be combined into one "disengagement" output (Parastu's request)
     disengagement.suppressed = extract.data(sim, 
@@ -41,6 +41,10 @@ extract.hiv.data.for.ncd = function(sim,
                                     data.type = "hiv.mortality",
                                     years = years,
                                     keep.dimensions = c("year","age","sex"))
+    rv$non.hiv.mortality = extract.data(sim, 
+                                    data.type = "non.hiv.mortality",
+                                    years = years,
+                                    keep.dimensions = c("year","age","sex"))
     rv$diagnosis = extract.data(sim, 
                                 data.type = "diagnoses",
                                 years = years,
@@ -70,6 +74,9 @@ dimnames(hiv.output.for.ncd$incidence)[[2]][17] = "80-85"
 
 hiv.output.for.ncd$hiv.mortality[,"80 and over",] =hiv.output.for.ncd$hiv.mortality[,"80 and over",]/4
 dimnames(hiv.output.for.ncd$hiv.mortality)[[2]][17] = "80-85"
+
+hiv.output.for.ncd$non.hiv.mortality[,"80 and over",] =hiv.output.for.ncd$non.hiv.mortality[,"80 and over",]/4
+dimnames(hiv.output.for.ncd$non.hiv.mortality)[[2]][17] = "80-85"
 
 hiv.output.for.ncd$diagnosis[,"80 and over",] =hiv.output.for.ncd$diagnosis[,"80 and over",]/4
 dimnames(hiv.output.for.ncd$diagnosis)[[2]][17] = "80-85"
@@ -174,7 +181,7 @@ return.all.probabilities = function(sim,
 }
 
 target.probabilities = return.all.probabilities(sim=hiv.sim,
-                                                parameters=parameters,
+                                                parameters=hiv.sim$parameters,
                                                 years=hiv.sim$years)
 
 
