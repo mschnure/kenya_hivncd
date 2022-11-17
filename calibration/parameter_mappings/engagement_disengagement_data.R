@@ -37,6 +37,7 @@ on.art = array(on.art,
                dim = sapply(dim.names, length),
                dimnames = dim.names)
 
+annual.difference=0
 # annual difference = (year2 on art) - (year1 on art) 
 for(i in 1:length(years)-1){
     annual.difference[i] = on.art[i+1] - on.art[i]
@@ -65,9 +66,19 @@ percent.on.art = array(percent.on.art/100,
 
 off.art = (on.art/percent.on.art) - on.art
 
-# Engaged prop = start.art/off.art
-engagement.p = start.art/off.art[-length(off.art)]
-engagement.rate = -log(1-engagement.p)
+# Engaged rate = start.art/off.art
+engagement.rate = start.art/off.art[-length(off.art)]
+# engagement.rate = -log(1-engagement.p)
+
+engagement.years = as.numeric(names(engagement.rate)) # years are actually off by one - 2016 label right now is people who engaged in 2017
+
+qplot(names(engagement.rate),engagement.rate) + ylim(0,NA)
+
+# Checking what functional form to use for smoothing
+fit.linear = lm(engagement.rate~ engagement.years)
+
+qplot(engagement.years,engagement.rate) + ylim(0,3) + xlim(2010,2030) + 
+    geom_abline(intercept = fit.linear$coefficients[1], slope = fit.linear$coefficients[2])
 
 
 
