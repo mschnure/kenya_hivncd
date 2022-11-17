@@ -13,12 +13,13 @@
 #     7. extract.total.aware
 #     8. extract.new.diagnoses
 #     9. extract.hiv.mortality
-#     10. extract.total.suppressed
-#     11. extract.annual.suppression
-#     12. extract.total.engaged
-#     13. extract.annual.engagement
-#     14. extract.disengagement.suppressed
-#     15. extract.disengagement.unsuppressed
+#     10. extract.hiv.mortality
+#     11. extract.total.suppressed
+#     12. extract.annual.suppression
+#     13. extract.total.engaged
+#     14. extract.annual.engagement
+#     15. extract.disengagement.suppressed
+#     16. extract.disengagement.unsuppressed
 
 
 
@@ -83,6 +84,14 @@ extract.data = function(sim,
                                    sexes=sexes,
                                    subgroups=subgroups,
                                    keep.dimensions=keep.dimensions)
+    
+    else if (data.type=='non.hiv.mortality')
+        rv = extract.non.hiv.mortality(sim,
+                                       years=years, 
+                                       ages=ages,
+                                       sexes=sexes,
+                                       subgroups=subgroups,
+                                       keep.dimensions=keep.dimensions)
     
     else if (data.type=='suppression')
         rv = extract.total.suppressed(sim,
@@ -430,6 +439,27 @@ extract.hiv.mortality <- function(sim,
         keep.dimensions = keep.dimensions
     )
 }
+
+# Call to do.extract.4D; pulls non hiv mortality
+extract.non.hiv.mortality <- function(sim,
+                                  years = sim$years,
+                                  ages = sim$AGES,
+                                  subgroups = sim$SUBGROUPS,
+                                  sexes = sim$SEXES,
+                                  hiv.status = sim$HIV.STATUS,
+                                  keep.dimensions = 'year'){
+    do.extract.4D(
+        sim = sim,
+        arr = sim$non.hiv.mortality,
+        years = years,
+        ages = ages,
+        subgroups = subgroups,
+        sexes = sexes,
+        hiv.status = hiv.status,
+        keep.dimensions = keep.dimensions
+    )
+}
+
 
 # Call to extract.population with HIV status set only to suppressed states; pulls prevalence 
 extract.total.suppressed <- function(sim,
