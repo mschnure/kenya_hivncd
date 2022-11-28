@@ -295,7 +295,13 @@ run.model <- function(parameters,
                       start.year,
                       end.year,
                       keep.years){
-    #This is just a stub
+    
+    # Error check on parameters - NA values
+    mask = sapply(parameters$time.varying.parameters,function(param){any(sapply(param$values,function(val){any(is.na(val))}))})
+    if(any(mask))
+        stop(paste0("NA parameter values found in: ",
+                    paste0(names(parameters$time.varying.parameters)[mask],collapse=", ")))
+    
     ode.results = odeintr::integrate_sys(sys=function(x,t){compute.dx(time=t,y=x,parameters=parameters)},
                                          init=set.up.initial.diffeq.vector(initial.state, parameters),
                                          start=start.year,
