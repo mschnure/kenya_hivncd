@@ -9,8 +9,13 @@
 source('source_code.R')
 
 ## Added this in so that parameters objects exists without running a sim - need this for likelihood functions 
-parameters = create.model.parameters()
-parameters = map.model.parameters(parameters)
+if(1==2){
+    parameters = create.model.parameters()
+    parameters = map.model.parameters(parameters)
+}
+
+
+
 
 # Single function that is analogous to all the code in the test_case file, but also allows for
 # easier manipulation of sampled parameters
@@ -20,8 +25,6 @@ parameters = map.model.parameters(parameters)
 #     3. Called in parameter_optim code
 
 ## Run model with sampled parameters
-variable.parameters=get.default.parameters()
-
 run.model.for.parameters = function(variable.parameters,
                                     parameters=create.model.parameters()){
     
@@ -64,6 +67,7 @@ run.model.for.parameters = function(variable.parameters,
 }
 
 
+variable.parameters=get.default.parameters()
 # Transmission parameters
 variable.parameters['trate.0']=.5 # 1990
 variable.parameters['trate.1']=0.045 # 1997
@@ -81,11 +85,11 @@ variable.parameters['age.assortativity']=.8
 variable.parameters['birth.transmission.risk.0']=.7
 # Cascade parameters
 # variable.parameters['testing.rate.1']=0.5
-variable.parameters['engagement.rate.2']=1.5
+# variable.parameters['engagement.rate.2']=1.5
 variable.parameters['suppression.rate.0']=0.7
 variable.parameters['suppression.rate.1']=4
 variable.parameters['unsuppression.rates']=.05
-variable.parameters['male.cascade.multiplier']=.6
+variable.parameters['male.cascade.multiplier']=.7
 # Mortality parameters
 variable.parameters['age.45.to.65.mortality.intercept.multiplier']= 2.3 # multiplies intercept or slope before projecting
 variable.parameters['age.45.to.65.mortality.slope.multiplier']= 1.01
