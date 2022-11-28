@@ -95,12 +95,16 @@ get.default.parameters = function(){
         ## Cascade parameters ##
         log.OR.testing.intercept=0, # 0 because on log scale
         log.OR.testing.slope=0,
-        engagement.time.0=1986,
-        engagement.time.1=2014,
-        engagement.time.2=2016,
-        engagement.rate.0=0.15,
-        engagement.rate.1=0.33,
-        engagement.rate.2=3,
+        log.OR.engagement.intercept=0,
+        log.OR.engagement.pre.universal.slope=0,
+        log.OR.engagement.intermediate.slope=0,
+        log.OR.engagement.post.universal.slope=0,
+        # engagement.time.0=1986,
+        # engagement.time.1=2014,
+        # engagement.time.2=2016,
+        # engagement.rate.0=0.15,
+        # engagement.rate.1=0.33,
+        # engagement.rate.2=3,
         unsuppressed.disengagement.rates=0.1392621, # Lee et al
         suppressed.disengagement.rates=0.1025866, # Lee et al
         suppression.time.0=1993,
@@ -629,36 +633,35 @@ map.model.parameters <- function(parameters,
     
     
     #-- ENGAGEMENT/DISENGAGEMENT --#
-    # Before 2014, initiate at CD4 <350
-    engagement.rates.0 = array(sampled.parameters['engagement.rate.0'],
-                            dim=sapply(trans.dim.names, length),
-                            dimnames=trans.dim.names)
-    engagement.rates.0[,"male",] = engagement.rates.0[,"male",]*sampled.parameters["male.cascade.multiplier"]
+    engagement.years.to.project = c(1975:2030)
     
-    parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='ENGAGEMENT.RATES',
-                                                  value = engagement.rates.0,
-                                                  time = sampled.parameters['engagement.time.0'])
-    
-    # 2014-2016, initiate at CD4 <500
-    engagement.rates.1 = array(sampled.parameters['engagement.rate.1'],
-                               dim=sapply(trans.dim.names, length),
-                               dimnames=trans.dim.names)
-    engagement.rates.1[,"male",] = engagement.rates.1[,"male",]*sampled.parameters["male.cascade.multiplier"]
-    parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='ENGAGEMENT.RATES',
-                                                  value = engagement.rates.1,
-                                                  time = sampled.parameters['engagement.time.1'])
-    
-    # Initiation of test and treat 
-    engagement.rates.2 = array(sampled.parameters['engagement.rate.2'],
-                               dim=sapply(trans.dim.names, length),
-                               dimnames=trans.dim.names)
-    engagement.rates.2[,"male",] = engagement.rates.2[,"male",]*sampled.parameters["male.cascade.multiplier"]
-    parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='ENGAGEMENT.RATES',
-                                                  value = engagement.rates.2,
-                                                  time = sampled.parameters['engagement.time.2'])
+    for(year in engagement.years.to.project){
+        if(year<2016 | year>2017){
+            projected.log.odds = (ENGAGEMENT.MODEL$intercept+sampled.parameters['log.OR.engagement.intercept'])+
+                ((ENGAGEMENT.MODEL$pre.universal.slope+sampled.parameters['log.OR.engagement.pre.universal.slope'])*year)+
+                ((ENGAGEMENT.MODEL$post.universal.slope+sampled.parameters['log.OR.engagement.post.universal.slope'])*pmax(0,(year-2015)))
+        } else if(year==2016 | year==2017){
+            projected.log.odds = (ENGAGEMENT.MODEL$intercept+sampled.parameters['log.OR.engagement.intercept'])+
+                ((ENGAGEMENT.MODEL$pre.universal.slope+sampled.parameters['log.OR.engagement.pre.universal.slope'])*year)+
+                ((ENGAGEMENT.MODEL$intermediate.slope.2016.2017+sampled.parameters['log.OR.engagement.intermediate.slope'])*pmax(0,(year-2015)))+
+                ((ENGAGEMENT.MODEL$post.universal.slope+sampled.parameters['log.OR.engagement.post.universal.slope'])*pmax(0,(year-2015)))
+        }
+        projected.p = 1/(1+exp(-projected.log.odds)) # didn't do a max proportion here - okay? 
+        projected.rate = -log(1-projected.p)
+        
+        projected.rate.age.sex = array(projected.rate,
+                                       dim=sapply(trans.dim.names, length),
+                                       dimnames=trans.dim.names)
+        
+        
+        projected.rate.age.sex[,"male",] = projected.rate.age.sex[,"male",]*sampled.parameters["male.cascade.multiplier"]
+        
+        parameters = add.time.varying.parameter.value(parameters,
+                                                      parameter.name='ENGAGEMENT.RATES',
+                                                      value = projected.rate.age.sex,
+                                                      time = year)
+        
+    }
     
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='UNSUPPRESSED.DISENGAGEMENT.RATES',
@@ -673,6 +676,40 @@ map.model.parameters <- function(parameters,
                                                                 dim=sapply(trans.dim.names, length),
                                                                 dimnames=trans.dim.names),
                                                   time = 2000)
+    
+    if(1==2){# Before 2014, initiate at CD4 <350
+        engagement.rates.0 = array(sampled.parameters['engagement.rate.0'],
+                                   dim=sapply(trans.dim.names, length),
+                                   dimnames=trans.dim.names)
+        engagement.rates.0[,"male",] = engagement.rates.0[,"male",]*sampled.parameters["male.cascade.multiplier"]
+        
+        parameters = add.time.varying.parameter.value(parameters,
+                                                      parameter.name='ENGAGEMENT.RATES',
+                                                      value = engagement.rates.0,
+                                                      time = sampled.parameters['engagement.time.0'])
+        
+        # 2014-2016, initiate at CD4 <500
+        engagement.rates.1 = array(sampled.parameters['engagement.rate.1'],
+                                   dim=sapply(trans.dim.names, length),
+                                   dimnames=trans.dim.names)
+        engagement.rates.1[,"male",] = engagement.rates.1[,"male",]*sampled.parameters["male.cascade.multiplier"]
+        parameters = add.time.varying.parameter.value(parameters,
+                                                      parameter.name='ENGAGEMENT.RATES',
+                                                      value = engagement.rates.1,
+                                                      time = sampled.parameters['engagement.time.1'])
+        
+        # Initiation of test and treat 
+        engagement.rates.2 = array(sampled.parameters['engagement.rate.2'],
+                                   dim=sapply(trans.dim.names, length),
+                                   dimnames=trans.dim.names)
+        engagement.rates.2[,"male",] = engagement.rates.2[,"male",]*sampled.parameters["male.cascade.multiplier"]
+        parameters = add.time.varying.parameter.value(parameters,
+                                                      parameter.name='ENGAGEMENT.RATES',
+                                                      value = engagement.rates.2,
+                                                      time = sampled.parameters['engagement.time.2'])
+        
+}
+    
     
     #-- SUPPRESSION/UNSUPPRESSION --#
     # Set suppression to 0 before ART
