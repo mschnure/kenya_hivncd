@@ -64,33 +64,35 @@ extract.hiv.data.for.ncd = function(sim,
 
 hiv.output.for.ncd = extract.hiv.data.for.ncd(sim=sim)
 
-### convert all "80 and over" to "80-85" ####
-hiv.output.for.ncd$population[,"80 and over",,] =hiv.output.for.ncd$population[,"80 and over",,]/4
-dimnames(hiv.output.for.ncd$population)[[2]][17] = "80-85"
-hiv.output.for.ncd$population = aperm(hiv.output.for.ncd$population, c(1,4,2,3))
-
-hiv.output.for.ncd$incidence[,"80 and over",] =hiv.output.for.ncd$incidence[,"80 and over",]/4
-dimnames(hiv.output.for.ncd$incidence)[[2]][17] = "80-85"
-
-hiv.output.for.ncd$hiv.mortality[,"80 and over",] =hiv.output.for.ncd$hiv.mortality[,"80 and over",]/4
-dimnames(hiv.output.for.ncd$hiv.mortality)[[2]][17] = "80-85"
-
-hiv.output.for.ncd$non.hiv.mortality[,"80 and over",] =hiv.output.for.ncd$non.hiv.mortality[,"80 and over",]/4
-dimnames(hiv.output.for.ncd$non.hiv.mortality)[[2]][17] = "80-85"
-
-hiv.output.for.ncd$diagnosis[,"80 and over",] =hiv.output.for.ncd$diagnosis[,"80 and over",]/4
-dimnames(hiv.output.for.ncd$diagnosis)[[2]][17] = "80-85"
-
-hiv.output.for.ncd$engagement[,"80 and over",] =hiv.output.for.ncd$engagement[,"80 and over",]/4
-dimnames(hiv.output.for.ncd$engagement)[[2]][17] = "80-85"
-
-hiv.output.for.ncd$disengagement[,"80 and over",] =hiv.output.for.ncd$disengagement[,"80 and over",]/4
-dimnames(hiv.output.for.ncd$disengagement)[[2]][17] = "80-85"
-
-hiv.output.for.ncd$suppression[,"80 and over",] =hiv.output.for.ncd$suppression[,"80 and over",]/4
-dimnames(hiv.output.for.ncd$suppression)[[2]][17] = "80-85"
-
-#####
+{
+    ### convert all "80 and over" to "80-85" ####
+    hiv.output.for.ncd$population[,"80 and over",,] =hiv.output.for.ncd$population[,"80 and over",,]/4
+    dimnames(hiv.output.for.ncd$population)[[2]][17] = "80-85"
+    hiv.output.for.ncd$population = aperm(hiv.output.for.ncd$population, c(1,4,2,3))
+    
+    hiv.output.for.ncd$incidence[,"80 and over",] =hiv.output.for.ncd$incidence[,"80 and over",]/4
+    dimnames(hiv.output.for.ncd$incidence)[[2]][17] = "80-85"
+    
+    hiv.output.for.ncd$hiv.mortality[,"80 and over",] =hiv.output.for.ncd$hiv.mortality[,"80 and over",]/4
+    dimnames(hiv.output.for.ncd$hiv.mortality)[[2]][17] = "80-85"
+    
+    hiv.output.for.ncd$non.hiv.mortality[,"80 and over",] =hiv.output.for.ncd$non.hiv.mortality[,"80 and over",]/4
+    dimnames(hiv.output.for.ncd$non.hiv.mortality)[[2]][17] = "80-85"
+    
+    hiv.output.for.ncd$diagnosis[,"80 and over",] =hiv.output.for.ncd$diagnosis[,"80 and over",]/4
+    dimnames(hiv.output.for.ncd$diagnosis)[[2]][17] = "80-85"
+    
+    hiv.output.for.ncd$engagement[,"80 and over",] =hiv.output.for.ncd$engagement[,"80 and over",]/4
+    dimnames(hiv.output.for.ncd$engagement)[[2]][17] = "80-85"
+    
+    hiv.output.for.ncd$disengagement[,"80 and over",] =hiv.output.for.ncd$disengagement[,"80 and over",]/4
+    dimnames(hiv.output.for.ncd$disengagement)[[2]][17] = "80-85"
+    
+    hiv.output.for.ncd$suppression[,"80 and over",] =hiv.output.for.ncd$suppression[,"80 and over",]/4
+    dimnames(hiv.output.for.ncd$suppression)[[2]][17] = "80-85"
+    
+    #####
+}
 
 hiv.sim = sim
 
@@ -140,9 +142,67 @@ extract.parameter.all.years = function(sim,
     rv
 }
 
-return.all.probabilities = function(sim,
-                                    parameters,
-                                    years){
+
+
+extract.fertility.and.maternal.transmission = function(sim,
+                                                       parameters,
+                                                       specific.parameter,
+                                                       years){
+    
+    dim.names = list(year = years,
+                     age = c(parameters$AGES),
+                     sex = c("FEMALE","MALE"),
+                     hiv.status=c("hiv_negative","undiagnosed","diagnosed_unengaged","engaged_unsuppressed","engaged_suppressed"))
+    
+    rv = array(NA,
+               dim = sapply(dim.names,length),
+               dimnames = dim.names)
+    
+    for(year in years){
+        rv[as.character(year),,,] = extract.parameter.by.year(parameters=parameters,
+                                                              specific.parameter = specific.parameter,
+                                                              year=year)
+    }
+    
+    rv
+    
+}
+
+return.births.by.hiv.status = function(sim,
+                                       parameters,
+                                       years,
+                                       hiv.status){
+    
+    fertility = extract.fertility.and.maternal.transmission(sim=sim,
+                                                            parameters=parameters,
+                                                            years=years,
+                                                            specific.parameter = "FERTILITY.RATES")
+    
+    pop = extract.data(sim, 
+                       data.type = "population",
+                       years = years,
+                       keep.dimensions = c("year","age","sex","hiv.status"))
+    
+    births = fertility*pop
+    
+    maternal.fetal.transmission = extract.fertility.and.maternal.transmission(sim=sim,
+                                                                              parameters=parameters,
+                                                                              years=years,
+                                                                              specific.parameter = "MATERNAL.FETAL.TRANSMISSION")
+    if(hiv.status=="hiv"){
+        births.by.status = births*maternal.fetal.transmission
+        
+    } else if(hiv.status=="non.hiv"){
+        births.by.status = births*(1-maternal.fetal.transmission)
+    }
+
+    births.by.status = apply(births.by.status, 1, sum)
+}
+
+
+return.all.parameters = function(sim,
+                                 parameters,
+                                 years){
     
     rv = list()
     
@@ -165,11 +225,11 @@ return.all.probabilities = function(sim,
                                                      specific.parameter = "UNSUPPRESSED.DISENGAGEMENT.RATES",
                                                      years=years)
     
-    disengagement.suppressed = extract.data(sim, 
+    disengagement.suppressed = extract.data(sim=sim, 
                                             data.type = "disengagement.suppressed",
                                             years = years,
                                             keep.dimensions = c("year","age","sex"))
-    disengagement.unsuppressed = extract.data(sim, 
+    disengagement.unsuppressed = extract.data(sim=sim, 
                                               data.type = "disengagement.unsuppressed",
                                               years = years,
                                               keep.dimensions = c("year","age","sex"))
@@ -177,15 +237,25 @@ return.all.probabilities = function(sim,
     rv$prob.diseng = ((prob.diseng.supp*disengagement.suppressed) + (prob.diseng.unsupp*disengagement.unsuppressed))/
         (disengagement.suppressed + disengagement.unsuppressed)
     
+    rv$hiv.births = return.births.by.hiv.status(sim=sim,
+                                                parameters=parameters,
+                                                years=years,
+                                                hiv.status="hiv")
+    
+    rv$non.hiv.births = return.births.by.hiv.status(sim=sim,
+                                                parameters=parameters,
+                                                years=years,
+                                                hiv.status="non.hiv")
+    
     rv
 }
 
-target.probabilities = return.all.probabilities(sim=hiv.sim,
+target.parameters = return.all.parameters(sim=hiv.sim,
                                                 parameters=hiv.sim$parameters,
                                                 years=hiv.sim$years)
 
 
-save(hiv.sim,target.probabilities,DATA.MANAGER,hiv.output.for.ncd,
+save(hiv.sim,target.parameters,DATA.MANAGER,hiv.output.for.ncd,
      file="~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_sim.RData")
 
 # testing plotting hiv distribution 
