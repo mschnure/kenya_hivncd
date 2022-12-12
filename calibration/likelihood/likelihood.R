@@ -28,14 +28,18 @@ if(1==2){
     sapply(lik.components,function(sub.lik){sub.lik(sim)})
 }
 
+WEIGHT.YEARS = 1970:2030
+WEIGHTS.BY.YEAR = (1/4)^(WEIGHT.YEARS<2010) # before 2010, 1/4
+names(WEIGHTS.BY.YEAR) = WEIGHT.YEARS
+
 # Calls individual "create.likelihood.for.data.type" functions for each data type
 # Each data type function assembles the likelihood elements once (because it is time consuming - e.g., matrix M), 
 # and then returns a function that computes the likelihood 
 # SO, the output that create.likelihood() generates is a FUNCTION that can then be run on a sim to return the likelihood 
 create.likelihood = function(data.manager=DATA.MANAGER,
                              parameters,
-                             years = 2010:2020,
-                             total.weight = 1, # can make all of the other weights = total.weight * multiplier 
+                             years = 1980:2020,
+                             total.weight = WEIGHTS.BY.YEAR, 
                              #incidence
                              incidence.years=years,
                              incidence.weight=1, 
@@ -79,7 +83,7 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                     parameters=parameters,
                                                     denominator.data.type="population", # later maybe make this out of the negative pop
                                                     obs.is.proportion=F,
-                                                    weight=incidence.weight,
+                                                    weight=total.weight*incidence.weight,
                                                     obs.correlation=incidence.obs.correlation,
                                                     correlation.structure=incidence.correlation.structure)
     
@@ -89,7 +93,7 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                      parameters=parameters,
                                                      denominator.data.type="population", 
                                                      obs.is.proportion=F,
-                                                     weight=prevalence.weight,
+                                                     weight=total.weight*prevalence.weight,
                                                      obs.correlation=prevalence.obs.correlation,
                                                      correlation.structure=prevalence.correlation.structure)
     
@@ -99,7 +103,7 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                     parameters=parameters,
                                                     denominator.data.type="prevalence",
                                                     obs.is.proportion=T, # awareness data is reported as a proportion 
-                                                    weight=awareness.weight,
+                                                    weight=total.weight*awareness.weight,
                                                     obs.correlation=awareness.obs.correlation,
                                                     correlation.structure=awareness.correlation.structure,
                                                     )
@@ -110,7 +114,7 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                      parameters=parameters,
                                                      denominator.data.type="awareness", # engagement denominator = awareness
                                                      obs.is.proportion=T, # engagement data is reported as a proportion 
-                                                     weight=engagement.weight,
+                                                     weight=total.weight*engagement.weight,
                                                      obs.correlation=engagement.obs.correlation,
                                                      correlation.structure=engagement.correlation.structure)
     
@@ -120,7 +124,7 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                       parameters=parameters,
                                                       denominator.data.type="awareness", # suppression denominator = awareness
                                                       obs.is.proportion=T, # suppression data is reported as a proportion 
-                                                      weight=suppression.weight,
+                                                      weight=total.weight*suppression.weight,
                                                       obs.correlation=suppression.obs.correlation,
                                                       correlation.structure=suppression.correlation.structure)
     
@@ -130,7 +134,7 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                      parameters=parameters,
                                                      denominator.data.type=NULL, 
                                                      obs.is.proportion=F,
-                                                     weight=population.weight,
+                                                     weight=total.weight*population.weight,
                                                      obs.correlation=population.obs.correlation,
                                                      correlation.structure=population.correlation.structure,
                                                      calculate.sds.from.ci=F,
@@ -145,7 +149,7 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                         parameters=parameters,
                                                         denominator.data.type=NULL, # technically hiv mortality reported as a number
                                                         obs.is.proportion=F, 
-                                                        weight=hiv.mortality.weight,
+                                                        weight=total.weight*hiv.mortality.weight,
                                                         obs.correlation=hiv.mortality.obs.correlation,
                                                         correlation.structure=hiv.mortality.correlation.structure,
                                                         use.total=T,
@@ -163,7 +167,14 @@ create.likelihood = function(data.manager=DATA.MANAGER,
     
     rv = function(sim){ 
         
-        sum(sapply(components, function(likelihood){likelihood(sim)})) # adding up each likelihood component, run on sim
+        rv = sum(sapply(components, function(likelihood){likelihood(sim)})) # adding up each likelihood component, run on sim
+        
+        if(is.na(rv))
+            browser()
+        
+        print(rv)
+        
+        return(rv)
     }
     
     attr(rv,"components") = components # attaching the components as an attribute to the function 
@@ -479,7 +490,19 @@ compute.likelihood = function(sim,
     }
     
     cov.mat = cov.mat + obs.cov.mat # add in observation error part 
-    cov.mat = cov.mat*(1/weight) # higher weight --> smaller variance; (potentially downweight population likelihood)
+    
+    if(length(weight)==1)
+        cov.mat = cov.mat*(1/weight) # higher weight --> smaller variance; (potentially downweight population likelihood)
+    else {
+        # if weight isn't a single value, then weight is a named vector of weights where the names are years
+        weight.per.obs = weight[as.character(obs.year)]
+        
+        weight.matrix = sqrt(weight.per.obs) %*% t(sqrt(weight.per.obs))
+        
+        cov.mat = cov.mat/weight.matrix
+        
+    }
+    
     
     if(debug){
         df = data.frame(year=obs.year,dimension=obs.dimensions,obs=obs,mean=mu)
