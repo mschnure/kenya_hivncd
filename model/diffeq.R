@@ -255,17 +255,21 @@ compute.dx <- function(time,
     #flatten out all our arrays
     #return a vector of length = length(y) that represents the change in each element in y
     # when data elements have different dimensions, using as.numeric makes sure that we can collapse them into a 1D vector
-    c(as.numeric(dx.state),   
-      as.numeric(dx.incidence), 
-      as.numeric(dx.diagnoses), 
-      as.numeric(dx.hiv.mortality), 
-      as.numeric(dx.non.hiv.mortality),
-      as.numeric(dx.engagement),
-      as.numeric(dx.disengagement.unsuppressed),
-      as.numeric(dx.disengagement.suppressed),
-      as.numeric(dx.suppression)
+    rv = c(as.numeric(dx.state),   
+           as.numeric(dx.incidence), 
+           as.numeric(dx.diagnoses), 
+           as.numeric(dx.hiv.mortality), 
+           as.numeric(dx.non.hiv.mortality),
+           as.numeric(dx.engagement),
+           as.numeric(dx.disengagement.unsuppressed),
+           as.numeric(dx.disengagement.suppressed),
+           as.numeric(dx.suppression)
 )
     
+    if(any(is.na(rv)))
+        browser()
+    
+    rv
     
 }
 
@@ -297,7 +301,7 @@ run.model <- function(parameters,
                       keep.years){
     
     # Error check on parameters - NA values
-    mask = sapply(parameters$time.varying.parameters,function(param){any(sapply(param$values,function(val){any(is.na(val))}))})
+    mask = sapply(parameters$time.varying.parameters,function(param){any(sapply(param$values,function(val){any(is.na(val)) | any(is.infinite(val))}))})
     if(any(mask))
         stop(paste0("NA parameter values found in: ",
                     paste0(names(parameters$time.varying.parameters)[mask],collapse=", ")))
