@@ -30,9 +30,7 @@ simplot = function(...,
 ){
     sims = list(...)
     keep.dimensions = union('year',union(facet.by, split.by))
-    
-    if(any(data.types=="hiv.mortality"))
-        sexes = sims[[1]]$SEXES
+
     
     if(any(data.types=="hiv.mortality") & any(keep.dimensions=="sex"))
         stop("no hiv mortality data by sex")
@@ -54,6 +52,9 @@ simplot = function(...,
                 sim = sims[[i]]
                 sims.for.i = list(sim)}
         
+            if(any(data.types=="hiv.mortality"))
+                sexes = sims.for.i[[1]]$SEXES
+            
             for(j in 1:length(sims.for.i)){
                 
                 sim = sims.for.i[[j]]
