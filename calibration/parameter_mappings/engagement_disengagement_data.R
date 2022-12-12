@@ -71,24 +71,29 @@ off.art = (on.art/percent.on.art) - on.art
 
 # ENGAGEMENT RATE = start.art/off.art
 engagement.rate = start.art/off.art[-length(off.art)] 
-engagement.years = as.numeric(names(engagement.rate))
+engagement.anchor.year = 2000
+engagement.years = as.numeric(names(engagement.rate))-engagement.anchor.year
 
 df = data.frame(y=engagement.rate,
                 x=engagement.years)
-df$x2 = pmax(0,df$x-2015)
-df$x4 = pmax(0,df$x-2015) 
-df$x4[df$x>2017]=0 # makes a 1 in 2016 and 2 in 2017, all the rest are zero 
+df$x2 = pmax(0,df$x-15)
+df$x4 = pmax(0,df$x-15) 
+df$x4[df$x>17]=0 # makes a 1 in 2016 and 2 in 2017, all the rest are zero 
 
 fit1 = suppressWarnings(glm(y~x+x2, family=binomial,data=df)) # logistic with spline at 2017 (family=binomial, meaning link is logit)
 fit2 = suppressWarnings(glm(y~x+x2+x4, family=binomial,data=df)) # three slopes: pre-2016, 2016-2017, post 2017 - but I don't know if this is true actually
 
 fit.to.use = "fit2"
 
+max.proportion = 0.95
+
 if(fit.to.use=="fit1"){
     fit=fit1
     ENGAGEMENT.MODEL = list(intercept=fit$coefficients[1],
                             pre.universal.slope=fit$coefficients[2],
-                            post.universal.slope=fit$coefficients[3])
+                            post.universal.slope=fit$coefficients[3],
+                            anchor.year=engagement.anchor.year,
+                            max.proportion=max.proportion)
 }
 
 if(fit.to.use=="fit2"){
@@ -96,7 +101,9 @@ if(fit.to.use=="fit2"){
     ENGAGEMENT.MODEL = list(intercept=fit$coefficients[1],
                             pre.universal.slope=fit$coefficients[2],
                             intermediate.slope.2016.2017=fit$coefficients[4],
-                            post.universal.slope=fit$coefficients[3])
+                            post.universal.slope=fit$coefficients[3],
+                            anchor.year=engagement.anchor.year,
+                            max.proportion=max.proportion)
 }
 
 
