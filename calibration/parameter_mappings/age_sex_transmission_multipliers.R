@@ -117,8 +117,33 @@ MALE.AGE.MULTIPLIERS.2008 = get.all.multipliers(sex="male",year=2008)
 FEMALE.AGE.MULTIPLIERS.2014 = get.all.multipliers(sex="female",year=2014)
 MALE.AGE.MULTIPLIERS.2014 = get.all.multipliers(sex="male",year=2014)
 
-# plotting 
+# REMOVE THIS - JUST FOR TESTING
+# stop("MELISSA need to fix age sex multipliers")
+# FEMALE.AGE.MULTIPLIERS.2003 = rep(1,17)
+# MALE.AGE.MULTIPLIERS.2003 = FEMALE.AGE.MULTIPLIERS.2008 = MALE.AGE.MULTIPLIERS.2008 = FEMALE.AGE.MULTIPLIERS.2014 = MALE.AGE.MULTIPLIERS.2014 = FEMALE.AGE.MULTIPLIERS.2003
+
+# plotting/testing
 if(1==2){
+    
+    combined = round(cbind(FEMALE.AGE.MULTIPLIERS.2003,MALE.AGE.MULTIPLIERS.2003,
+                           FEMALE.AGE.MULTIPLIERS.2008,MALE.AGE.MULTIPLIERS.2008,
+                           FEMALE.AGE.MULTIPLIERS.2014,MALE.AGE.MULTIPLIERS.2014),2)
+    
+    colnames(combined) = c("F97","M97","F08","M08","F15","M15") # labeled with years they're actually applied in 
+    combined
+    
+    age.transmission.multiplier.names = c("15.to.19",
+                                          "20.to.29",
+                                          "40.to.49",
+                                          "50.and.over.0",
+                                          "50.and.over.1",
+                                          "50.and.over.2",
+                                          "50.and.over.3"
+                                          )
+    
+    
+    cbind(age.transmission.multiplier.names)
+    
     ages = get.age.brackets.in.range(lower=0,upper=Inf)
     ages[2] = "05-09"
     
