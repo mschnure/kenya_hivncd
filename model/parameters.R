@@ -67,11 +67,11 @@ get.default.parameters = function(){
         start.time=1975,
         time.0=1990,
         time.1=1997,
-        time.2=2008, # this is only for the age multiplier spline point; not changing transmission in this year 
+        time.2=2008, 
         time.3=2015,
         trate.0=0.7,
         trate.1=0.2,
-        trate.2=0.2, # transmission doesn't change in 2008, only age multiplier does 
+        trate.2=0.2, 
         trate.3=0.15,
         # sex transmission multipliers
         male.to.male.multiplier=1,
@@ -638,11 +638,11 @@ map.model.parameters <- function(parameters,
     for(year in engagement.years.to.project){
         if(year<2016 | year>2017){
             projected.log.odds = (ENGAGEMENT.MODEL$intercept+sampled.parameters['log.OR.engagement.intercept'])+
-                ((ENGAGEMENT.MODEL$pre.universal.slope+sampled.parameters['log.OR.engagement.pre.universal.slope'])*year)+
+                ((ENGAGEMENT.MODEL$pre.universal.slope+sampled.parameters['log.OR.engagement.pre.universal.slope'])*(year-ENGAGEMENT.MODEL$anchor.year))+
                 ((ENGAGEMENT.MODEL$post.universal.slope+sampled.parameters['log.OR.engagement.post.universal.slope'])*pmax(0,(year-2015)))
         } else if(year==2016 | year==2017){
             projected.log.odds = (ENGAGEMENT.MODEL$intercept+sampled.parameters['log.OR.engagement.intercept'])+
-                ((ENGAGEMENT.MODEL$pre.universal.slope+sampled.parameters['log.OR.engagement.pre.universal.slope'])*year)+
+                ((ENGAGEMENT.MODEL$pre.universal.slope+sampled.parameters['log.OR.engagement.pre.universal.slope'])*(year-ENGAGEMENT.MODEL$anchor.year))+
                 ((ENGAGEMENT.MODEL$intermediate.slope.2016.2017+sampled.parameters['log.OR.engagement.intermediate.slope'])*pmax(0,(year-2015)))+
                 ((ENGAGEMENT.MODEL$post.universal.slope+sampled.parameters['log.OR.engagement.post.universal.slope'])*pmax(0,(year-2015)))
         }
@@ -655,6 +655,9 @@ map.model.parameters <- function(parameters,
         
         
         projected.rate.age.sex[,"male",] = projected.rate.age.sex[,"male",]*sampled.parameters["male.cascade.multiplier"]
+        
+        if(any(is.infinite(projected.rate.age.sex)))
+            browser()
         
         parameters = add.time.varying.parameter.value(parameters,
                                                       parameter.name='ENGAGEMENT.RATES',
