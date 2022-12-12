@@ -11,11 +11,11 @@ library(boot)
 
 prior = join.distributions(
     
-    # general
-    trate.0 = Lognormal.Distribution(log(1), log(8)/2), # (log(1) = 0, but leaving this way for clarity)
-    trate.1 = Lognormal.Distribution(log(1), log(8)/2),
-    trate.2 = Lognormal.Distribution(log(1), log(8)/2), 
-    trate.3 = Lognormal.Distribution(log(1), log(8)/2), 
+    # general 
+    trate.0 = Lognormal.Distribution(log(.5), log(8)/2), # ORIGINALLY 1; (log(1) = 0, but leaving this way for clarity)
+    trate.1 = Lognormal.Distribution(log(.25), log(8)/2), # ORIGINALLY 1
+    trate.2 = Lognormal.Distribution(log(.25), log(8)/2), # ORIGINALLY 1
+    trate.3 = Lognormal.Distribution(log(.25), log(8)/2), # ORIGINALLY 1
     
     # sex transmission multipliers
     female.to.male.multiplier = Lognormal.Distribution(log(1), log(4)/2), 
@@ -28,9 +28,10 @@ prior = join.distributions(
     age.50.and.over.transmission.multiplier.0 = Lognormal.Distribution(log(1), log(4)/2),
     age.50.and.over.transmission.multiplier.1 = Lognormal.Distribution(log(1), log(4)/2),
     age.50.and.over.transmission.multiplier.2 = Lognormal.Distribution(log(1), log(4)/2),
+    age.50.and.over.transmission.multiplier.3 = Lognormal.Distribution(log(1), log(4)/2), 
     
     # other transmission multipliers
-    age.assortativity = Lognormal.Distribution(log(1), log(4)/2),
+    age.assortativity = Lognormal.Distribution(log(1), log(1.5)/2), # probably need to be as tight as log(1.5)/2
     
     birth.transmission.risk.0 = Logitnormal.Distribution(logit(0.42), log(3)/2), 
     birth.transmission.risk.1 = Logitnormal.Distribution(logit(0.3), log(3)/2), 
@@ -79,7 +80,11 @@ prior = join.distributions(
 
 parameter.var.blocks = list(
     
-    trates = c("trate.0","trate.1","trate.2","trate.3"),
+    trate0 = "trate.0",
+    trate1 = "trate.1",
+    trate2 = "trate.2",
+    trate3 = "trate.3", 
+    
     sex.transmission.multiplier = c("female.to.male.multiplier"),
     age.transmission.multipliers.1 = c("age.15.to.19.transmission.multiplier",
                                        "age.20.to.29.transmission.multiplier",
@@ -87,7 +92,8 @@ parameter.var.blocks = list(
     
     age.transmission.multipliers.2 = c("age.50.and.over.transmission.multiplier.0",
                                        "age.50.and.over.transmission.multiplier.1",
-                                       "age.50.and.over.transmission.multiplier.2"),
+                                       "age.50.and.over.transmission.multiplier.2",
+                                       "age.50.and.over.transmission.multiplier.3"),
     
     
     age.assortativity = c("age.assortativity"),
