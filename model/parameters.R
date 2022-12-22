@@ -99,12 +99,6 @@ get.default.parameters = function(){
         log.OR.engagement.pre.universal.slope=0,
         log.OR.engagement.intermediate.slope=0,
         log.OR.engagement.post.universal.slope=0,
-        # engagement.time.0=1986,
-        # engagement.time.1=2014,
-        # engagement.time.2=2016,
-        # engagement.rate.0=0.15,
-        # engagement.rate.1=0.33,
-        # engagement.rate.2=3,
         unsuppressed.disengagement.rates=0.1392621, # Lee et al
         suppressed.disengagement.rates=0.1025866, # Lee et al
         suppression.time.0=1993,
@@ -127,8 +121,14 @@ get.default.parameters = function(){
         hiv.specific.mortality.rates.1=0.07,  
         hiv.specific.mortality.rates.2=0.018,
         age.0.to.14.hiv.mortality.multiplier.0=1,
-        age.15.to.24.hiv.mortality.multiplier=1,
-        over.50.hiv.mortality.multiplier=1,
+        age.0.to.14.hiv.mortality.multiplier.1=1,
+        age.0.to.14.hiv.mortality.multiplier.2=1,
+        age.15.to.24.hiv.mortality.multiplier.0=1,
+        age.15.to.24.hiv.mortality.multiplier.1=1,
+        age.15.to.24.hiv.mortality.multiplier.2=1,
+        over.50.hiv.mortality.multiplier.0=1,
+        over.50.hiv.mortality.multiplier.1=1,
+        over.50.hiv.mortality.multiplier.2=1,
         fertility.multiplier=1
     ) 
 }
@@ -246,24 +246,27 @@ map.model.parameters <- function(parameters,
     HIV.MORTALITY.RATES.2[,,,c('undiagnosed', 'diagnosed_unengaged', 'engaged_unsuppressed')] = 
         sampled.parameters['hiv.specific.mortality.rates.2']
     
-    # Set up age-specific HIV mortality multipliers
+    # Set up age- and time-specific HIV mortality multipliers 
     HIV.MORTALITY.RATES.0[age.15.to.24.age.brackets,,,] = HIV.MORTALITY.RATES.0[age.15.to.24.age.brackets,,,]*
-        sampled.parameters["age.15.to.24.hiv.mortality.multiplier"]
+        sampled.parameters["age.15.to.24.hiv.mortality.multiplier.0"]
     HIV.MORTALITY.RATES.1[age.15.to.24.age.brackets,,,] = HIV.MORTALITY.RATES.1[age.15.to.24.age.brackets,,,]*
-        sampled.parameters["age.15.to.24.hiv.mortality.multiplier"]
+        sampled.parameters["age.15.to.24.hiv.mortality.multiplier.1"]
     HIV.MORTALITY.RATES.2[age.15.to.24.age.brackets,,,] = HIV.MORTALITY.RATES.2[age.15.to.24.age.brackets,,,]*
-        sampled.parameters["age.15.to.24.hiv.mortality.multiplier"]
+        sampled.parameters["age.15.to.24.hiv.mortality.multiplier.2"]
     
     HIV.MORTALITY.RATES.0[over.50.age.brackets,,,] = HIV.MORTALITY.RATES.0[over.50.age.brackets,,,]*
-        sampled.parameters["over.50.hiv.mortality.multiplier"]
+        sampled.parameters["over.50.hiv.mortality.multiplier.0"]
     HIV.MORTALITY.RATES.1[over.50.age.brackets,,,] = HIV.MORTALITY.RATES.1[over.50.age.brackets,,,]*
-        sampled.parameters["over.50.hiv.mortality.multiplier"]
+        sampled.parameters["over.50.hiv.mortality.multiplier.1"]
     HIV.MORTALITY.RATES.2[over.50.age.brackets,,,] = HIV.MORTALITY.RATES.2[over.50.age.brackets,,,]*
-        sampled.parameters["over.50.hiv.mortality.multiplier"]
+        sampled.parameters["over.50.hiv.mortality.multiplier.2"]
     
-    # Set up age- and time-specific HIV mortality multipliers 
     HIV.MORTALITY.RATES.0[age.0.to.14.age.brackets,,,] = HIV.MORTALITY.RATES.0[age.0.to.14.age.brackets,,,]*
         sampled.parameters["age.0.to.14.hiv.mortality.multiplier.0"]
+    HIV.MORTALITY.RATES.1[age.0.to.14.age.brackets,,,] = HIV.MORTALITY.RATES.1[age.0.to.14.age.brackets,,,]*
+        sampled.parameters["age.0.to.14.hiv.mortality.multiplier.1"]
+    HIV.MORTALITY.RATES.2[age.0.to.14.age.brackets,,,] = HIV.MORTALITY.RATES.2[age.0.to.14.age.brackets,,,]*
+        sampled.parameters["age.0.to.14.hiv.mortality.multiplier.2"]
     
     parameters = add.time.varying.parameter.value(parameters,
                                                   parameter.name='HIV.MORTALITY.RATES',
