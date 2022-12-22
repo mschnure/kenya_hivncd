@@ -1,6 +1,6 @@
 source("model/run_systematic.R")
 
-sim = run.model.for.parameters(variable.parameters = variable.parameters)
+sim = run.model.for.parameters(variable.parameters = params.start.values)
 
 ## Extracts outputs needed for NCD model
 extract.hiv.data.for.ncd = function(sim,
@@ -26,7 +26,7 @@ extract.hiv.data.for.ncd = function(sim,
     dim.names = list(year = dimnames(rv$population)[[1]],
                      age = dimnames(rv$population)[[2]],
                      sex = dimnames(rv$population)[[3]],
-                     hiv.status = c("hiv_negative","undiagnosed","diagnosed_unengaged","engaged"))
+                     hiv.status = c("HIV.NEG","HIV.UNDIAG","HIV.UNENG","HIV.ENG"))
     rv$population = array(c(rv$population[,,,c("hiv_negative","undiagnosed","diagnosed_unengaged")],
                             rv$population[,,,"engaged_unsuppressed"] + rv$population[,,,"engaged_suppressed"]),
                              dim = sapply(dim.names, length),
@@ -65,31 +65,39 @@ extract.hiv.data.for.ncd = function(sim,
 hiv.output.for.ncd = extract.hiv.data.for.ncd(sim=sim)
 
 {
-    ### convert all "80 and over" to "80-85" ####
+    ### convert all "80 and over" to "80-85", rename female/male to be all caps ####
     hiv.output.for.ncd$population[,"80 and over",,] =hiv.output.for.ncd$population[,"80 and over",,]/4
     dimnames(hiv.output.for.ncd$population)[[2]][17] = "80-85"
+    dimnames(hiv.output.for.ncd$population)[[3]] = c("FEMALE","MALE")
     hiv.output.for.ncd$population = aperm(hiv.output.for.ncd$population, c(1,4,2,3))
     
     hiv.output.for.ncd$incidence[,"80 and over",] =hiv.output.for.ncd$incidence[,"80 and over",]/4
     dimnames(hiv.output.for.ncd$incidence)[[2]][17] = "80-85"
+    dimnames(hiv.output.for.ncd$incidence)[[3]] = c("FEMALE","MALE")
     
     hiv.output.for.ncd$hiv.mortality[,"80 and over",] =hiv.output.for.ncd$hiv.mortality[,"80 and over",]/4
     dimnames(hiv.output.for.ncd$hiv.mortality)[[2]][17] = "80-85"
+    dimnames(hiv.output.for.ncd$hiv.mortality)[[3]] = c("FEMALE","MALE")
     
     hiv.output.for.ncd$non.hiv.mortality[,"80 and over",] =hiv.output.for.ncd$non.hiv.mortality[,"80 and over",]/4
     dimnames(hiv.output.for.ncd$non.hiv.mortality)[[2]][17] = "80-85"
+    dimnames(hiv.output.for.ncd$non.hiv.mortality)[[3]] = c("FEMALE","MALE")
     
     hiv.output.for.ncd$diagnosis[,"80 and over",] =hiv.output.for.ncd$diagnosis[,"80 and over",]/4
     dimnames(hiv.output.for.ncd$diagnosis)[[2]][17] = "80-85"
+    dimnames(hiv.output.for.ncd$diagnosis)[[3]] = c("FEMALE","MALE")
     
     hiv.output.for.ncd$engagement[,"80 and over",] =hiv.output.for.ncd$engagement[,"80 and over",]/4
     dimnames(hiv.output.for.ncd$engagement)[[2]][17] = "80-85"
+    dimnames(hiv.output.for.ncd$engagement)[[3]] = c("FEMALE","MALE")
     
     hiv.output.for.ncd$disengagement[,"80 and over",] =hiv.output.for.ncd$disengagement[,"80 and over",]/4
     dimnames(hiv.output.for.ncd$disengagement)[[2]][17] = "80-85"
+    dimnames(hiv.output.for.ncd$disengagement)[[3]] = c("FEMALE","MALE")
     
     hiv.output.for.ncd$suppression[,"80 and over",] =hiv.output.for.ncd$suppression[,"80 and over",]/4
     dimnames(hiv.output.for.ncd$suppression)[[2]][17] = "80-85"
+    dimnames(hiv.output.for.ncd$suppression)[[3]] = c("FEMALE","MALE")
     
     #####
 }
