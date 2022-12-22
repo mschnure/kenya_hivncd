@@ -181,7 +181,7 @@ simplot = function(...,
             df.truth.denominator = rbind(df.truth.denominator, one.df)   
             
             
-            df.truth$value = (df.truth$value/df.truth.denominator$value)*100
+            df.truth$value = (df.truth$value/df.truth.denominator$value)
         }
     }
     
@@ -202,11 +202,13 @@ simplot = function(...,
         facet_string = paste0(facet_string, '+', paste0(facet.by,collapse = '+'))
     facet_formula = as.formula(facet_string)
     
-    ggplot() + 
+    plot = ggplot() + 
         geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id)) +
         geom_point(data = df.truth, aes(x = year, y = value, color = sim.id, group = group.id, shape = split)) +
         facet_wrap(facet_formula, scales = "free_y") + 
         ylim(0,NA)
+    
+    suppressWarnings(print(plot))
     
     
 }
