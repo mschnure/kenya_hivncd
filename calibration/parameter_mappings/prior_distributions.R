@@ -21,9 +21,20 @@ prior = join.distributions(
     female.to.male.multiplier = Lognormal.Distribution(log(1), log(4)/2), 
     
     # age transmission multipliers
-    age.15.to.19.transmission.multiplier = Lognormal.Distribution(log(1), log(4)/2),
-    age.20.to.29.transmission.multiplier = Lognormal.Distribution(log(1), log(4)/2),
-    age.40.to.49.transmission.multiplier = Lognormal.Distribution(log(1), log(4)/2),
+    age.15.to.19.transmission.multiplier.0 = Lognormal.Distribution(log(1), log(4)/2),
+    age.15.to.19.transmission.multiplier.1 = Lognormal.Distribution(log(1), log(4)/2),
+    age.15.to.19.transmission.multiplier.2 = Lognormal.Distribution(log(1), log(4)/2),
+    age.15.to.19.transmission.multiplier.3 = Lognormal.Distribution(log(1), log(4)/2),
+    
+    age.20.to.29.transmission.multiplier.0 = Lognormal.Distribution(log(1), log(4)/2),
+    age.20.to.29.transmission.multiplier.1 = Lognormal.Distribution(log(1), log(4)/2),
+    age.20.to.29.transmission.multiplier.2 = Lognormal.Distribution(log(1), log(4)/2),
+    age.20.to.29.transmission.multiplier.3 = Lognormal.Distribution(log(1), log(4)/2),
+    
+    age.40.to.49.transmission.multiplier.0 = Lognormal.Distribution(log(1), log(4)/2),
+    age.40.to.49.transmission.multiplier.1 = Lognormal.Distribution(log(1), log(4)/2),
+    age.40.to.49.transmission.multiplier.2 = Lognormal.Distribution(log(1), log(4)/2),
+    age.40.to.49.transmission.multiplier.3 = Lognormal.Distribution(log(1), log(4)/2),
     
     age.50.and.over.transmission.multiplier.0 = Lognormal.Distribution(log(1), log(4)/2),
     age.50.and.over.transmission.multiplier.1 = Lognormal.Distribution(log(1), log(4)/2),
@@ -56,7 +67,9 @@ prior = join.distributions(
     suppression.rate.1 = Lognormal.Distribution(log(0.6732885), log(4)/2),
     unsuppression.rates = Lognormal.Distribution(log(0.1971601), log(4)/2),
     
-    male.cascade.multiplier = Lognormal.Distribution(log(1), log(4)/2),
+    male.awareness.multiplier = Lognormal.Distribution(log(1), log(4)/2),
+    male.engagement.multiplier = Lognormal.Distribution(log(1), log(4)/2),
+    male.suppression.multiplier = Lognormal.Distribution(log(1), log(4)/2),
     
     # mortality/fertility parameters 
     age.45.to.65.mortality.intercept.multiplier = Lognormal.Distribution(log(1), log(4)/2),
@@ -80,7 +93,14 @@ prior = join.distributions(
     over.50.hiv.mortality.multiplier.1 = Lognormal.Distribution(log(1), log(4)/2),
     over.50.hiv.mortality.multiplier.2 = Lognormal.Distribution(log(1), log(4)/2),
     
-    fertility.multiplier = Lognormal.Distribution(log(1), log(4)/2)
+    fertility.multiplier = Lognormal.Distribution(log(1), log(4)/2),
+    
+    age.15.to.19.base.aging.rate=Lognormal.Distribution(log(0.25), log(4)/2),
+    age.20.to.24.base.aging.rate=Lognormal.Distribution(log(0.25), log(4)/2),
+    age.15.to.19.aging.factor=Lognormal.Distribution(log(2), log(4)/2),
+    age.20.to.24.aging.factor=Lognormal.Distribution(log(2), log(4)/2),
+    age.25.to.50.aging.factor=Lognormal.Distribution(log(2), log(4)/2),
+    over.50.aging.factor=Lognormal.Distribution(log(2), log(4)/2)
     
     
 )
@@ -94,11 +114,22 @@ parameter.var.blocks = list(
     trate3 = "trate.3", 
     
     sex.transmission.multiplier = c("female.to.male.multiplier"),
-    age.transmission.multipliers.1 = c("age.15.to.19.transmission.multiplier",
-                                       "age.20.to.29.transmission.multiplier",
-                                       "age.40.to.49.transmission.multiplier"),
+    age.transmission.multipliers.1 = c("age.15.to.19.transmission.multiplier.0",
+                                       "age.15.to.19.transmission.multiplier.1",
+                                       "age.15.to.19.transmission.multiplier.2",
+                                       "age.15.to.19.transmission.multiplier.3"),
     
-    age.transmission.multipliers.2 = c("age.50.and.over.transmission.multiplier.0",
+    age.transmission.multipliers.2 = c("age.20.to.29.transmission.multiplier.0",
+                                       "age.20.to.29.transmission.multiplier.1",
+                                       "age.20.to.29.transmission.multiplier.2",
+                                       "age.20.to.29.transmission.multiplier.3"),
+    
+    age.transmission.multipliers.3 = c("age.40.to.49.transmission.multiplier.0",
+                                       "age.40.to.49.transmission.multiplier.0",
+                                       "age.40.to.49.transmission.multiplier.0",
+                                       "age.40.to.49.transmission.multiplier.0"),
+    
+    age.transmission.multipliers.4 = c("age.50.and.over.transmission.multiplier.0",
                                        "age.50.and.over.transmission.multiplier.1",
                                        "age.50.and.over.transmission.multiplier.2",
                                        "age.50.and.over.transmission.multiplier.3"),
@@ -125,7 +156,9 @@ parameter.var.blocks = list(
                     "suppression.rate.1",
                     "unsuppression.rates"),
     
-    male.cascade.multiplier = c("male.cascade.multiplier"),
+    male.cascade.multiplier = c("male.awareness.multiplier",
+                                "male.engagement.multiplier",
+                                "male.suppression.multiplier"),
     
     general.mortality = c("age.45.to.65.mortality.intercept.multiplier",
                           "age.45.to.65.mortality.slope.multiplier",
@@ -147,8 +180,15 @@ parameter.var.blocks = list(
                                           "over.50.hiv.mortality.multiplier.1",
                                           "over.50.hiv.mortality.multiplier.2"),
     
-    fertility = c("fertility.multiplier")
-
+    fertility = c("fertility.multiplier"),
+    
+    aging.1 = c("age.15.to.19.base.aging.rate",
+                "age.20.to.24.base.aging.rate"),
+    
+    aging.2 = c("age.15.to.19.aging.factor",
+                "age.20.to.24.aging.factor",
+                "age.25.to.50.aging.factor",
+                "over.50.aging.factor")
 )
 
 # checking for missing variables
