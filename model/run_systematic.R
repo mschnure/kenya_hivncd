@@ -108,6 +108,7 @@ variable.parameters['age.0.to.14.hiv.mortality.multiplier.0']=12
 
 if(1==2){
     sim = run.model.for.parameters(variable.parameters = variable.parameters)
+    sim = run.model.for.parameters(variable.parameters = params.start.values)
 }
 
 
