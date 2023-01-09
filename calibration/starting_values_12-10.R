@@ -1,6 +1,6 @@
 
 # MCMC2 - revised values from this below to get starting values for MCMC3 and MCMC4
-load("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/kenya_hivncd/mcmcruns/mcmc2022-12-08 18:35:57.Rdata")
+load("mcmcruns/mcmc2022-12-08 18:35:57.Rdata")
 
 # Other runs
 if(1==2){
