@@ -29,7 +29,8 @@ if(1==2){
 }
 
 WEIGHT.YEARS = 1970:2030
-WEIGHTS.BY.YEAR = (1/4)^(WEIGHT.YEARS<2010) # before 2010, 1/4
+#WEIGHTS.BY.YEAR = (1/4)^(WEIGHT.YEARS<2010) # before 2010, 1/4
+WEIGHTS.BY.YEAR=rep(1,length(WEIGHT.YEARS))
 names(WEIGHTS.BY.YEAR) = WEIGHT.YEARS
 
 # Calls individual "create.likelihood.for.data.type" functions for each data type
@@ -72,8 +73,8 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                              population.correlation.structure="auto.regressive",
                              #hiv.mortality
                              hiv.mortality.years=1980:2020,
-                             hiv.mortality.weight=1,
-                             hiv.mortality.obs.correlation=0.7, # 0.5 would die out very quickly, so making this higher
+                             hiv.mortality.weight=1/16, # 1/100000 - weight used in mcmc.6 and mcmc.8
+                             hiv.mortality.obs.correlation=0.5, # 0.5 would die out very quickly, so making this higher (originally 0.7, but back to 0.5 now)
                              hiv.mortality.correlation.structure="auto.regressive"
                              ){ 
     
@@ -105,8 +106,7 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                     obs.is.proportion=T, # awareness data is reported as a proportion 
                                                     weight=total.weight*awareness.weight,
                                                     obs.correlation=awareness.obs.correlation,
-                                                    correlation.structure=awareness.correlation.structure,
-                                                    )
+                                                    correlation.structure=awareness.correlation.structure)
     
     engagement.lik = create.likelihood.for.data.type(data.type = "engagement",
                                                      data.manager=data.manager,
@@ -144,18 +144,19 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                      use.age.sex=T) 
     
     hiv.mortality.lik = create.likelihood.for.data.type(data.type = "hiv.mortality",
+                                                        divide.obs.by.denominator=T,
                                                         data.manager=data.manager,
                                                         years=hiv.mortality.years,
                                                         parameters=parameters,
-                                                        denominator.data.type=NULL, # technically hiv mortality reported as a number
-                                                        obs.is.proportion=F, 
+                                                        denominator.data.type="prevalence", # technically hiv mortality reported as a number
+                                                        obs.is.proportion=T, 
                                                         weight=total.weight*hiv.mortality.weight,
                                                         obs.correlation=hiv.mortality.obs.correlation,
                                                         correlation.structure=hiv.mortality.correlation.structure,
                                                         use.total=T,
-                                                        use.sex=T,
+                                                        use.sex=F,
                                                         use.age=T,
-                                                        use.age.sex=T)
+                                                        use.age.sex=F)
     
     components = list(incidence=incidence.lik,
                       prevalence=prevalence.lik,
@@ -186,6 +187,7 @@ create.likelihood = function(data.manager=DATA.MANAGER,
 # Using a call to get.likelihood.elements.by.data.type, assembles the likelihood elements once per data type (slow), 
 # then returns a FUNCTION that calls compute.likelihood, computes the likelihood on those elements (faster)
 create.likelihood.for.data.type = function(data.type,
+                                           divide.obs.by.denominator=F,
                                            data.manager,
                                            years,
                                            denominator.data.type,
@@ -202,6 +204,8 @@ create.likelihood.for.data.type = function(data.type,
     
     # slower; so only have to call this function once and then creates the below function
     likelihood.elements = get.likelihood.elements.by.data.type(data.type=data.type,
+                                                               divide.obs.by.denominator=divide.obs.by.denominator,
+                                                               denominator.data.type=denominator.data.type,
                                                                years=years,
                                                                data.manager=data.manager,
                                                                parameters=parameters,
@@ -238,6 +242,8 @@ create.likelihood.for.data.type = function(data.type,
 ## Calls get.likelihood.elements.by.data.type.and.dimension once for each combo of dimensions (year, year/age, etc.)
 ## Will be called above (in create.likelihood.for.data.type) once per data type 
 get.likelihood.elements.by.data.type = function(data.type,
+                                                divide.obs.by.denominator=divide.obs.by.denominator,
+                                                denominator.data.type=denominator.data.type,
                                                 years,
                                                 data.manager,
                                                 obs.correlation,
@@ -250,6 +256,8 @@ get.likelihood.elements.by.data.type = function(data.type,
                                                 use.age.sex=T){
     if(use.total)
         dim.1 = get.likelihood.elements.by.data.type.and.dimension(data.type = data.type,
+                                                                   divide.obs.by.denominator=divide.obs.by.denominator,
+                                                                   denominator.data.type=denominator.data.type,
                                                                    years = years,
                                                                    data.manager = data.manager,
                                                                    parameters=parameters,
@@ -260,6 +268,8 @@ get.likelihood.elements.by.data.type = function(data.type,
     
     if(use.age)
         dim.2 = get.likelihood.elements.by.data.type.and.dimension(data.type = data.type,
+                                                                   divide.obs.by.denominator=divide.obs.by.denominator,
+                                                                   denominator.data.type=denominator.data.type,
                                                                    years = years,
                                                                    data.manager = data.manager,
                                                                    parameters=parameters,
@@ -270,6 +280,8 @@ get.likelihood.elements.by.data.type = function(data.type,
     
     if(use.sex)
         dim.3 = get.likelihood.elements.by.data.type.and.dimension(data.type = data.type,
+                                                                   divide.obs.by.denominator=divide.obs.by.denominator,
+                                                                   denominator.data.type=denominator.data.type,
                                                                    years = years,
                                                                    data.manager = data.manager,
                                                                    parameters=parameters,
@@ -280,6 +292,8 @@ get.likelihood.elements.by.data.type = function(data.type,
     
     if(use.age.sex)
         dim.4 = get.likelihood.elements.by.data.type.and.dimension(data.type = data.type,
+                                                                   divide.obs.by.denominator=divide.obs.by.denominator,
+                                                                   denominator.data.type=denominator.data.type,
                                                                    years = years,
                                                                    data.manager = data.manager,
                                                                    parameters=parameters,
@@ -343,6 +357,8 @@ get.likelihood.elements.by.data.type = function(data.type,
         # (5) vector of observation standard deviations 
 # This will be called once for each dimension (year, year/age, year/sex, year/age/sex)
 get.likelihood.elements.by.data.type.and.dimension = function(data.type,
+                                                              divide.obs.by.denominator=F,
+                                                              denominator.data.type,
                                                               years,
                                                               data.manager,
                                                               keep.dimensions,
@@ -353,6 +369,15 @@ get.likelihood.elements.by.data.type.and.dimension = function(data.type,
                                      data.type = data.type,
                                      years = years,
                                      keep.dimensions = keep.dimensions)
+    if(divide.obs.by.denominator){
+        denominator = get.surveillance.data(data.manager = data.manager,
+                                            data.type = denominator.data.type,
+                                            years = years,
+                                            keep.dimensions = keep.dimensions)
+        
+        obs.data = obs.data/denominator
+    }
+    
     obs.data.long = melt(obs.data)
     
     # For data with upper/lower values (everything except pop), use these to calculate the SDs; only keep observations with all three values 
@@ -365,6 +390,11 @@ get.likelihood.elements.by.data.type.and.dimension = function(data.type,
                                                            data.type = paste0(data.type,".uppers"),
                                                            years = years,
                                                            keep.dimensions = keep.dimensions))
+        
+        if(divide.obs.by.denominator){
+            obs.data.uppers = obs.data.uppers/denominator
+            obs.data.lowers = obs.data.lowers/denominator
+        }
         
         remove.mask = is.na(obs.data.long$value) | is.na(obs.data.uppers) | is.na(obs.data.lowers)
         obs.data.long = obs.data.long[!remove.mask,] # drop missing observations
@@ -505,7 +535,8 @@ compute.likelihood = function(sim,
     
     
     if(debug){
-        df = data.frame(year=obs.year,dimension=obs.dimensions,obs=obs,mean=mu)
+        df = data.frame(year=obs.year,dimension=obs.dimensions,obs=obs,mean=mu,sd=sqrt(diag(cov.mat)))
+        df$standard.error = (df$obs-df$mean)/df$sd
         browser()
     }
     if(1==2)
