@@ -19,6 +19,7 @@ extract.simset.output = function(simset,
     
     simset = add.sim.ids(simset,
                          id.prefix = id.prefix)
+    simset = add.model.type(simset)
     simset = add.sim.intervention.id(simset,
                                      intervention.id = intervention.id)
     
@@ -28,19 +29,15 @@ extract.simset.output = function(simset,
         
         rv[[i]] = extract.hiv.data.for.ncd(sim)
         rv[[i]]$id = sim$id
+        rv[[i]]$model = sim$model
         rv[[i]]$intervention.id = sim$intervention.id
         rv[[i]]$target.parameters = return.all.parameters(sim,years=years)
     }
     
+    class(rv) = "khm_simulation_output"
+    
     rv
 }
-
-khm = extract.simset.output(simset.for.ncd,
-                            intervention.id="no.int")
-
-# SAVE NEW OUTPUT
-save(simset.for.ncd,khm,file="~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_simset.RData")
-
 
 # helper functions
 add.sim.ids = function(simset,
@@ -57,6 +54,18 @@ add.sim.ids = function(simset,
     simset
 }
 
+add.model.type = function(simset){
+    
+    simset@simulations = lapply(1:simset@n.sim,function(i){
+        
+        sim = simset@simulations[[i]]
+        sim$model = "hiv"
+        
+        sim
+    })
+    
+    simset
+}
 
 add.sim.intervention.id = function(simset,
                                    intervention.id){
@@ -72,12 +81,6 @@ add.sim.intervention.id = function(simset,
     simset
     
 }
-
-
-
-
-
-
 
 ##----------------------------##
 ##-- OUTPUT FROM SINGLE SIM --##
@@ -324,6 +327,18 @@ return.all.parameters = function(sim,
     
     rv
 }
+
+
+
+# SAVE NEW OUTPUT
+khm = extract.simset.output(simset.for.ncd,
+                            intervention.id="no.int")
+
+
+# save(simset.for.ncd,khm,file="~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_simset.RData")
+save(khm,file="~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_simset.RData")
+
+
 
 ## OLD OUTPUT FROM SINGLE SIM
 # renamed from hiv.output.for.ncd to khm (for "kenya hiv model")
