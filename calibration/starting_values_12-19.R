@@ -1,6 +1,6 @@
 
 # MCMC4 - starts with MCMC2's final values; revised params in starting_values_12-10; then rerun with all years equally weighted
-load("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/kenya_hivncd/mcmcruns/mcmc2022-12-19 08:12:35.Rdata")
+load("mcmcruns/mcmc2022-12-19 08:12:35.Rdata")
 
 simset = extract.simset(mcmc.4,
                         additional.burn=1000, 

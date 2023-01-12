@@ -5,10 +5,10 @@ load("mcmcruns/mcmc2022-12-08 18:35:57.Rdata")
 # Other runs
 if(1==2){
     # MCMC3 - starting values from below; years after 2010 most weighted
-    load("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/kenya_hivncd/mcmcruns/mcmc2022-12-12 22:01:19.Rdata")
+    load("mcmcruns/mcmc2022-12-12 22:01:19.Rdata")
     
     # MCMC4 - starting values from below; all years equally weighted
-    load("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/kenya_hivncd/mcmcruns/mcmc2022-12-19 08:12:35.Rdata")
+    load("mcmcruns/mcmc2022-12-19 08:12:35.Rdata")
 }
 
 simset = extract.simset(mcmc.2,
