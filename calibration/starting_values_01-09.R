@@ -15,9 +15,10 @@ params.start.values["age.40.to.49.transmission.multiplier.3"] = params.start.val
     params.start.values["age.40.to.49.transmission.multiplier.1"] = params.start.values["age.40.to.49.transmission.multiplier.0"] = 
     params.start.values["age.40.to.49.transmission.multiplier"]
 
-params.start.values["male.suppression.multiplier"] = params.start.values["male.engagement.multiplier"] = 
-    params.start.values["male.awareness.multiplier"] = params.start.values["male.cascade.multiplier"]
+params.start.values["male.engagement.multiplier"] = params.start.values["male.awareness.multiplier"] = 
+    params.start.values["male.cascade.multiplier"]
 
+params.start.values["male.suppression.multiplier"] = 1
 
 remove.mask = names(params.start.values) %in% c("age.15.to.19.transmission.multiplier",
                                                 "age.20.to.29.transmission.multiplier",

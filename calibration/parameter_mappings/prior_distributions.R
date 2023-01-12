@@ -125,9 +125,9 @@ parameter.var.blocks = list(
                                        "age.20.to.29.transmission.multiplier.3"),
     
     age.transmission.multipliers.3 = c("age.40.to.49.transmission.multiplier.0",
-                                       "age.40.to.49.transmission.multiplier.0",
-                                       "age.40.to.49.transmission.multiplier.0",
-                                       "age.40.to.49.transmission.multiplier.0"),
+                                       "age.40.to.49.transmission.multiplier.1",
+                                       "age.40.to.49.transmission.multiplier.2",
+                                       "age.40.to.49.transmission.multiplier.3"),
     
     age.transmission.multipliers.4 = c("age.50.and.over.transmission.multiplier.0",
                                        "age.50.and.over.transmission.multiplier.1",

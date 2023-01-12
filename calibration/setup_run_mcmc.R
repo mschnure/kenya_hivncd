@@ -25,7 +25,7 @@ set.seed(1234)
 # mcmc.8 (1/6) - (seed: 1234); run with 1/5 starting values, all years equally weighted, new aging rates, hiv mortality downweighted to 1/100000
 
 # include new splined age transmission multipliers and separate cascade multipliers: 
-# mcmc.9 (1/9) - (seed: 1234); run with 1/9 starting values, hiv mortality downweighted to 1/16
+# mcmc.9 (1/11) - (seed: 1234); run with 1/9 starting values, hiv mortality downweighted to 1/16
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
@@ -77,7 +77,7 @@ save(mcmc.9,file=paste0("mcmcruns/mcmc",Sys.time(),".Rdata"))
 
 if(1==2)
 {
-    mcmc=mcmc.7
+    mcmc=mcmc.9
     
     simset = extract.simset(mcmc,
                             additional.burn=1000, # throw away first 1000
@@ -116,7 +116,7 @@ if(1==2)
     trace.plot(mcmc,"birth")
     trace.plot(mcmc,"*testing")
     trace.plot(mcmc,"*suppression") # mixing well - a lot of jumping
-    trace.plot(mcmc,"*cascade") # not bad, but not as much mixing/jumping
+    trace.plot(mcmc,"*male") # 
     trace.plot(mcmc,"*fertility")
     trace.plot(mcmc,"*aging")
     trace.plot(mcmc,"*hiv.mortality.multiplier")
@@ -130,6 +130,7 @@ if(1==2)
     simplot(simset,data.types = c("incidence"),ages = "15+",facet.by = c("age","sex"),years=1980:2020) 
     simplot(simset,data.types = c("prevalence"),facet.by = "age",years=1980:2020) 
     simplot(simset,data.types = c("hiv.mortality"),facet.by="age",proportion = T,years=1980:2020) 
+    simplot(simset,data.types = c("awareness","engagement","suppression"),proportion=T,facet.by = c("age","sex"))
     
     # Check last run of mcmc so I can change parameters manually 
     params.0 = simset@parameters[simset@n.sim,] # get the last set of values for parameters
@@ -182,6 +183,11 @@ if(1==2)
                               additional.thin=10) 
     sim.8 = simset.8@simulations[[simset@n.sim]]
     
+    simset.9 = extract.simset(mcmc.9,
+                              additional.burn=1000, 
+                              additional.thin=10) 
+    sim.9 = simset.9@simulations[[simset@n.sim]]
+
     
     simplot(sim.4,sim.5,sim.6,data.types = c("incidence"),facet.by = "age",years = 1980:2020)
     simplot(sim.4,sim.5,sim.6,data.types = c("prevalence"),facet.by = "age",years = 1980:2020)
@@ -201,6 +207,13 @@ if(1==2)
     simplot(sim.7,sim.8,data.types = c("awareness","engagement","suppression"),proportion=T,facet.by = c("age","sex"))
     simplot(sim.7,sim.8,data.types = c("population"),facet.by="age",years=1980:2020)
     
+    simplot(sim.8,sim.9,data.types = c("incidence"),years = 1980:2020)
+    simplot(sim.8,sim.9,data.types = c("incidence"),facet.by = "age",years = 1980:2020)
+    simplot(sim.8,sim.9,data.types = c("prevalence"),facet.by = "age",years = 1980:2020)
+    simplot(sim.8,sim.9,data.types = c("hiv.mortality"),facet.by = "age",proportion = T,years = 1980:2020)
+    simplot(sim.8,sim.9,data.types = c("awareness","engagement","suppression"),proportion=T,facet.by = c("age","sex"))
+    simplot(sim.8,sim.9,data.types = c("awareness","engagement","suppression"),proportion=T)
+    simplot(sim.8,sim.9,data.types = c("population"),facet.by="age",years=1980:2020)
     
     simplot(sim.0,sim.test,data.types = c("incidence"),years = 1980:2020)
     simplot(sim.0,sim.4,data.types = c("awareness","engagement","suppression"),proportion=T,years=1980:2020)
@@ -212,20 +225,15 @@ if(1==2)
     simplot(sim.0,sim.test,data.types = c("hiv.mortality"),facet.by="age",proportion = T,years=1980:2020) 
     
     simplot(sim.0,sim.4,data.types = c("hiv.mortality"),proportion = T,years=1980:2020) 
-    
-    
-    
-    
-    # Testing out manually changing parameters from the last run - IN STARTING VALUES CODE 
-    
+
     
     
     # Check likelihood 
-    lik = create.likelihood(parameters=sim.5$parameters) 
+    lik = create.likelihood(parameters=sim.9$parameters) 
     lik.components = attr(lik,"components")
     
     lik(sim.test)
-    round(sapply(lik.components,function(sub.lik){exp(sub.lik(sim.8) - sub.lik(sim.7))}),2) 
+    round(sapply(lik.components,function(sub.lik){exp(sub.lik(sim.9) - sub.lik(sim.8))}),2) 
     
     round(exp(lik(sim.test) - lik(sim.4)),2) 
     
