@@ -105,18 +105,18 @@ if(1==2)
     # if it's getting dragged, there should be data justifying this drag
     
     # matches parameters with string, use * if the parameter doesn't start with that string
-    trace.plot(mcmc,"age.") # age assortativity getting dragged right now, without data to justify 
+    trace.plot(mcmc,"age.") 
     trace.plot(mcmc,"age.",additional.burn = 1000)
     trace.plot(mcmc,"trate") 
-    trace.plot(mcmc,"trate",additional.burn = 1000) # having trouble taking big steps/mixing
+    trace.plot(mcmc,"trate",additional.burn = 1000) 
     trace.plot(mcmc,"*transmission")
-    trace.plot(mcmc,"female") # not great 
-    trace.plot(mcmc,"*engagement") # okay/good 
-    trace.plot(mcmc,"*mortality") # some strong preferences - is that justified or is it getting stuck?
+    trace.plot(mcmc,"female") 
+    trace.plot(mcmc,"*engagement") 
+    trace.plot(mcmc,"*mortality") 
     trace.plot(mcmc,"birth")
     trace.plot(mcmc,"*testing")
-    trace.plot(mcmc,"*suppression") # mixing well - a lot of jumping
-    trace.plot(mcmc,"*male") # 
+    trace.plot(mcmc,"*suppression") 
+    trace.plot(mcmc,"*male") 
     trace.plot(mcmc,"*fertility")
     trace.plot(mcmc,"*aging")
     trace.plot(mcmc,"*hiv.mortality.multiplier")
@@ -125,8 +125,8 @@ if(1==2)
     
     ## NOW BACK TO OTHER PLOTS/FITS
     simplot(simset,data.types = c("awareness","engagement","suppression"),proportion = T,years=1980:2020)
-    simplot(simset,data.types = c("population"),facet.by = "age",years=1980:2020) # might need to adjust mortality multiplier to include 40-44? change this around
-    simplot(simset,data.types = c("incidence"),facet.by = "age",years=1980:2020) # not good
+    simplot(simset,data.types = c("population"),facet.by = "age",years=1980:2020) 
+    simplot(simset,data.types = c("incidence"),facet.by = "age",years=1980:2020) 
     simplot(simset,data.types = c("incidence"),ages = "15+",facet.by = c("age","sex"),years=1980:2020) 
     simplot(simset,data.types = c("prevalence"),facet.by = "age",years=1980:2020) 
     simplot(simset,data.types = c("hiv.mortality"),facet.by="age",proportion = T,years=1980:2020) 

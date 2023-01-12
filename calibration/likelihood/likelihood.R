@@ -73,7 +73,7 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                              population.correlation.structure="auto.regressive",
                              #hiv.mortality
                              hiv.mortality.years=1980:2020,
-                             hiv.mortality.weight=1/16, # 1/100000 - weight used in mcmc.6 and mcmc.8
+                             hiv.mortality.weight=1/256, # 1/100000 - weight used in mcmc.6 and mcmc.8
                              hiv.mortality.obs.correlation=0.5, # 0.5 would die out very quickly, so making this higher (originally 0.7, but back to 0.5 now)
                              hiv.mortality.correlation.structure="auto.regressive"
                              ){ 
