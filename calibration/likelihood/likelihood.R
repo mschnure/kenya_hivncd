@@ -173,8 +173,6 @@ create.likelihood = function(data.manager=DATA.MANAGER,
         if(is.na(rv))
             browser()
         
-        print(rv)
-        
         return(rv)
     }
     
