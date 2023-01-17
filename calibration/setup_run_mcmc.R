@@ -1,5 +1,6 @@
 # library(devtools)
 # install_github("tfojo1/bayesian.simulations")
+# install_github("tfojo1/distributions")
 library(bayesian.simulations)
 library(distributions)
 library(ggplot2) 
@@ -26,6 +27,7 @@ set.seed(1234)
 
 # include new splined age transmission multipliers and separate cascade multipliers: 
 # mcmc.9 (1/11) - (seed: 1234); run with 1/9 starting values, hiv mortality downweighted to 1/16
+# mcmc.10 (1/13) - (seed: 1234); run with 1/9 starting values, hiv mortality downweighted to 1/256 - DIDN'T ACTUALLY RUN
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
@@ -48,6 +50,7 @@ transformations = sapply(prior@subdistributions,function(dist){
 })
 
 sds = get.sds(prior)
+sds = sds[names(params.start.values)]
 
 # Main things: prior, likelihood, function that maps
 # Additional things: blocks to sample in, proposal distribution for values to sample - needs a covariance matrix for MVN distribution
@@ -62,7 +65,7 @@ control = create.adaptive.blockwise.metropolis.control(var.names = prior@var.nam
                                              thin = 5) 
 
 # set starting.values 
-mcmc.9 = run.mcmc.with.cache(control = control,
+mcmc.10 = run.mcmc.with.cache(control = control,
                            n.iter = 10000,
                            starting.values = params.start.values, 
                            update.frequency = 5,
@@ -72,7 +75,7 @@ mcmc.9 = run.mcmc.with.cache(control = control,
 
 # run.mcmc.from.cache(dir = "mcmc_cache/")
 
-save(mcmc.9,file=paste0("mcmcruns/mcmc",Sys.time(),".Rdata"))
+save(mcmc.10,file=paste0("mcmcruns/mcmc",Sys.time(),".Rdata"))
 
 
 if(1==2)

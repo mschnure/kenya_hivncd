@@ -1,4 +1,5 @@
 
+N.CHAINS = 4
 # source other files - add in other code 
 
 library(bayesian.simulations)
@@ -29,6 +30,7 @@ transformations = sapply(prior@subdistributions,function(dist){
 })
 
 sds = get.sds(prior)
+sds = sds[names(params.start.values)]
 
 control = create.adaptive.blockwise.metropolis.control(var.names = prior@var.names,
                                                        simulation.function = simulation.function,
@@ -38,13 +40,19 @@ control = create.adaptive.blockwise.metropolis.control(var.names = prior@var.nam
                                                        transformations = transformations,
                                                        initial.covariance.mat = diag((sds/20)^2), # step size
                                                        burn = 0,
-                                                       thin = 5) 
+                                                       thin = 100) 
 
+
+
+n.start.values = sapply(1:length(params.start.values), function(i){
+        rnorm(N.CHAINS, params.start.values[i], sds[i]/64)
+    })
+dimnames(n.start.values)[[2]] = names(params.start.values)
 
 # runs chains in parallel
 create.mcmc.cache(control = control,
                   n.iter = 100000,
-                  starting.values = params.start.values, 
+                  starting.values = n.start.values, 
                   cache.frequency = 500,
                   dir = "mcmc_cache")
 
