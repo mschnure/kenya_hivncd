@@ -9,6 +9,6 @@ BASE.PARAMETERS=create.model.parameters()
 
 print(qplot(1,1) + ggtitle(paste0("CHAIN ", CHAIN)))
 
-run.mcmc.from.cache(dir="mcmc_cache",
+run.mcmc.from.cache(dir="mcmcruns/mcmc_cache",
                     chains=CHAIN,
                     update.frequency = 500)

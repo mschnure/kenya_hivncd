@@ -54,6 +54,6 @@ create.mcmc.cache(control = control,
                   n.iter = 100000,
                   starting.values = n.start.values, 
                   cache.frequency = 500,
-                  dir = "mcmc_cache")
+                  dir = "mcmcruns/mcmc_cache")
 
 
