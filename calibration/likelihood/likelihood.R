@@ -40,7 +40,7 @@ names(WEIGHTS.BY.YEAR) = WEIGHT.YEARS
 create.likelihood = function(data.manager=DATA.MANAGER,
                              parameters,
                              years = 1980:2020,
-                             total.weight = WEIGHTS.BY.YEAR, 
+                             total.weight = 0.5*WEIGHTS.BY.YEAR, # multiplying by 0.5 to broaden everything
                              #incidence
                              incidence.years=years,
                              incidence.weight=1, 
@@ -48,22 +48,22 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                              incidence.correlation.structure="auto.regressive",
                              #prevalence
                              prevalence.years=years,
-                             prevalence.weight=1, # will probably have to downweight just due to magnitude; don't want it to outweight incidence
+                             prevalence.weight=0.25*1, # will probably have to downweight just due to magnitude; don't want it to outweight incidence
                              prevalence.obs.correlation=0.5,
                              prevalence.correlation.structure="auto.regressive",
                              #awareness
                              awareness.years=years,
-                             awareness.weight=1,
+                             awareness.weight=1*12, # 12x more data points for incidence/prevalence as awareness
                              awareness.obs.correlation=0.5,
                              awareness.correlation.structure="compound.symmetry",
                              #engagement
                              engagement.years=years,
-                             engagement.weight=1,
+                             engagement.weight=1*12, # 12x more data points for incidence/prevalence as engagement
                              engagement.obs.correlation=0.5,
                              engagement.correlation.structure="compound.symmetry",
                              #suppression
                              suppression.years=years,
-                             suppression.weight=1,
+                             suppression.weight=1*44, # 12x more data points for incidence/prevalence as awareness
                              suppression.obs.correlation=0.5,
                              suppression.correlation.structure="compound.symmetry",
                              #population

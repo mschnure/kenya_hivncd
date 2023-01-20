@@ -12,7 +12,7 @@ source("model/run_systematic.R")
 # load("calibration/starting_values_01-05.Rdata") # new starting values with aging rates added in - used these for mcmc.7 and mcmc.8
 load("calibration/starting_values_01-09.Rdata")
 
-set.seed(1234) 
+set.seed(2020) 
 
 # mcmc.1 (12/06) - (seed: 2020)
 # mcmc.2 (12/08) - (seed: 2020)
@@ -27,7 +27,9 @@ set.seed(1234)
 
 # include new splined age transmission multipliers and separate cascade multipliers: 
 # mcmc.9 (1/11) - (seed: 1234); run with 1/9 starting values, hiv mortality downweighted to 1/16
-# mcmc.10 (1/13) - (seed: 1234); run with 1/9 starting values, hiv mortality downweighted to 1/256 - DIDN'T ACTUALLY RUN
+# mcmc.10 (1/13) - (seed: 1234); run with 1/9 starting values, hiv mortality downweighted to 1/256 - RAN ON 2 CHAINS
+# mcmc.11 (1/18) - (seed: 2020); new weights for all likelihoods (all *0.5; suppression*44; awareness and engagement*12)
+# mcmc.12 (1/20) - (seed: 2020); same as mcmc.11, but prevalence weight *.25; joint trate distributions
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
@@ -40,14 +42,20 @@ simulation.function = function(sampled.parameters){
 
 likelihood = create.likelihood(parameters = BASE.PARAMETERS)
 
-transformations = sapply(prior@subdistributions,function(dist){
+transformations = unlist(sapply(prior@subdistributions,function(dist){
     
-    if(is.null(dist@transformation))
+    if(.hasSlot(dist,"transformations"))
+        sapply(dist@transformations,function(tf){
+            tf@name
+        })
+    else if(is.null(dist@transformation))
         "identity"
     else
         dist@transformation@name
     
-})
+}))
+
+names(transformations) = prior@var.names
 
 sds = get.sds(prior)
 sds = sds[names(params.start.values)]
@@ -65,22 +73,25 @@ control = create.adaptive.blockwise.metropolis.control(var.names = prior@var.nam
                                              thin = 5) 
 
 # set starting.values 
-mcmc.10 = run.mcmc.with.cache(control = control,
+mcmc.12 = run.mcmc.with.cache(control = control,
                            n.iter = 10000,
                            starting.values = params.start.values, 
                            update.frequency = 5,
                            cache.frequency = 500,
                            cache.dir = "mcmc_cache"
                            )
+mcmc.11 = run.mcmc.from.cache(dir="mcmc_cache",
+                    update.frequency = 5)
+
 
 # run.mcmc.from.cache(dir = "mcmc_cache/")
 
-save(mcmc.10,file=paste0("mcmcruns/mcmc",Sys.time(),".Rdata"))
+save(mcmc.11,file=paste0("mcmcruns/mcmc",Sys.time(),".Rdata"))
 
 
 if(1==2)
 {
-    mcmc=mcmc.9
+    mcmc=mcmc.11
     
     simset = extract.simset(mcmc,
                             additional.burn=1000, # throw away first 1000
@@ -190,6 +201,17 @@ if(1==2)
                               additional.burn=1000, 
                               additional.thin=10) 
     sim.9 = simset.9@simulations[[simset@n.sim]]
+    
+    # this is the one that ran on two chains
+    simset.10 = extract.simset(mcmc.10,
+                              additional.burn=500, 
+                              additional.thin=10) 
+    sim.10 = simset.10@simulations[[simset@n.sim]]
+    
+    simset.11 = extract.simset(mcmc.11,
+                              additional.burn=1000, 
+                              additional.thin=10) 
+    sim.11 = simset.11@simulations[[simset@n.sim]]
 
     
     simplot(sim.4,sim.5,sim.6,data.types = c("incidence"),facet.by = "age",years = 1980:2020)
@@ -218,6 +240,14 @@ if(1==2)
     simplot(sim.8,sim.9,data.types = c("awareness","engagement","suppression"),proportion=T)
     simplot(sim.8,sim.9,data.types = c("population"),facet.by="age",years=1980:2020)
     
+    simplot(sim.10,sim.11,data.types = c("incidence"),years = 1980:2020)
+    simplot(sim.10,sim.11,data.types = c("incidence"),facet.by = "age",years = 1980:2020)
+    simplot(sim.10,sim.11,data.types = c("prevalence"),facet.by = "age",years = 1980:2020)
+    simplot(sim.10,sim.11,data.types = c("hiv.mortality"),facet.by = "age",proportion = T,years = 1980:2020)
+    simplot(sim.10,sim.11,data.types = c("awareness","engagement","suppression"),proportion=T,facet.by = c("age","sex"))
+    simplot(sim.10,sim.11,data.types = c("awareness","engagement","suppression"),proportion=T)
+    simplot(sim.10,sim.11,data.types = c("population"),facet.by="age",years=1980:2020)
+    
     simplot(sim.0,sim.test,data.types = c("incidence"),years = 1980:2020)
     simplot(sim.0,sim.4,data.types = c("awareness","engagement","suppression"),proportion=T,years=1980:2020)
     simplot(sim.test,sim.4,data.types = c("awareness","engagement","suppression"),proportion=T,facet.by = c("age","sex"))
@@ -232,11 +262,11 @@ if(1==2)
     
     
     # Check likelihood 
-    lik = create.likelihood(parameters=sim.9$parameters) 
+    lik = create.likelihood(parameters=sim.10$parameters) 
     lik.components = attr(lik,"components")
     
     lik(sim.test)
-    round(sapply(lik.components,function(sub.lik){exp(sub.lik(sim.9) - sub.lik(sim.8))}),2) 
+    round(sapply(lik.components,function(sub.lik){exp(sub.lik(sim.10) - sub.lik(sim.11))}),2) 
     
     round(exp(lik(sim.test) - lik(sim.4)),2) 
     

@@ -9,13 +9,56 @@ library(boot)
 # without data, best guess would have mean at 0 (or 1) and then decide how far off I'm willing to be 
 # log(4)/2 --> can be off by a factor of 4 (=log(2), just keeping this way for clarity)
 
+make.joint.distribution = function(median.r2, # anchor on trate.2
+                                   sd.r2,
+                                   median.r0.to.r1, #0 relative to 1
+                                   sd.r0.to.r1,
+                                   median.r1.to.r2, #1 relative to 2
+                                   sd.r1.to.r2,
+                                   median.r3.to.r2, #3 relative to 2
+                                   sd.r3.to.r2){
+    
+    mean.vector = log(c(median.r2,
+                      median.r0.to.r1,
+                      median.r1.to.r2,
+                      median.r3.to.r2))
+    cov.mat = diag(c(sd.r2,
+                     sd.r0.to.r1,
+                     sd.r1.to.r2,
+                     sd.r3.to.r2)^2)
+    
+    M = rbind(c(1,1,1,0), # which elements of the mean vector you multiply to get r0
+              c(1,0,1,0), # r1
+              c(1,0,0,0), # r2
+              c(1,0,0,1)) # r3
+    
+    new.mean.vector = M %*% mean.vector
+    new.cov.mat = M %*% cov.mat %*% t(M)
+    
+    Multivariate.Lognormal.Distribution(mu = new.mean.vector,
+                                        sigma = new.cov.mat,
+                                        var.names = c("trate.0","trate.1","trate.2","trate.3"))
+    
+}
+
+
+
 prior = join.distributions(
     
     # general 
-    trate.0 = Lognormal.Distribution(log(.5), log(8)/2), # ORIGINALLY 1; (log(1) = 0, but leaving this way for clarity)
-    trate.1 = Lognormal.Distribution(log(.25), log(8)/2), # ORIGINALLY 1
-    trate.2 = Lognormal.Distribution(log(.25), log(8)/2), # ORIGINALLY 1
-    trate.3 = Lognormal.Distribution(log(.25), log(8)/2), # ORIGINALLY 1
+    trates = make.joint.distribution(median.r2 = 0.25,
+                                     sd.r2=log(4)/2,
+                                     median.r0.to.r1 = 8,
+                                     sd.r0.to.r1 = log(2)/2,
+                                     median.r1.to.r2 = 1,
+                                     sd.r1.to.r2 = log(2)/2,
+                                     median.r3.to.r2 = 1,
+                                     sd.r3.to.r2 = log(2)/2),
+    
+    # trate.0 = Lognormal.Distribution(log(.5), log(8)/2), # ORIGINALLY 1; (log(1) = 0, but leaving this way for clarity)
+    # trate.1 = Lognormal.Distribution(log(.25), log(8)/2), # ORIGINALLY 1
+    # trate.2 = Lognormal.Distribution(log(.25), log(8)/2), # ORIGINALLY 1
+    # trate.3 = Lognormal.Distribution(log(.25), log(8)/2), # ORIGINALLY 1
     
     # sex transmission multipliers
     female.to.male.multiplier = Lognormal.Distribution(log(1), log(4)/2), 
