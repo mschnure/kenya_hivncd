@@ -27,7 +27,7 @@ compute.dx <- function(time,
                        y, #the vector-form model state at this time
                        parameters){
     
-    if (parameters$max.run.time < (as.numeric(Sys$time())-parameters$model.run.start))
+    if (parameters$max.run.time < (as.numeric(Sys.time())-parameters$model.run.start))
         return (rep(NA, length(y)))
     
     ##---------------------------------##
@@ -270,8 +270,8 @@ compute.dx <- function(time,
            as.numeric(dx.suppression)
 )
     
-    if(any(is.na(rv)))
-        browser()
+ #   if(any(is.na(rv)))
+  #      browser()
     
     rv
     
