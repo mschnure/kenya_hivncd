@@ -54,6 +54,8 @@ run.model.for.parameters = function(variable.parameters,
                                            seed.to.sexes = c(1,2), 
                                            seed.n = 1)
     
+    save(parameters,variable.parameters,file="calibration/debug.parameters.Rdata")
+    
     sim = run.model(parameters=parameters,
                     initial.state=initial.state,
                     start.year=1970, # later make these arguments that I pass to the function, with these as defaults 

@@ -168,10 +168,15 @@ create.likelihood = function(data.manager=DATA.MANAGER,
     
     rv = function(sim){ 
         
-        rv = sum(sapply(components, function(likelihood){likelihood(sim)})) # adding up each likelihood component, run on sim
-        
-        if(is.na(rv))
-            browser()
+        # checking if any components of the sim are NA
+        if(any(sapply(sim,function(x){
+            any(is.na(x))
+        }))){
+            rv = -Inf
+           # stop("NA values in sim")
+        } else{
+            rv = sum(sapply(components, function(likelihood){likelihood(sim)})) # adding up each likelihood component, run on sim    
+        }
         
         return(rv)
     }
