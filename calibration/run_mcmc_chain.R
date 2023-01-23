@@ -4,7 +4,7 @@ library(bayesian.simulations)
 library(ggplot2)
 
 source("model/run_systematic.R")
-BASE.PARAMETERS=create.model.parameters()
+BASE.PARAMETERS=create.model.parameter()
 
 
 print(qplot(1,1) + ggtitle(paste0("CHAIN ", CHAIN)))

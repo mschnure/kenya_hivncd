@@ -26,6 +26,10 @@ library(odeintr)
 compute.dx <- function(time,
                        y, #the vector-form model state at this time
                        parameters){
+    
+    if (parameters$max.run.time < (as.numeric(Sys$time())-parameters$model.run.start))
+        return (rep(NA, length(y)))
+    
     ##---------------------------------##
     ##-- GET TIME-VARYING PARAMETERS --##
     ##---------------------------------##
@@ -298,7 +302,8 @@ run.model <- function(parameters,
                       initial.state,
                       start.year,
                       end.year,
-                      keep.years){
+                      keep.years,
+                      max.run.seconds=Inf){
     
     # Error check on parameters - NA values
     mask = sapply(parameters$time.varying.parameters,function(param){any(sapply(param$values,function(val){any(is.na(val)) | any(is.infinite(val))}))})
@@ -306,6 +311,8 @@ run.model <- function(parameters,
         stop(paste0("NA parameter values found in: ",
                     paste0(names(parameters$time.varying.parameters)[mask],collapse=", ")))
     
+    parameters$model.run.start = as.numeric(Sys.time())
+    parameters$max.run.time = max.run.seconds
     ode.results = odeintr::integrate_sys(sys=function(x,t){compute.dx(time=t,y=x,parameters=parameters)},
                                          init=set.up.initial.diffeq.vector(initial.state, parameters),
                                          start=start.year,

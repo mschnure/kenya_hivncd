@@ -20,14 +20,19 @@ simulation.function = function(sampled.parameters){
 
 likelihood = create.likelihood(parameters = BASE.PARAMETERS)
 
-transformations = sapply(prior@subdistributions,function(dist){
+transformations = unlist(sapply(prior@subdistributions,function(dist){
     
-    if(is.null(dist@transformation))
+    if (.hasSlot(dist, 'transformations'))
+        sapply(dist@transformations, function(tf){
+            tf@name
+        })
+    else if(is.null(dist@transformation))
         "identity"
     else
         dist@transformation@name
     
-})
+}))
+names(transformations) = prior@var.names
 
 sds = get.sds(prior)
 sds = sds[names(params.start.values)]
