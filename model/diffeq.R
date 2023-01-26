@@ -303,7 +303,7 @@ run.model <- function(parameters,
                       start.year,
                       end.year,
                       keep.years,
-                      max.run.seconds=Inf){
+                      max.run.seconds=10){
     
     # Error check on parameters - NA values
     mask = sapply(parameters$time.varying.parameters,function(param){any(sapply(param$values,function(val){any(is.na(val)) | any(is.infinite(val))}))})

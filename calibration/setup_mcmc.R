@@ -1,4 +1,6 @@
 
+MCMC.DIR = "R:melissa/mcmcruns"
+
 N.CHAINS = 4
 
 library(bayesian.simulations)
@@ -58,6 +60,6 @@ create.mcmc.cache(control = control,
                   n.iter = 100000,
                   starting.values = n.start.values, 
                   cache.frequency = 500,
-                  dir = "mcmcruns/mcmc_cache")
+                  dir = file.path(MCMC.DIR, "mcmc_cache"))
 
 
