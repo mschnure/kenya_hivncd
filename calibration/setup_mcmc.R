@@ -1,6 +1,5 @@
 
 N.CHAINS = 4
-# source other files - add in other code 
 
 library(bayesian.simulations)
 library(distributions)

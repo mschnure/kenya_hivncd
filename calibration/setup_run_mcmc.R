@@ -28,8 +28,8 @@ set.seed(2020)
 # include new splined age transmission multipliers and separate cascade multipliers: 
 # mcmc.9 (1/11) - (seed: 1234); run with 1/9 starting values, hiv mortality downweighted to 1/16
 # mcmc.10 (1/13) - (seed: 1234); run with 1/9 starting values, hiv mortality downweighted to 1/256 - RAN ON 2 CHAINS
-# mcmc.11 (1/18) - (seed: 2020); new weights for all likelihoods (all *0.5; suppression*44; awareness and engagement*12)
-# mcmc.12 (1/20) - (seed: 2020); same as mcmc.11, but prevalence weight *.25; joint trate distributions
+# mcmc.11 (1/17) - (seed: 2020); new weights for all likelihoods (all *0.5; suppression*44; awareness and engagement*12)
+# mcmc.12 (1/20) - (seed: 2020); same as mcmc.11, but prevalence weight *.25; joint trate distributions; Todd is running
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
@@ -212,6 +212,11 @@ if(1==2)
                               additional.burn=1000, 
                               additional.thin=10) 
     sim.11 = simset.11@simulations[[simset@n.sim]]
+    
+    simset.12 = extract.simset(mcmc.12,
+                               additional.burn=500, 
+                               additional.thin=13) 
+    sim.12 = simset.12@simulations[[simset@n.sim]]
 
     
     simplot(sim.4,sim.5,sim.6,data.types = c("incidence"),facet.by = "age",years = 1980:2020)
