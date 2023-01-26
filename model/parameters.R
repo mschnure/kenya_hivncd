@@ -135,6 +135,9 @@ get.default.parameters = function(){
         hiv.specific.mortality.rates.0=0.04,  
         hiv.specific.mortality.rates.1=0.07,  
         hiv.specific.mortality.rates.2=0.018,
+        male.hiv.mortality.multiplier.0=1,
+        male.hiv.mortality.multiplier.1=1,
+        male.hiv.mortality.multiplier.2=1,
         age.0.to.14.hiv.mortality.multiplier.0=1,
         age.0.to.14.hiv.mortality.multiplier.1=1,
         age.0.to.14.hiv.mortality.multiplier.2=1,
@@ -341,10 +344,15 @@ map.model.parameters <- function(parameters,
     # Set up time-specific HIV mortality rates 
     HIV.MORTALITY.RATES.0[,,,c('undiagnosed', 'diagnosed_unengaged', 'engaged_unsuppressed')] = 
         sampled.parameters['hiv.specific.mortality.rates.0']
+    HIV.MORTALITY.RATES.0[,"male",,] = HIV.MORTALITY.RATES.0[,"male",,]*sampled.parameters["male.hiv.mortality.multiplier.0"]
+    
     HIV.MORTALITY.RATES.1[,,,c('undiagnosed', 'diagnosed_unengaged', 'engaged_unsuppressed')] = 
         sampled.parameters['hiv.specific.mortality.rates.1']
+    HIV.MORTALITY.RATES.1[,"male",,] = HIV.MORTALITY.RATES.1[,"male",,]*sampled.parameters["male.hiv.mortality.multiplier.1"]
+    
     HIV.MORTALITY.RATES.2[,,,c('undiagnosed', 'diagnosed_unengaged', 'engaged_unsuppressed')] = 
         sampled.parameters['hiv.specific.mortality.rates.2']
+    HIV.MORTALITY.RATES.2[,"male",,] = HIV.MORTALITY.RATES.2[,"male",,]*sampled.parameters["male.hiv.mortality.multiplier.2"]
     
     # Set up age- and time-specific HIV mortality multipliers 
     HIV.MORTALITY.RATES.0[age.15.to.24.age.brackets,,,] = HIV.MORTALITY.RATES.0[age.15.to.24.age.brackets,,,]*

@@ -124,6 +124,10 @@ prior = join.distributions(
     hiv.specific.mortality.rates.1 = Lognormal.Distribution(log(0.07), log(4)/2),
     hiv.specific.mortality.rates.2 = Lognormal.Distribution(log(0.018), log(4)/2),
     
+    male.hiv.mortality.multiplier.0 = Lognormal.Distribution(log(1), log(4)/2),
+    male.hiv.mortality.multiplier.1 = Lognormal.Distribution(log(1), log(4)/2),
+    male.hiv.mortality.multiplier.2 = Lognormal.Distribution(log(1), log(4)/2),
+    
     age.0.to.14.hiv.mortality.multiplier.0 = Lognormal.Distribution(log(1), log(4)/2),
     age.0.to.14.hiv.mortality.multiplier.1 = Lognormal.Distribution(log(1), log(4)/2),
     age.0.to.14.hiv.mortality.multiplier.2 = Lognormal.Distribution(log(1), log(4)/2),
@@ -211,6 +215,10 @@ parameter.var.blocks = list(
     hiv.mortality = c("hiv.specific.mortality.rates.0",
                       "hiv.specific.mortality.rates.1",
                       "hiv.specific.mortality.rates.2"),
+    
+    hiv.mortality.sex = c("male.hiv.mortality.multiplier.0",
+                          "male.hiv.mortality.multiplier.1",
+                          "male.hiv.mortality.multiplier.2"),
     
     hiv.mortality.age.multipliers.infant = c("age.0.to.14.hiv.mortality.multiplier.0",
                                              "age.0.to.14.hiv.mortality.multiplier.1",
