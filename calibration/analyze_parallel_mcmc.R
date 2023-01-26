@@ -1,5 +1,5 @@
 
-load("mcmcruns/mcmc_v10_2023-01-17.Rdata")
+load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
 
 mcmc=mcmc.12
 
@@ -17,8 +17,6 @@ trace.plot(mcmc,"*testing") # these got dragged a lot
 
 
 simset = extract.simset(mcmc, additional.burn=500, additional.thin=20)
-
-simset=simset.12
 
 source("model/run_systematic.R")
 simplot(simset)

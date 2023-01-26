@@ -6,7 +6,7 @@ library(distributions)
 library(ggplot2) 
 
 source("model/run_systematic.R")
-load("calibration/starting_values_01-09.Rdata")
+load("calibration/starting_values_01-26.Rdata")
 
 set.seed(1234) 
 
