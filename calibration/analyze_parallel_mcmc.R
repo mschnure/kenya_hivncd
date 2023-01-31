@@ -1,7 +1,11 @@
 
-load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
+# load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
+load("mcmcruns/mcmc_v13_2023-01-30.Rdata")
 
-mcmc=mcmc.12
+mcmc=mcmc.13
+simset = extract.simset(mcmc,
+                           additional.burn=500, 
+                           additional.thin=13) 
 
 acceptance.plot(mcmc)
 acceptance.plot(mcmc, by.block = T, window.iterations = 200)
@@ -15,6 +19,8 @@ trace.plot(mcmc, 'female.to.male.m')
 trace.plot(mcmc, 'trate')
 trace.plot(mcmc,"*testing") # these got dragged a lot 
 
+trace.plot(mcmc, '*hiv.mortality')
+trace.plot(mcmc, '*hiv.specific.mortality')
 
 simset = extract.simset(mcmc, additional.burn=500, additional.thin=20)
 
@@ -25,6 +31,7 @@ simplot(simset, years=1980:2020, facet.by='age', data.types='incidence')
 simplot(simset, years=1980:2020, data.types='prevalence')
 simplot(simset, years=1980:2020, facet.by='age', data.types='prevalence')
 simplot(simset, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='prevalence')
+simplot(simset, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='incidence')
 simplot(simset, years=1980:2020, facet.by='age', data.types='hiv.mortality',proportion = T)
 simplot(simset, years=1980:2020,  data.types=c('awareness',"engagement","suppression"), proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='awareness', proportion=T)

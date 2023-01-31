@@ -11,7 +11,7 @@ source("model/run_systematic.R")
 # load("calibration/starting_values_12-19.Rdata") - used these for mcmc.5 and mcmc.6
 # load("calibration/starting_values_01-05.Rdata") # with aging rates added in - used these for mcmc.7 and mcmc.8
 # load("calibration/starting_values_01-09.Rdata") # with all age transmission splines and male cascade multipliers - used these for mcmc.9-mcmc.12
- load("calibration/starting_values_01-26.Rdata") # with male hiv mortality multiplier 
+ load("calibration/starting_values/starting_values_01-26.Rdata") # with male hiv mortality multiplier 
 
 set.seed(1234) 
 
@@ -31,7 +31,7 @@ set.seed(1234)
 # mcmc.10 (1/13) - (seed: 1234); run with 1/9 starting values, hiv mortality downweighted to 1/256 - RAN ON 2 CHAINS
 # mcmc.11 (1/17) - (seed: 2020); new weights for all likelihoods (all *0.5; suppression*44; awareness and engagement*12)
 # mcmc.12 (1/26) - (seed: 1234? check with Todd); same as mcmc.11, but prevalence weight *.25; joint trate distributions; Todd ran on 4 chains 
-# mcmc.13 (1/?) - (seed: 1234? check with Todd); added male.hiv.mortality.multiplier
+# mcmc.13 (1/30) - (seed: 1234? check with Todd); added male.hiv.mortality.multiplier
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
