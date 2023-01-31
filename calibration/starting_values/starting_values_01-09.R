@@ -1,6 +1,6 @@
 
 # load 1/5 starting values
-load("calibration/starting_values_01-05.Rdata")
+load("calibration/starting_values/starting_values_01-05.Rdata")
 
 # Add in new transmission & cascade multipliers 
 params.start.values["age.15.to.19.transmission.multiplier.3"] = params.start.values["age.15.to.19.transmission.multiplier.2"] = 
@@ -30,4 +30,4 @@ params.start.values = params.start.values[!remove.mask]
 
 
 
-save(params.start.values,file=("calibration/starting_values_01-09.Rdata"))
+save(params.start.values,file=("calibration/starting_values/starting_values_01-09.Rdata"))
