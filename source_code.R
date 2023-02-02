@@ -1,6 +1,7 @@
 source('data_manager.R')
 source('model/diffeq.R')
 source('model/age_mappings.R') 
+source('interventions/interventions.R')
 
 load('cached/data.manager.Rdata')
 source('calibration/parameter_mappings/south_africa_age_mixing.R')
