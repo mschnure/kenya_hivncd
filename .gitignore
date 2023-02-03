@@ -9,6 +9,7 @@
 # Project-specific
 data
 mcmcruns
+cached
 
 # Project-specific
 /temp/
