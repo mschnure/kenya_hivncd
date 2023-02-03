@@ -32,6 +32,7 @@ set.seed(1234)
 # mcmc.11 (1/17) - (seed: 2020); new weights for all likelihoods (all *0.5; suppression*44; awareness and engagement*12)
 # mcmc.12 (1/26) - (seed: 1234? check with Todd); same as mcmc.11, but prevalence weight *.25; joint trate distributions; Todd ran on 4 chains 
 # mcmc.13 (1/30) - (seed: 1234? check with Todd); added male.hiv.mortality.multiplier; Todd ran
+# mcmc.14 (2/3) - (seed: 1234); scaled prevalence, incidence, and hiv.mortality calibration targets by age/sex to match total 
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
@@ -75,20 +76,20 @@ control = create.adaptive.blockwise.metropolis.control(var.names = prior@var.nam
                                              thin = 5) 
 
 # set starting.values 
-mcmc.13 = run.mcmc.with.cache(control = control,
+mcmc.14 = run.mcmc.with.cache(control = control,
                            n.iter = 10000,
                            starting.values = params.start.values, 
                            update.frequency = 5,
                            cache.frequency = 500,
                            cache.dir = "mcmc_cache"
                            )
-mcmc.13 = run.mcmc.from.cache(dir="mcmc_cache",
+mcmc.14 = run.mcmc.from.cache(dir="mcmc_cache",
                     update.frequency = 5)
 
 
 # run.mcmc.from.cache(dir = "mcmc_cache/")
 
-save(mcmc.11,file=paste0("mcmcruns/mcmc",Sys.time(),".Rdata"))
+save(mcmc.14,file=paste0("mcmcruns/mcmc",Sys.Date(),".Rdata"))
 
 
 if(1==2)
