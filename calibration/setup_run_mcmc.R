@@ -33,6 +33,7 @@ set.seed(1234)
 # mcmc.12 (1/26) - (seed: 1234? check with Todd); same as mcmc.11, but prevalence weight *.25; joint trate distributions; Todd ran on 4 chains 
 # mcmc.13 (1/30) - (seed: 1234? check with Todd); added male.hiv.mortality.multiplier; Todd ran
 # mcmc.14 (2/3) - (seed: 1234); scaled prevalence, incidence, and hiv.mortality calibration targets by age/sex to match total 
+# mcmc.15 (2/6) - (seed: 1234); same as 14, Todd running on multiple chains
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
