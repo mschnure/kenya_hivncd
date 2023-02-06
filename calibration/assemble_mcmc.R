@@ -1,9 +1,9 @@
 
 
+MCMC.DIR = "R:melissa/mcmcruns"
 library(bayesian.simulations)
 
-mcmc.15 = assemble.mcmc.from.cache('mcmcruns/mcmc_cache', allow.incomplete = T,
-                                chains = c(1,2))
+mcmc.15 = assemble.mcmc.from.cache(file.path(MCMC.DIR, 'mcmc_cache'), allow.incomplete = T, chains = 1:4)
 
 
 
