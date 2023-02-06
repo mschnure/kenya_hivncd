@@ -94,7 +94,7 @@ save(mcmc.14,file=paste0("mcmcruns/mcmc",Sys.Date(),".Rdata"))
 
 if(1==2)
 {
-    mcmc=mcmc.11
+    mcmc=mcmc.14
     
     simset = extract.simset(mcmc,
                             additional.burn=1000, # throw away first 1000

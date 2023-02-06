@@ -1,8 +1,8 @@
 
 # load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
-load("mcmcruns/mcmc_v13_2023-01-30.Rdata")
+# load("mcmcruns/mcmc_v13_2023-01-30.Rdata")
 
-mcmc=mcmc.13
+mcmc=mcmc.14
 simset = extract.simset(mcmc,
                            additional.burn=500, 
                            additional.thin=13) 
@@ -37,6 +37,8 @@ simplot(simset, years=1980:2020,  data.types=c('awareness',"engagement","suppres
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='awareness', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='engagement', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='suppression', proportion=T)
+
+simplot(simset, years=1980:2020, facet.by='age', data.types='population')
 
 sim.from.mcmc = simset@simulations[[simset@n.sim]]
 params.from.mcmc = simset@parameters[simset@n.sim,]

@@ -33,9 +33,7 @@ scale.calibration.data = function(data.type){
     NEW.10.TO.19 = DATA.MANAGER[[data.type]]$age[,"10-19"]*mean.scaling.factor
     NEW.15.TO.24 = DATA.MANAGER[[data.type]]$age[,"15-24"]*mean.scaling.factor
     
-    rv = list()
-    rv$total = DATA.MANAGER[[data.type]]$total
-    rv$subgroup = DATA.MANAGER[[data.type]]$subgroup
+    rv = DATA.MANAGER[[data.type]]
     
     rv$age = cbind(NEW.0.TO.14,
                    NEW.10.TO.19,
@@ -45,8 +43,6 @@ scale.calibration.data = function(data.type){
                    NEW.50.AND.OVER,
                    DATA.MANAGER[[data.type]]$age[,"All ages"])
     dimnames(rv$age) = dimnames(DATA.MANAGER[[data.type]]$age)
-    
-    rv$age.subgroup = DATA.MANAGER[[data.type]]$age.subgroup
     
     if(!grepl("hiv.mortality",data.type)) {
         rv$age.sex = NEW.15.AND.OVER.BY.SEX    

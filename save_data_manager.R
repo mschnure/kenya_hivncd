@@ -1,7 +1,7 @@
 source('data_manager.R')
 source('model/diffeq.R')
 source('model/age_mappings.R') 
-source('data/scaling_prevalence.R')
+source('calibration/scaling_prevalence.R')
 
 scale.data = T
 
