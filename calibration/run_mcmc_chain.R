@@ -1,4 +1,4 @@
-CHAIN = 1 # Todd will change this to 2-4 for other runs
+CHAIN = 4 # Todd will change this to 2-4 for other runs
 
 MCMC.DIR = "R:melissa/mcmcruns"
 
