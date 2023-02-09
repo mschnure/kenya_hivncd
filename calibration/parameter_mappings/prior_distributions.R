@@ -161,18 +161,23 @@ parameter.var.blocks = list(
     trate3 = "trate.3", 
     
     sex.transmission.multiplier = c("female.to.male.multiplier"),
-    age.transmission.multipliers.1 = c("age.15.to.19.transmission.multiplier.0",
-                                       "age.15.to.19.transmission.multiplier.1",
+    
+    age.transmission.multipliers.00 = c("age.15.to.19.transmission.multiplier.0"),
+    
+    age.transmission.multipliers.01 = c("age.20.to.29.transmission.multiplier.0"),
+    
+    age.transmission.multipliers.02 = c("age.40.to.49.transmission.multiplier.0"),
+    
+    
+    age.transmission.multipliers.1 = c("age.15.to.19.transmission.multiplier.1",
                                        "age.15.to.19.transmission.multiplier.2",
                                        "age.15.to.19.transmission.multiplier.3"),
     
-    age.transmission.multipliers.2 = c("age.20.to.29.transmission.multiplier.0",
-                                       "age.20.to.29.transmission.multiplier.1",
+    age.transmission.multipliers.2 = c("age.20.to.29.transmission.multiplier.1",
                                        "age.20.to.29.transmission.multiplier.2",
                                        "age.20.to.29.transmission.multiplier.3"),
     
-    age.transmission.multipliers.3 = c("age.40.to.49.transmission.multiplier.0",
-                                       "age.40.to.49.transmission.multiplier.1",
+    age.transmission.multipliers.3 = c("age.40.to.49.transmission.multiplier.1",
                                        "age.40.to.49.transmission.multiplier.2",
                                        "age.40.to.49.transmission.multiplier.3"),
     
