@@ -11,7 +11,8 @@ source("model/run_systematic.R")
 # load("calibration/starting_values_12-19.Rdata") - used these for mcmc.5 and mcmc.6
 # load("calibration/starting_values_01-05.Rdata") # with aging rates added in - used these for mcmc.7 and mcmc.8
 # load("calibration/starting_values_01-09.Rdata") # with all age transmission splines and male cascade multipliers - used these for mcmc.9-mcmc.12
- load("calibration/starting_values/starting_values_01-26.Rdata") # with male hiv mortality multiplier 
+# load("calibration/starting_values/starting_values_01-26.Rdata") # with male hiv mortality multiplier 
+load("calibration/starting_values/starting_values_02-09.Rdata") # with scaled calibration targets and starting with final values from mcmc.15 run
 
 set.seed(1234) 
 
@@ -33,7 +34,9 @@ set.seed(1234)
 # mcmc.12 (1/26) - (seed: 1234? check with Todd); same as mcmc.11, but prevalence weight *.25; joint trate distributions; Todd ran on 4 chains 
 # mcmc.13 (1/30) - (seed: 1234? check with Todd); added male.hiv.mortality.multiplier; Todd ran
 # mcmc.14 (2/3) - (seed: 1234); scaled prevalence, incidence, and hiv.mortality calibration targets by age/sex to match total 
-# mcmc.15 (2/6) - (seed: 1234); same as 14, Todd running on multiple chains
+# mcmc.15 (2/9) - (seed: 1234); same as 14, Todd running on multiple chains
+
+# mcmc.16 (2/9) - (seed: 1234); using params at end of 15 as new starting values; separate sampling blocks; Todd running on multiple chains
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
@@ -77,20 +80,20 @@ control = create.adaptive.blockwise.metropolis.control(var.names = prior@var.nam
                                              thin = 5) 
 
 # set starting.values 
-mcmc.14 = run.mcmc.with.cache(control = control,
+mcmc.16 = run.mcmc.with.cache(control = control,
                            n.iter = 10000,
                            starting.values = params.start.values, 
                            update.frequency = 5,
                            cache.frequency = 500,
                            cache.dir = "mcmc_cache"
                            )
-mcmc.14 = run.mcmc.from.cache(dir="mcmc_cache",
-                    update.frequency = 5)
+# mcmc.16 = run.mcmc.from.cache(dir="mcmc_cache",
+#                     update.frequency = 5)
 
 
 # run.mcmc.from.cache(dir = "mcmc_cache/")
 
-save(mcmc.14,file=paste0("mcmcruns/mcmc",Sys.Date(),".Rdata"))
+save(mcmc.16,file=paste0("mcmcruns/mcmc",Sys.Date(),".Rdata"))
 
 
 if(1==2)

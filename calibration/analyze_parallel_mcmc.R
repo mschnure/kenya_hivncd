@@ -2,10 +2,10 @@
 # load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
 # load("mcmcruns/mcmc_v13_2023-01-30.Rdata")
 
-mcmc=mcmc.14
+mcmc=mcmc.15
 simset = extract.simset(mcmc,
                            additional.burn=500, 
-                           additional.thin=13) 
+                           additional.thin=17) 
 
 acceptance.plot(mcmc)
 acceptance.plot(mcmc, by.block = T, window.iterations = 200)
@@ -17,12 +17,17 @@ get.rhats(mcmc)
 trace.plot(mcmc, 'female.to.male.m')
 
 trace.plot(mcmc, 'trate')
-trace.plot(mcmc,"*testing") # these got dragged a lot 
+trace.plot(mcmc,"*transmission")
+
+trace.plot(mcmc,"*testing") 
+trace.plot(mcmc,"*engagement") 
+trace.plot(mcmc,"*suppression") 
 
 trace.plot(mcmc, '*hiv.mortality')
+trace.plot(mcmc, '*male.hiv.mortality')
 trace.plot(mcmc, '*hiv.specific.mortality')
 
-simset = extract.simset(mcmc, additional.burn=500, additional.thin=20)
+# simset = extract.simset(mcmc, additional.burn=500, additional.thin=20)
 
 source("model/run_systematic.R")
 simplot(simset)
