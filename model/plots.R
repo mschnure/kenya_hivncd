@@ -45,7 +45,7 @@ simplot = function(...,
         for(i in 1:length(sims)){
             
             if(is(sims[[i]],"simset")) # if this is an MCMC results, i.e., a simset
-                sims.for.i = simset@simulations
+                sims.for.i = sims[[i]]@simulations
             
             # for plotting single simulations
             else {
@@ -80,7 +80,7 @@ simplot = function(...,
             for(i in 1:length(sims)){
                 
                 if(is(sims[[i]],"simset")) # if this is an MCMC results, i.e., a simset
-                    sims.for.i = simset@simulations
+                    sims.for.i = sims[[i]]@simulations
                 
                 # for plotting single simulations
                 else {
