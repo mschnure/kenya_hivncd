@@ -26,7 +26,8 @@ if(1==2){
 
 ## Run model with sampled parameters
 run.model.for.parameters = function(variable.parameters,
-                                    parameters=create.model.parameters()){
+                                    parameters=create.model.parameters(),
+                                    intervention=NO.INTERVENTION){
     
     sampled.parameters = get.default.parameters()
     
@@ -37,7 +38,8 @@ run.model.for.parameters = function(variable.parameters,
     sampled.parameters[names(variable.parameters)]=variable.parameters #overwrite with whatever new parameters we want
     
     parameters = map.model.parameters(parameters,
-                                      sampled.parameters=sampled.parameters)
+                                      sampled.parameters=sampled.parameters,
+                                      intervention=intervention)
     
     state.dim.names = list(age=parameters$AGES, 
                            sex=parameters$SEXES,

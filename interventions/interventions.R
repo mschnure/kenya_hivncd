@@ -7,7 +7,6 @@
 # diagnosed_unengaged --> engaged_unsuppressed
 # parameter = ENGAGEMENT.RATES
 
-
 # RETENTION 
 # (1) retention.unsuppressed
 # engaged_unsuppressed --> diagnosed_unengaged
@@ -15,8 +14,6 @@
 # (2) retention.suppressed
 # engaged_suppressed --> diagnosed_unengaged
 # parameter = SUPPRESSED.DISENGAGEMENT.RATES
-
-
 
 # SUPPRESSION 
 # (1) gain.suppression
@@ -26,8 +23,21 @@
 # engaged_suppressed --> engaged_unsuppressed
 # parameter = UNSUPPRESSION.RATES
 
-
-
+run.intervention.on.simset = function(simset,
+                                      intervention){
+    
+    simset@simulations = lapply(1:simset@n.sim,function(i){
+        
+        run.model.for.parameters(variable.parameters = simset@parameters[i,], # rows are values of sampled parameters for each simulation in simset
+                                 intervention = intervention) 
+        
+    })
+    
+    attr(simset,"intervention") = intervention
+    
+    simset
+    
+}
 
 
 create.intervention.unit = function(parameter,
@@ -130,19 +140,19 @@ testing.unit.1 = create.intervention.unit(parameter = "testing",
                                           scale = "proportion",
                                           start.time = 2025,
                                           effect.time = 2030,
-                                          effect.value = .50)
+                                          effect.value = .90)
 
 engagement.unit.1 = create.intervention.unit(parameter = "engagement",
                                           scale = "proportion",
                                           start.time = 2025,
                                           effect.time = 2030,
-                                          effect.value = .80)
+                                          effect.value = 0.95)
 
 gain.suppression.unit.1 = create.intervention.unit(parameter = "gain.suppression",
                                               scale = "proportion",
                                               start.time = 2025,
                                               effect.time = 2030,
-                                              effect.value = .90)
+                                              effect.value = .95)
 
 lose.suppression.unit.1 = create.intervention.unit(parameter = "lose.suppression",
                                               scale = "proportion",
@@ -162,7 +172,14 @@ retention.suppressed.unit.1 = create.intervention.unit(parameter = "retention.su
                                                        effect.time = 2030,
                                                        effect.value = .90)
 
+testing.1 = create.intervention.from.units(testing.unit.1,
+                                           code="testing.1")
 
+engagement.1 = create.intervention.from.units(engagement.unit.1,
+                                              code="engagement.1")
+
+gain.suppression.1 = create.intervention.from.units(gain.suppression.unit.1,
+                                                    code="gain.suppression.1")
 
 all.interventions = create.intervention.from.units(testing.unit.1,
                                                    engagement.unit.1,
