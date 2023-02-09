@@ -8,4 +8,4 @@ mcmc.15 = assemble.mcmc.from.cache(file.path(MCMC.DIR, 'mcmc_cache'), allow.inco
 
 
 # melissa fill in
-save(mcmc.15,file=paste0("mcmcruns/mcmc_v13_", Sys.Date(), ".Rdata"))
+save(mcmc.15,file=file.path(MCMC.DIR, paste0("mcmc_v15_", Sys.Date(), ".Rdata")))
