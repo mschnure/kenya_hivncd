@@ -16,28 +16,33 @@ make.joint.distribution = function(median.r2, # anchor on trate.2
                                    median.r1.to.r2, #1 relative to 2
                                    sd.r1.to.r2,
                                    median.r3.to.r2, #3 relative to 2
-                                   sd.r3.to.r2){
+                                   sd.r3.to.r2, 
+                                   median.r4.to.r2, #4 relative to 2
+                                   sd.r4.to.r2){
     
     mean.vector = log(c(median.r2,
                       median.r0.to.r1,
                       median.r1.to.r2,
-                      median.r3.to.r2))
+                      median.r3.to.r2,
+                      median.r4.to.r2))
     cov.mat = diag(c(sd.r2,
                      sd.r0.to.r1,
                      sd.r1.to.r2,
-                     sd.r3.to.r2)^2)
+                     sd.r3.to.r2,
+                     sd.r4.to.r2)^2)
     
-    M = rbind(c(1,1,1,0), # which elements of the mean vector you multiply to get r0
-              c(1,0,1,0), # r1
-              c(1,0,0,0), # r2
-              c(1,0,0,1)) # r3
+    M = rbind(c(1,1,1,0,0), # which elements of the mean vector you multiply to get r0
+              c(1,0,1,0,0), # r1
+              c(1,0,0,0,0), # r2
+              c(1,0,0,1,0), # r3
+              c(1,0,0,0,1)) # r4
     
     new.mean.vector = M %*% mean.vector
     new.cov.mat = M %*% cov.mat %*% t(M)
     
     Multivariate.Lognormal.Distribution(mu = new.mean.vector,
                                         sigma = new.cov.mat,
-                                        var.names = c("trate.0","trate.1","trate.2","trate.3"))
+                                        var.names = c("trate.0","trate.1","trate.2","trate.3","trate.4"))
     
 }
 
@@ -53,7 +58,10 @@ prior = join.distributions(
                                      median.r1.to.r2 = 1,
                                      sd.r1.to.r2 = log(2)/2,
                                      median.r3.to.r2 = 1,
-                                     sd.r3.to.r2 = log(2)/2),
+                                     sd.r3.to.r2 = log(2)/2,
+                                     median.r4.to.r2 = 1,
+                                     sd.r4.to.r2 = log(2)/2),
+    
     
     # trate.0 = Lognormal.Distribution(log(.5), log(8)/2), # ORIGINALLY 1; (log(1) = 0, but leaving this way for clarity)
     # trate.1 = Lognormal.Distribution(log(.25), log(8)/2), # ORIGINALLY 1
@@ -159,6 +167,7 @@ parameter.var.blocks = list(
     trate1 = "trate.1",
     trate2 = "trate.2",
     trate3 = "trate.3", 
+    trate4 = "trate.4", 
     
     sex.transmission.multiplier = c("female.to.male.multiplier"),
     
