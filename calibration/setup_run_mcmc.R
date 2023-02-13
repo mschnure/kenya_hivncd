@@ -36,7 +36,8 @@ set.seed(1234)
 # mcmc.14 (2/3) - (seed: 1234); scaled prevalence, incidence, and hiv.mortality calibration targets by age/sex to match total 
 # mcmc.15 (2/9) - (seed: 1234); same as 14, Todd running on multiple chains
 
-# mcmc.16 (2/9) - (seed: 1234); using params at end of 15 as new starting values; separate sampling blocks; Todd running on multiple chains
+# mcmc.16 (2/13) - (seed: 1234); using params at end of 15 as new starting values; separate sampling blocks; Todd running on multiple chains
+# mcmc.17 (2/13) - (seed: 1234); changed year weighting; added trate.4
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
@@ -80,7 +81,7 @@ control = create.adaptive.blockwise.metropolis.control(var.names = prior@var.nam
                                              thin = 5) 
 
 # set starting.values 
-mcmc.16 = run.mcmc.with.cache(control = control,
+mcmc.17 = run.mcmc.with.cache(control = control,
                            n.iter = 10000,
                            starting.values = params.start.values, 
                            update.frequency = 5,

@@ -2,22 +2,22 @@
 # load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
 # load("mcmcruns/mcmc_v13_2023-01-30.Rdata")
 
-mcmc=mcmc.15
+mcmc=mcmc.16
 simset = extract.simset(mcmc,
                            additional.burn=500, 
-                           additional.thin=17) 
+                           additional.thin=15) 
 
 acceptance.plot(mcmc)
 acceptance.plot(mcmc, by.block = T, window.iterations = 200)
+
+trace.plot(mcmc, 'trate')
+trace.plot(mcmc,"*transmission")
 
 trace.plot(mcmc, 'age')
 trace.plot(mcmc, 'age', additional.burn = 500)
 
 get.rhats(mcmc)
 trace.plot(mcmc, 'female.to.male.m')
-
-trace.plot(mcmc, 'trate')
-trace.plot(mcmc,"*transmission")
 
 trace.plot(mcmc,"*testing") 
 trace.plot(mcmc,"*engagement") 
