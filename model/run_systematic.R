@@ -27,7 +27,8 @@ if(1==2){
 ## Run model with sampled parameters
 run.model.for.parameters = function(variable.parameters,
                                     parameters=create.model.parameters(),
-                                    intervention=NO.INTERVENTION){
+                                    end.year=2021,
+                                    interventions=NO.INTERVENTION){
     
     sampled.parameters = get.default.parameters()
     
@@ -39,7 +40,7 @@ run.model.for.parameters = function(variable.parameters,
     
     parameters = map.model.parameters(parameters,
                                       sampled.parameters=sampled.parameters,
-                                      intervention=intervention)
+                                      interventions=interventions)
     
     state.dim.names = list(age=parameters$AGES, 
                            sex=parameters$SEXES,
@@ -61,7 +62,7 @@ run.model.for.parameters = function(variable.parameters,
     sim = run.model(parameters=parameters,
                     initial.state=initial.state,
                     start.year=1970, # later make these arguments that I pass to the function, with these as defaults 
-                    end.year=2030,
+                    end.year=end.year,
                     keep.years=c(1970:2030))
     
     sim$parameters = parameters

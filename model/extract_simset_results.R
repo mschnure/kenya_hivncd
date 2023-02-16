@@ -1,16 +1,20 @@
 source("model/run_systematic.R")
 load("mcmcruns/mcmc_v15_2023-02-09.Rdata")
 
-mcmc=mcmc.16
+RUN.SIMULATIONS.TO.YEAR = 2040
+
+mcmc=mcmc.17
 simset = extract.simset(mcmc,
                         additional.burn=500, 
                         additional.thin=30) 
 
 simset.testing.1 = run.intervention.on.simset(simset,
+                                              end.year = RUN.SIMULATIONS.TO.YEAR,
                                               intervention = testing.1)
 
 simset.all.int = run.intervention.on.simset(simset,
-                                        intervention = all.interventions)
+                                            end.year = RUN.SIMULATIONS.TO.YEAR,
+                                            intervention = all.interventions)
 
 
 years = as.character(simset@simulations[[1]]$years)
