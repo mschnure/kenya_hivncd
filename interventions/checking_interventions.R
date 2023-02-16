@@ -1,23 +1,30 @@
 source("model/run_systematic.R")
 load("calibration/starting_values/starting_values_02-08.Rdata")
 
+RUN.SIMULATIONS.TO.YEAR = 2040
+
 sim.base = run.model.for.parameters(variable.parameters = params.start.values)
 
 # just making sure that explicitly setting to no intervention is the same as not setting anything at all 
 sim.no.int = run.model.for.parameters(variable.parameters = params.start.values,
+                                      end.year = RUN.SIMULATIONS.TO.YEAR,
                                       intervention = NO.INTERVENTION)
 
 sim.testing.1 = run.model.for.parameters(variable.parameters = params.start.values,
+                                         end.year = RUN.SIMULATIONS.TO.YEAR,
                                          intervention = testing.1)
 
 sim.engagement.1 = run.model.for.parameters(variable.parameters = params.start.values,
+                                            end.year = RUN.SIMULATIONS.TO.YEAR,
                                             intervention = engagement.1)
 
 sim.gain.suppression.1 = run.model.for.parameters(variable.parameters = params.start.values,
+                                                  end.year = RUN.SIMULATIONS.TO.YEAR,
                                                   intervention = gain.suppression.1)
 
 
 sim.all.interventions = run.model.for.parameters(variable.parameters = params.start.values,
+                                                 end.year = RUN.SIMULATIONS.TO.YEAR,
                                                  intervention = all.interventions)
 
 simplot(sim.base, sim.no.int, years=1980:2020, facet.by='age', data.types='incidence')
