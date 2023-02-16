@@ -24,16 +24,18 @@
 # parameter = UNSUPPRESSION.RATES
 
 run.intervention.on.simset = function(simset,
-                                      intervention){
+                                      end.year,
+                                      interventions){
     
     simset@simulations = lapply(1:simset@n.sim,function(i){
         
         run.model.for.parameters(variable.parameters = simset@parameters[i,], # rows are values of sampled parameters for each simulation in simset
-                                 intervention = intervention) 
+                                 end.year = end.year,
+                                 interventions = interventions) 
         
     })
     
-    attr(simset,"intervention") = intervention
+    attr(simset,"intervention") = interventions
     
     simset
     
@@ -41,17 +43,20 @@ run.intervention.on.simset = function(simset,
 
 
 create.intervention.unit = function(parameter,
-                                      scale, # proportion, rate, time
-                                      start.time, # time when intervention starts scaling up
-                                      effect.time, # time when intervention reaches value
-                                      effect.value){ # value that intervention reaches - Melissa think about these
+                                    scale, # proportion, rate, time
+                                    start.time, # time when intervention starts scaling up
+                                    effect.times, # times when intervention reaches value
+                                    effect.values, # values that intervention reaches 
+                                    end.time=Inf # when intervention should end
+                                    ){ 
     # check that all arguments are in the right format (e.g., scale is length 1 character, etc.)
     
     rv = list(parameter=parameter,
               scale=scale,
               start.time = start.time,
-              effect.time = effect.time,
-              effect.value = effect.value)
+              effect.times = effect.times,
+              effect.values = effect.values,
+              end.time = end.time)
     class(rv) = "intervention.unit"
     rv
     
@@ -59,6 +64,8 @@ create.intervention.unit = function(parameter,
 
 
 create.intervention.from.units = function(..., # pass one or more intervention objects; want to pass a list of intervention objects to parameters
+                                          target.ages=NULL, # will write into parameters code that if it's null, apply to all ages/sexes
+                                          target.sexes=NULL,
                                           code){ # for naming interventions
     units = list(...)
     
@@ -68,6 +75,8 @@ create.intervention.from.units = function(..., # pass one or more intervention o
     })
     
     rv = list(units=units,
+              target.ages,
+              target.sexes,
               code=code)
     class(rv) = "intervention"
     rv
@@ -136,37 +145,37 @@ convert.scales = function(values,
 
 
 # testing these out 
-testing.unit.1 = create.intervention.unit(parameter = "testing",
+testing.unit.1 = create.intervention.unit(parameter = "TESTING.RATES", 
                                           scale = "proportion",
                                           start.time = 2025,
                                           effect.time = 2030,
                                           effect.value = .90)
 
-engagement.unit.1 = create.intervention.unit(parameter = "engagement",
+engagement.unit.1 = create.intervention.unit(parameter = "ENGAGEMENT.RATES",
                                           scale = "proportion",
                                           start.time = 2025,
                                           effect.time = 2030,
                                           effect.value = 0.95)
 
-gain.suppression.unit.1 = create.intervention.unit(parameter = "gain.suppression",
+gain.suppression.unit.1 = create.intervention.unit(parameter = "SUPPRESSION.RATES",
                                               scale = "proportion",
                                               start.time = 2025,
                                               effect.time = 2030,
                                               effect.value = .95)
 
-lose.suppression.unit.1 = create.intervention.unit(parameter = "lose.suppression",
+lose.suppression.unit.1 = create.intervention.unit(parameter = "UNSUPPRESSION.RATES",
                                               scale = "proportion",
                                               start.time = 2025,
                                               effect.time = 2030,
                                               effect.value = .05)
 
-retention.unsuppressed.unit.1 = create.intervention.unit(parameter = "retention.unsuppressed",
+retention.unsuppressed.unit.1 = create.intervention.unit(parameter = "UNSUPPRESSED.DISENGAGEMENT.RATES",
                                                          scale = "proportion",
                                                          start.time = 2025,
                                                          effect.time = 2030,
                                                          effect.value = .90)
 
-retention.suppressed.unit.1 = create.intervention.unit(parameter = "retention.suppressed",
+retention.suppressed.unit.1 = create.intervention.unit(parameter = "SUPPRESSED.DISENGAGEMENT.RATES",
                                                        scale = "proportion",
                                                        start.time = 2025,
                                                        effect.time = 2030,
