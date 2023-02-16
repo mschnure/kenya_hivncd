@@ -2,7 +2,7 @@
 # load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
 # load("mcmcruns/mcmc_v13_2023-01-30.Rdata")
 
-mcmc=mcmc.16
+mcmc=mcmc.17
 simset = extract.simset(mcmc,
                            additional.burn=500, 
                            additional.thin=15) 

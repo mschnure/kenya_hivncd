@@ -37,7 +37,7 @@ set.seed(1234)
 # mcmc.15 (2/9) - (seed: 1234); same as 14, Todd running on multiple chains
 
 # mcmc.16 (2/13) - (seed: 1234); using params at end of 15 as new starting values; separate sampling blocks; Todd running on multiple chains
-# mcmc.17 (2/13) - (seed: 1234); changed year weighting; added trate.4
+# mcmc.17 (2/16) - (seed: 1234); changed year weighting; added trate.4
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
