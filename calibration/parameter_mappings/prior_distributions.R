@@ -17,25 +17,25 @@ make.joint.distribution = function(median.r2, # anchor on trate.2
                                    sd.r1.to.r2,
                                    median.r3.to.r2, #3 relative to 2
                                    sd.r3.to.r2, 
-                                   median.r4.to.r2, #4 relative to 2
-                                   sd.r4.to.r2){
+                                   median.r4.to.r3, #4 relative to 3
+                                   sd.r4.to.r3){
     
     mean.vector = log(c(median.r2,
                       median.r0.to.r1,
                       median.r1.to.r2,
                       median.r3.to.r2,
-                      median.r4.to.r2))
+                      median.r4.to.r3))
     cov.mat = diag(c(sd.r2,
                      sd.r0.to.r1,
                      sd.r1.to.r2,
                      sd.r3.to.r2,
-                     sd.r4.to.r2)^2)
+                     sd.r4.to.r3)^2)
     
     M = rbind(c(1,1,1,0,0), # which elements of the mean vector you multiply to get r0
-              c(1,0,1,0,0), # r1
-              c(1,0,0,0,0), # r2
-              c(1,0,0,1,0), # r3
-              c(1,0,0,0,1)) # r4
+              c(1,0,1,0,0), # " " r1
+              c(1,0,0,0,0), # " " r2
+              c(1,0,0,1,0), # " " r3
+              c(1,0,0,1,1)) # " " r4 
     
     new.mean.vector = M %*% mean.vector
     new.cov.mat = M %*% cov.mat %*% t(M)
@@ -59,8 +59,8 @@ prior = join.distributions(
                                      sd.r1.to.r2 = log(2)/2,
                                      median.r3.to.r2 = 1,
                                      sd.r3.to.r2 = log(2)/2,
-                                     median.r4.to.r2 = 1,
-                                     sd.r4.to.r2 = log(2)/2),
+                                     median.r4.to.r3 = 1,
+                                     sd.r4.to.r3 = log(2)/2),
     
     
     # trate.0 = Lognormal.Distribution(log(.5), log(8)/2), # ORIGINALLY 1; (log(1) = 0, but leaving this way for clarity)
