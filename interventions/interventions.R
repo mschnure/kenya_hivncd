@@ -47,7 +47,9 @@ create.intervention.unit = function(parameter,
                                     start.time, # time when intervention starts scaling up
                                     effect.times, # times when intervention reaches value
                                     effect.values, # values that intervention reaches 
-                                    end.time=Inf # when intervention should end
+                                    end.time=Inf, # when intervention should end
+                                    allow.lower.than.baseline = T,
+                                    allow.higher.than.baseline = T
                                     ){ 
     # check that all arguments are in the right format (e.g., scale is length 1 character, etc.)
     
@@ -56,7 +58,9 @@ create.intervention.unit = function(parameter,
               start.time = start.time,
               effect.times = effect.times,
               effect.values = effect.values,
-              end.time = end.time)
+              end.time = end.time,
+              allow.lower.than.baseline = allow.lower.than.baseline,
+              allow.higher.than.baseline = allow.higher.than.baseline)
     class(rv) = "intervention.unit"
     rv
     
@@ -75,8 +79,8 @@ create.intervention.from.units = function(..., # pass one or more intervention o
     })
     
     rv = list(units=units,
-              target.ages,
-              target.sexes,
+              target.ages=target.ages,
+              target.sexes=target.sexes,
               code=code)
     class(rv) = "intervention"
     rv
@@ -149,37 +153,51 @@ testing.unit.1 = create.intervention.unit(parameter = "TESTING.RATES",
                                           scale = "proportion",
                                           start.time = 2025,
                                           effect.time = 2030,
-                                          effect.value = .90)
+                                          effect.value = .90,
+                                          allow.lower.than.baseline = F)
 
 engagement.unit.1 = create.intervention.unit(parameter = "ENGAGEMENT.RATES",
                                           scale = "proportion",
                                           start.time = 2025,
                                           effect.time = 2030,
-                                          effect.value = 0.95)
+                                          effect.value = 0.95,
+                                          allow.lower.than.baseline = F)
 
 gain.suppression.unit.1 = create.intervention.unit(parameter = "SUPPRESSION.RATES",
                                               scale = "proportion",
                                               start.time = 2025,
                                               effect.time = 2030,
-                                              effect.value = .95)
+                                              effect.value = .95,
+                                              allow.lower.than.baseline = F)
 
 lose.suppression.unit.1 = create.intervention.unit(parameter = "UNSUPPRESSION.RATES",
                                               scale = "proportion",
                                               start.time = 2025,
                                               effect.time = 2030,
-                                              effect.value = .05)
+                                              effect.value = .05,
+                                              allow.higher.than.baseline = F)
 
-retention.unsuppressed.unit.1 = create.intervention.unit(parameter = "UNSUPPRESSED.DISENGAGEMENT.RATES",
-                                                         scale = "proportion",
-                                                         start.time = 2025,
-                                                         effect.time = 2030,
-                                                         effect.value = .90)
+disengagement.unsuppressed.unit.1 = create.intervention.unit(parameter = "UNSUPPRESSED.DISENGAGEMENT.RATES",
+                                                             scale = "proportion",
+                                                             start.time = 2025,
+                                                             effect.time = 2030,
+                                                             effect.value = 1-.90,
+                                                             allow.higher.than.baseline = F)
 
-retention.suppressed.unit.1 = create.intervention.unit(parameter = "SUPPRESSED.DISENGAGEMENT.RATES",
-                                                       scale = "proportion",
-                                                       start.time = 2025,
-                                                       effect.time = 2030,
-                                                       effect.value = .90)
+disengagement.suppressed.unit.1 = create.intervention.unit(parameter = "SUPPRESSED.DISENGAGEMENT.RATES",
+                                                           scale = "proportion",
+                                                           start.time = 2025,
+                                                           effect.time = 2030,
+                                                           effect.value = 1-.90,
+                                                           allow.higher.than.baseline = F)
+
+gain.suppression.unit.fake.1 = create.intervention.unit(parameter = "SUPPRESSION.RATES",
+                                                   scale = "proportion",
+                                                   start.time = 2025,
+                                                   effect.time = 2025.1,
+                                                   effect.value = .1,
+                                                   allow.lower.than.baseline = T)
+
 
 testing.1 = create.intervention.from.units(testing.unit.1,
                                            code="testing.1")
@@ -189,21 +207,48 @@ engagement.1 = create.intervention.from.units(engagement.unit.1,
 
 gain.suppression.1 = create.intervention.from.units(gain.suppression.unit.1,
                                                     code="gain.suppression.1")
+disengagement.unsuppressed.1 = create.intervention.from.units(disengagement.unsuppressed.unit.1,
+                                                    code="disengagement.unsuppressed.1")
+
+disengagement.suppressed.1 = create.intervention.from.units(disengagement.suppressed.unit.1,
+                                                              code="disengagement.suppressed.1")
 
 all.interventions = create.intervention.from.units(testing.unit.1,
                                                    engagement.unit.1,
                                                    gain.suppression.unit.1,
                                                    lose.suppression.unit.1,
-                                                   retention.unsuppressed.unit.1,
-                                                   retention.suppressed.unit.1,
+                                                   disengagement.unsuppressed.unit.1,
+                                                   disengagement.suppressed.unit.1,
                                                    code="all")
+all.interventions.female = create.intervention.from.units(testing.unit.1,
+                                                   engagement.unit.1,
+                                                   gain.suppression.unit.1,
+                                                   lose.suppression.unit.1,
+                                                   disengagement.unsuppressed.unit.1,
+                                                   disengagement.suppressed.unit.1,
+                                                   target.sexes = "female",
+                                                   code="all")
+
+all.interventions.male = create.intervention.from.units(testing.unit.1,
+                                                          engagement.unit.1,
+                                                          gain.suppression.unit.1,
+                                                          lose.suppression.unit.1,
+                                                          disengagement.unsuppressed.unit.1,
+                                                          disengagement.suppressed.unit.1,
+                                                          target.sexes = "male",
+                                                          code="all")
+
+suppression.female.bad = create.intervention.from.units(gain.suppression.unit.fake.1,
+                                                        code="female.suppressed.bad",
+                                                        target.sexes = "female")
+
 
 NO.INTERVENTION = create.intervention.from.units(code="no.int")
 
-
-convert.scales(2,from.scale = "rate",to.scale = "time")
-convert.scales(2,from.scale = "rate",to.scale = "proportion")
-convert.scales(3,from.scale = "rate",to.scale = "proportion")
+# 
+# convert.scales(2,from.scale = "rate",to.scale = "time")
+# convert.scales(2,from.scale = "rate",to.scale = "proportion")
+# convert.scales(3,from.scale = "rate",to.scale = "proportion")
 # check the rest of these
 
 
