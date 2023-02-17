@@ -38,6 +38,7 @@ set.seed(1234)
 
 # mcmc.16 (2/13) - (seed: 1234); using params at end of 15 as new starting values; separate sampling blocks; Todd running on multiple chains
 # mcmc.17 (2/16) - (seed: 1234); changed year weighting; added trate.4
+# mcmc.18 (2/17) - (seed: 1234); corrected trate.4 to be relative to trate.3 instead of trate.2
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
@@ -79,7 +80,7 @@ control = create.adaptive.blockwise.metropolis.control(var.names = prior@var.nam
                                                        thin = 5) 
 
 # set starting.values 
-mcmc.17 = run.mcmc.with.cache(control = control,
+mcmc.18 = run.mcmc.with.cache(control = control,
                               n.iter = 10000,
                               starting.values = params.start.values, 
                               update.frequency = 5,
