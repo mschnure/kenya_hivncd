@@ -174,7 +174,11 @@ map.model.parameters <- function(parameters,
                                  sampled.parameters=get.default.parameters(),
                                  age.cutoffs=MODEL.AGE.CUTOFFS,
                                  project.to.year=2040,
-                                 intervention=NO.INTERVENTION){
+                                 interventions=NO.INTERVENTION){
+    
+    if(is(interventions,"intervention")){
+        interventions = list(interventions)
+    }
     
     #-- SET UP DIMENSIONS --#
     state.dim.names = list(age=parameters$AGES, 
@@ -440,25 +444,9 @@ map.model.parameters <- function(parameters,
     
     
     #-- DIAGNOSES --#
-    # Set testing to 0 at start.time 
-    parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='TESTING.RATES',
-                                                  value = 0,
-                                                  time = (sampled.parameters['start.time']))
+    testing.times = c(1976:project.to.year)
+    testing.rates = c(lapply(testing.times, function(year){
     
-    # Set testing based on projection
-    testing.years.to.project = c(1976:2030)
-    
-    # TESTING INTERVENTION
-    testing.intervention.unit = intervention$units$testing
-    
-    # Reset projection years to project up until intervention start year, then replace with start year 
-    if(!is.null(testing.intervention.unit)){
-        testing.years.to.project=testing.years.to.project[testing.years.to.project<testing.intervention.unit$start.time]
-        testing.years.to.project = c(testing.years.to.project,testing.intervention.unit$start.time)
-    }
-    
-    for(year in testing.years.to.project){
         projected.log.odds = (TESTING.MODEL$intercepts+sampled.parameters['log.OR.testing.intercept'])+
             ((TESTING.MODEL$slopes+sampled.parameters['log.OR.testing.slope'])*(year-TESTING.MODEL$anchor.year))
         
@@ -467,28 +455,22 @@ map.model.parameters <- function(parameters,
         projected.rate = -log(1-projected.p)
         projected.rate[,"male",] = projected.rate[,"male",]*sampled.parameters["male.awareness.multiplier"]
         
-        parameters = add.time.varying.parameter.value(parameters,
-                                                      parameter.name='TESTING.RATES',
-                                                      value = projected.rate,
-                                                      time = year)
-    }
-    
-    # Add in intervention year/value 
-    if(!is.null(testing.intervention.unit)){
-        testing.rates = convert.scales(values = testing.intervention.unit$effect.value,
-                                       from.scale = testing.intervention.unit$scale,
-                                       to.scale = "rate")
+        projected.rate
         
-        testing.rates = array(testing.rates,
-                              dim = sapply(trans.dim.names, length),
-                              dimnames = trans.dim.names)
-        
-        parameters = add.time.varying.parameter.value(parameters,
-                                                      parameter.name='TESTING.RATES',
-                                                      value = testing.rates,
-                                                      time = testing.intervention.unit$effect.time)
-    }
+    }))
     
+    testing.times = c(sampled.parameters["start.time"],testing.times)
+    testing.rates = c(list(array(0,
+                                 dim=dim(testing.rates[[1]]),
+                                 dimnames = dimnames(testing.rates[[1]]))),
+                      testing.rates)
+    
+    parameters = set.rates.for.interventions(baseline.rates = testing.rates, # list 
+                                             baseline.times = testing.times, # vector
+                                             interventions = interventions,
+                                             scale = "rate", 
+                                             parameters = parameters,
+                                             parameter.name = "TESTING.RATES")
     
     
     #-- NEW INFECTIONS --#
@@ -767,18 +749,9 @@ map.model.parameters <- function(parameters,
     
     
     #-- ENGAGEMENT --#
-    engagement.years.to.project = c(1975:2030)
-    
-    # ENGAGEMENT INTERVENTION 
-    engagement.intervention.unit = intervention$units$engagement
-    
-    # Reset projection years to project up until intervention start year, then replace with start year 
-    if(!is.null(engagement.intervention.unit)){
-        engagement.years.to.project=engagement.years.to.project[engagement.years.to.project<engagement.intervention.unit$start.time]
-        engagement.years.to.project = c(engagement.years.to.project,engagement.intervention.unit$start.time)
-    }
-    
-    for(year in engagement.years.to.project){
+    engagement.times = c(1975:project.to.year)
+    engagement.rates = c(lapply(engagement.times, function(year){
+        
         if(year<2016 | year>2017){
             projected.log.odds = (ENGAGEMENT.MODEL$intercept+sampled.parameters['log.OR.engagement.intercept'])+
                 ((ENGAGEMENT.MODEL$pre.universal.slope+sampled.parameters['log.OR.engagement.pre.universal.slope'])*(year-ENGAGEMENT.MODEL$anchor.year))+
@@ -797,204 +770,91 @@ map.model.parameters <- function(parameters,
                                        dimnames=trans.dim.names)
         projected.rate.age.sex[,"male",] = projected.rate.age.sex[,"male",]*sampled.parameters["male.engagement.multiplier"]
         
-        parameters = add.time.varying.parameter.value(parameters,
-                                                      parameter.name='ENGAGEMENT.RATES',
-                                                      value = projected.rate.age.sex,
-                                                      time = year)
-    }
-
-    # Add in intervention year/value     
-    if(!is.null(engagement.intervention.unit)){
-        engagement.rates = convert.scales(values = engagement.intervention.unit$effect.value,
-                                          from.scale = engagement.intervention.unit$scale,
-                                          to.scale = "rate")
+        projected.rate.age.sex
         
-        engagement.rates = array(engagement.rates,
-                                 dim = sapply(trans.dim.names, length),
-                                 dimnames = trans.dim.names)
-        
-        parameters = add.time.varying.parameter.value(parameters,
-                                                      parameter.name='ENGAGEMENT.RATES',
-                                                      value = engagement.rates,
-                                                      time = engagement.intervention.unit$effect.time)
-    }
+    }))
+    
+    parameters = set.rates.for.interventions(baseline.rates = engagement.rates, # list 
+                                             baseline.times = engagement.times, # vector
+                                             interventions = interventions,
+                                             scale = "rate", 
+                                             parameters = parameters,
+                                             parameter.name = "ENGAGEMENT.RATES")
+    
     
     
     
     #-- DISENGAGEMENT --#
-    parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='UNSUPPRESSED.DISENGAGEMENT.RATES',
-                                                  value = array(sampled.parameters['unsuppressed.disengagement.rates'],
-                                                                dim=sapply(trans.dim.names, length),
-                                                                dimnames=trans.dim.names),
-                                                  time = 2000)
+    unsuppressed.disengagement.times = c(2000)
+    unsuppressed.disengagement.rates = list(array(sampled.parameters['unsuppressed.disengagement.rates'],
+                                                  dim=sapply(trans.dim.names, length),
+                                                  dimnames=trans.dim.names))
     
-    # RETENTION UNSUPPRESSED INTERVENTION 
-    retention.unsuppressed.intervention.unit = intervention$units$retention.unsuppressed
-    if(!is.null(retention.unsuppressed.intervention.unit)){
-        # Set start year for retention unsuppressed intervention - same as previous unsuppressed disengagement rate 
-        parameters = add.time.varying.parameter.value(parameters,
-                                                      parameter.name='UNSUPPRESSED.DISENGAGEMENT.RATES',
-                                                      value = array(sampled.parameters['unsuppressed.disengagement.rates'],
-                                                                    dim=sapply(trans.dim.names, length),
-                                                                    dimnames=trans.dim.names),
-                                                      time = retention.unsuppressed.intervention.unit$start.time)
-        
-        # Convert from intervention scale (unknown) to proportion 
-        proportion.retained.unsuppressed = convert.scales(values = retention.unsuppressed.intervention.unit$effect.value,
-                                                          from.scale = retention.unsuppressed.intervention.unit$scale,
-                                                          to.scale = "proportion")
-        # Convert proportion retained to proportion lost
-        proportion.lost.unsuppressed = 1-proportion.retained.unsuppressed
-        
-        # Convert proportion lost to rate lost
-        unsuppressed.disengagement.rates = convert.scales(values = proportion.lost.unsuppressed,
-                                                          from.scale = "proportion",
-                                                          to.scale = "rate")
-        
-        unsuppressed.disengagement.rates = array(unsuppressed.disengagement.rates,
-                                                 dim = sapply(trans.dim.names, length),
-                                                 dimnames = trans.dim.names)
-        
-        # Set retention unsuppressed intervention value/time 
-        parameters = add.time.varying.parameter.value(parameters,
-                                                      parameter.name='UNSUPPRESSED.DISENGAGEMENT.RATES',
-                                                      value = unsuppressed.disengagement.rates,
-                                                      time = retention.unsuppressed.intervention.unit$effect.time)
-    }
+    parameters = set.rates.for.interventions(baseline.rates = unsuppressed.disengagement.rates, # list 
+                                             baseline.times = unsuppressed.disengagement.times, # vector
+                                             interventions = interventions,
+                                             scale = "rate", 
+                                             parameters = parameters,
+                                             parameter.name = "UNSUPPRESSED.DISENGAGEMENT.RATES")
     
+    suppressed.disengagement.times = c(2000)
+    suppressed.disengagement.rates = list(array(sampled.parameters['suppressed.disengagement.rates'],
+                                                  dim=sapply(trans.dim.names, length),
+                                                  dimnames=trans.dim.names))
     
-    parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='SUPPRESSED.DISENGAGEMENT.RATES',
-                                                  value = array(sampled.parameters['suppressed.disengagement.rates'],
-                                                                dim=sapply(trans.dim.names, length),
-                                                                dimnames=trans.dim.names),
-                                                  time = 2000)
-    
-    
-    # RETENTION SUPPRESSED INTERVENTION 
-    retention.suppressed.intervention.unit = intervention$units$retention.suppressed
-    if(!is.null(retention.suppressed.intervention.unit)){
-        # Set start year for retention suppressed intervention - same as previous suppression rate 
-        parameters = add.time.varying.parameter.value(parameters,
-                                                      parameter.name='SUPPRESSED.DISENGAGEMENT.RATES',
-                                                      value = array(sampled.parameters['suppressed.disengagement.rates'],
-                                                                    dim=sapply(trans.dim.names, length),
-                                                                    dimnames=trans.dim.names),
-                                                      time = retention.suppressed.intervention.unit$start.time)
-        
-        # Convert from intervention scale (unknown) to proportion
-        proportion.retained.suppressed = convert.scales(values = retention.suppressed.intervention.unit$effect.value,
-                                                        from.scale = retention.suppressed.intervention.unit$scale,
-                                                        to.scale = "proportion")
-        # Convert proportion retained to proportion lost
-        proportion.lost.suppressed = 1-proportion.retained.suppressed
-        
-        # Convert proportion lost to rate lost
-        suppressed.disengagement.rates = convert.scales(values = proportion.lost.suppressed,
-                                                        from.scale = "proportion",
-                                                        to.scale = "rate")
-        
-        suppressed.disengagement.rates = array(suppressed.disengagement.rates,
-                                               dim = sapply(trans.dim.names, length),
-                                               dimnames = trans.dim.names)
-        
-        # Set retention suppressed intervention value/time 
-        parameters = add.time.varying.parameter.value(parameters,
-                                                      parameter.name='SUPPRESSED.DISENGAGEMENT.RATES',
-                                                      value = suppressed.disengagement.rates,
-                                                      time = retention.suppressed.intervention.unit$effect.time)
-    }
+    parameters = set.rates.for.interventions(baseline.rates = suppressed.disengagement.rates, # list 
+                                             baseline.times = suppressed.disengagement.times, # vector
+                                             interventions = interventions,
+                                             scale = "rate", 
+                                             parameters = parameters,
+                                             parameter.name = "SUPPRESSED.DISENGAGEMENT.RATES")
     
     
     
     #-- SUPPRESSION/UNSUPPRESSION --#
-    # Set suppression to 0 before ART
-    parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='SUPPRESSION.RATES',
-                                                  value = 0,
-                                                  time = (sampled.parameters['suppression.time.0']-0.001))
+    suppression.times = c(sampled.parameters['suppression.time.0']-0.001,
+                          sampled.parameters['suppression.time.0'],
+                          sampled.parameters['suppression.time.1'])
     
-    # First ART available; slower to suppression
     suppression.rates.0 = array(sampled.parameters['suppression.rate.0'],
-                               dim=sapply(trans.dim.names, length),
-                               dimnames=trans.dim.names)
+                                dim=sapply(trans.dim.names, length),
+                                dimnames=trans.dim.names)
     suppression.rates.0[,"male",] = suppression.rates.0[,"male",]*sampled.parameters["male.suppression.multiplier"]
-    parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='SUPPRESSION.RATES',
-                                                  value = suppression.rates.0,
-                                                  time = sampled.parameters['suppression.time.0'])
     
-    # More effective ART available
     suppression.rates.1 = array(sampled.parameters['suppression.rate.1'],
                                 dim=sapply(trans.dim.names, length),
                                 dimnames=trans.dim.names)
     suppression.rates.1[,"male",] = suppression.rates.1[,"male",]*sampled.parameters["male.suppression.multiplier"]
-    parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='SUPPRESSION.RATES',
-                                                  value = suppression.rates.1,
-                                                  time = sampled.parameters['suppression.time.1'])
-     
-    # GAIN SUPPRESSION INTERVENTION 
-    gain.suppression.intervention.unit = intervention$units$gain.suppression
-    if(!is.null(gain.suppression.intervention.unit)){
-        # Set start year for gain suppression intervention - same as previous suppression rate 
-        parameters = add.time.varying.parameter.value(parameters,
-                                                      parameter.name='SUPPRESSION.RATES',
-                                                      value = suppression.rates.1,
-                                                      time = gain.suppression.intervention.unit$start.time)
-        
-        gain.suppression.rates = convert.scales(values = gain.suppression.intervention.unit$effect.value,
-                                                from.scale = gain.suppression.intervention.unit$scale,
-                                                to.scale = "rate")
-        
-        gain.suppression.rates = array(gain.suppression.rates,
-                                       dim = sapply(trans.dim.names, length),
-                                       dimnames = trans.dim.names)
-        
-        # Set gain suppression intervention value/time 
-        parameters = add.time.varying.parameter.value(parameters,
-                                                      parameter.name='SUPPRESSION.RATES',
-                                                      value = gain.suppression.rates,
-                                                      time = gain.suppression.intervention.unit$effect.time)
-    }
     
-    parameters = add.time.varying.parameter.value(parameters,
-                                                  parameter.name='UNSUPPRESSION.RATES',
-                                                  value = array(sampled.parameters['unsuppression.rates'],
-                                                                dim=sapply(trans.dim.names, length),
-                                                                dimnames=trans.dim.names),
-                                                  time = 2000)
+    suppression.rates = list(array(0,
+                                   dim=sapply(trans.dim.names, length),
+                                   dimnames=trans.dim.names),
+                             suppression.rates.0,
+                             suppression.rates.1)
     
-    # LOSE SUPPRESSION INTERVENTION 
-    lose.suppression.intervention.unit = intervention$units$lose.suppression
-    if(!is.null(lose.suppression.intervention.unit)){
-        # Set start year for lose suppression intervention - same as previous suppression rate 
-        parameters = add.time.varying.parameter.value(parameters,
-                                                      parameter.name='UNSUPPRESSION.RATES',
-                                                      value = array(sampled.parameters['unsuppression.rates'],
-                                                                    dim=sapply(trans.dim.names, length),
-                                                                    dimnames=trans.dim.names),
-                                                      time = lose.suppression.intervention.unit$start.time)
-        
-        lose.suppression.rates = convert.scales(values = lose.suppression.intervention.unit$effect.value,
-                                                from.scale = lose.suppression.intervention.unit$scale,
-                                                to.scale = "rate")
-        
-        lose.suppression.rates = array(lose.suppression.rates,
-                                       dim = sapply(trans.dim.names, length),
-                                       dimnames = trans.dim.names)
-        
-        # Set lose suppression intervention value/time 
-        parameters = add.time.varying.parameter.value(parameters,
-                                                      parameter.name='UNSUPPRESSION.RATES',
-                                                      value = lose.suppression.rates,
-                                                      time = lose.suppression.intervention.unit$effect.time)
-    }
+    parameters = set.rates.for.interventions(baseline.rates = suppression.rates, # list 
+                                             baseline.times = suppression.times, # vector
+                                             interventions = interventions,
+                                             scale = "rate", 
+                                             parameters = parameters,
+                                             parameter.name = "SUPPRESSION.RATES")
     
     
+    unsuppression.times = c(2000)
+    unsuppression.rates = c(list(array(sampled.parameters['unsuppression.rates'],
+                                       dim=sapply(trans.dim.names, length),
+                                       dimnames=trans.dim.names)))
     
+    parameters = set.rates.for.interventions(baseline.rates = unsuppression.rates, # list 
+                                             baseline.times = unsuppression.times, # vector
+                                             interventions = interventions,
+                                             scale = "rate", 
+                                             parameters = parameters,
+                                             parameter.name = "UNSUPPRESSION.RATES")
     
+
+       
+
     
     
     #-- RETURN --#
@@ -1373,3 +1233,134 @@ map.birth.rates = function(data.manager,
     rv
     
 }
+
+# Helper function for creating interventions
+set.rates.for.interventions = function(baseline.rates,
+                                       baseline.times,
+                                       interventions,
+                                       scale,
+                                       parameters,
+                                       parameter.name){
+    
+    rates=baseline.rates
+    times=baseline.times
+    
+    for(intervention in interventions){
+        intervention.unit = intervention$units[[parameter.name]]
+        
+        ages = intervention$target.ages
+        sexes = intervention$target.sexes
+        if(is.null(ages)){
+            ages = parameters$AGES}
+        if(is.null(sexes)){
+            sexes = parameters$SEXES}
+        
+        if(!is.null(intervention.unit)){
+            
+            new.times = c(times,intervention.unit$start.time,intervention.unit$effect.times,intervention.unit$end.time)
+            new.times = sort(unique(new.times))
+            
+            new.rates = interpolate(values = rates, value.times = times, desired.times = new.times)
+            names(new.rates) = new.times
+            
+            effect.values = convert.scales(values = intervention.unit$effect.values, 
+                                           from.scale = intervention.unit$scale,
+                                           to.scale = scale)
+            
+            for(i in 1:length(intervention.unit$effect.times)){
+                time = as.character(intervention.unit$effect.times[i])
+                
+                if(!intervention.unit$allow.lower.than.baseline){
+                    # only new values (effect values) that are greater than the baseline values (new.rates right now are baseline values)
+                    mask = effect.values[i] > new.rates[[time]][ages,sexes,]
+                    new.rates[[time]][ages,sexes,][mask] = effect.values[i]
+                      
+                } else if(!intervention.unit$allow.higher.than.baseline){
+                    # only new values (effect values) that are lower than the baseline values (new.rates right now are baseline values)
+                    mask = effect.values[i] < new.rates[[time]][ages,sexes,]
+                    new.rates[[time]][ages,sexes,][mask] = effect.values[i]
+                } else 
+                    new.rates[[time]][ages,sexes,] = effect.values[i]
+            }
+            
+            times.between.start.and.effect = new.times[new.times>intervention.unit$start.time & new.times<intervention.unit$effect.times[1]]
+            for(time in times.between.start.and.effect){
+                new.rates[[as.character(time)]][ages,sexes,] = interpolate(values = new.rates, 
+                                                                           value.times = new.times,
+                                                                           desired.times = time)[[1]][ages,sexes,]
+            }
+            
+            times.between.effect.and.end = new.times[new.times>intervention.unit$effect.times[length(intervention.unit$effect.times)] & 
+                                                         new.times<intervention.unit$end.time]
+            for(time in times.between.effect.and.end){
+                new.rates[[as.character(time)]][ages,sexes,] = interpolate(values = new.rates, 
+                                                                           value.times = new.times,
+                                                                           desired.times = time)[[1]][ages,sexes,]
+            }
+            
+            rates = new.rates
+            times = new.times
+            
+        }
+        
+    }
+    
+    for(i in 1:length(rates)){
+        parameters = add.time.varying.parameter.value(parameters,
+                                                      parameter.name=parameter.name,
+                                                      value = rates[[i]], 
+                                                      time = times[i]) 
+    }
+    
+    parameters
+    
+}
+
+
+interpolate = function(values,
+                       value.times,
+                       desired.times){
+    
+    n.times = length(value.times)
+    
+    lapply(desired.times,function(time){
+        
+        if (time <= value.times[1])
+            values[[1]] #return first value
+        else if (time >= value.times[n.times])
+            values[[n.times]] #return last value
+        else 
+        {#we need to interpolate (linearly)
+            index1 = (1:n.times)[value.times<=time] 
+            index1 = index1[length(index1)] #find the index of last 'time' entry which is <= selected time
+            index2 = index1 + 1 #the index of the first 'time' entry which is > selected time
+            
+            if (time==value.times[index1] || value.times[index1]==-Inf)
+                values[[index1]] #return the value
+            else if(time==value.times[index2] || value.times[index2]==Inf) 
+                values[[index2]]
+            else #linear interpolation:
+            {
+                time1 = value.times[index1]
+                time2 = value.times[index2]
+                
+                value1 = values[[index1]]
+                value2 = values[[index2]]
+                
+                slope = (value2 - value1) / (time2 - time1)
+                value1 + slope * (time - time1) #final value that is returned
+            }
+        }
+        
+    })
+           
+    
+
+    
+    
+}
+
+
+
+
+
