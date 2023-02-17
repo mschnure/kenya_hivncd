@@ -27,6 +27,7 @@ if(1==2){
 ## Run model with sampled parameters
 run.model.for.parameters = function(variable.parameters,
                                     parameters=create.model.parameters(),
+                                    start.year=1970,
                                     end.year=2021,
                                     interventions=NO.INTERVENTION){
     
@@ -61,9 +62,9 @@ run.model.for.parameters = function(variable.parameters,
     
     sim = run.model(parameters=parameters,
                     initial.state=initial.state,
-                    start.year=1970, # later make these arguments that I pass to the function, with these as defaults 
+                    start.year=start.year, # later make these arguments that I pass to the function, with these as defaults 
                     end.year=end.year,
-                    keep.years=c(1970:2030))
+                    keep.years=c(start.year:end.year))
     
     sim$parameters = parameters
     
