@@ -2,6 +2,12 @@
 # Description: Generate results/figures from interventions run on mcmc.17 
 #########################################################################
 
+# Types of figures
+#     1. Calibration plots (no intervention, 2000-2020)
+#     2. Intervention plots (2000-2040)
+#     3. Age distribution plots (2040)
+
+
 source("interventions/run_interventions_on_simset.R")
 
 ##-----------------------------------------##
