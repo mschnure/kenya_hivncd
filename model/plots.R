@@ -23,6 +23,7 @@ simplot = function(...,
                    data.types = c('incidence','prevalence'),
                    facet.by = NULL,
                    split.by = NULL,
+                   show.individual.sims=T,
                    proportion = F, # default denominator for engagement/suppression is awareness
                    ages = data.manager[[data.types[1]]]$AGES, #use what's in the data as the default - there is a problem here if you have multiple data types
                    sexes = data.manager[[data.types[1]]]$SEXES
@@ -42,6 +43,7 @@ simplot = function(...,
     
     df.sim = NULL
     for(d in data.types){
+        
         for(i in 1:length(sims)){
             
             if(is(sims[[i]],"simset")) # if this is an MCMC results, i.e., a simset
@@ -51,82 +53,116 @@ simplot = function(...,
             else {
                 sim = sims[[i]]
                 sims.for.i = list(sim)}
-        
+            
             if(any(data.types=="hiv.mortality"))
                 sexes = sims.for.i[[1]]$SEXES
             
-            for(j in 1:length(sims.for.i)){
-                
-                sim = sims.for.i[[j]]
-                
-                # Extract the data from simulation
-                value = extract.data(sim, years = years, age=ages, sex = sexes, data.type=d, keep.dimensions = keep.dimensions)
-                
-                # set up a dataframe with columns: year, value, sim id, data.type 
-                one.df = reshape2::melt(value) 
-                one.df$sim.id = i
-                one.df$sim.number = j
-                one.df$data.type = d
-                
-                df.sim = rbind(df.sim, one.df)   
-            }
-            
-        }
-    }
-    if(proportion)
-    {
-        df.sim.denominator = NULL
-        for(d in data.types){
-            for(i in 1:length(sims)){
-                
-                if(is(sims[[i]],"simset")) # if this is an MCMC results, i.e., a simset
-                    sims.for.i = sims[[i]]@simulations
-                
-                # for plotting single simulations
-                else {
-                    sim = sims[[i]]
-                    sims.for.i = list(sim)}
+            # SHOW LINES FOR ALL INDIVIDUAL SIMS
+            if(show.individual.sims | length(sims.for.i)==1){
                 
                 for(j in 1:length(sims.for.i)){
                     
                     sim = sims.for.i[[j]]
-                    
-                    # Extract denominator from simulation (denom for eng/supp is aware; denom for aware/mort is prev)
-                    if((d=="engagement") | (d=="suppression")){
-                        denominator = extract.data(sim, 
-                                                   years = years, 
-                                                   age=ages, 
-                                                   sex = sexes, 
-                                                   data.type="awareness", 
-                                                   keep.dimensions = keep.dimensions)
+
+                    # Extract the data from simulation
+                    value = extract.data(sim, years = years, age=ages, sex = sexes, data.type=d, keep.dimensions = keep.dimensions)
+
+                    if(proportion){
+                        # Extract denominator from simulation (denom for eng/supp is aware; denom for aware/mort is prev)
+                        if((d=="engagement") | (d=="suppression")){
+                            denominator = extract.data(sim, 
+                                                       years = years, 
+                                                       age=ages, 
+                                                       sex = sexes, 
+                                                       data.type="awareness", 
+                                                       keep.dimensions = keep.dimensions)
+                        }
+                        
+                        else if((d=="awareness") | (d=="hiv.mortality")){
+                            denominator = extract.data(sim, 
+                                                       years = years, 
+                                                       age=ages, 
+                                                       sex = sexes, 
+                                                       data.type="prevalence", 
+                                                       keep.dimensions = keep.dimensions)
+                        } else 
+                            stop("invalid denominator")
+                        
+                        value = value/denominator
                     }
-                    
-                    else if((d=="awareness") | (d=="hiv.mortality")){
-                        denominator = extract.data(sim, 
-                                                   years = years, 
-                                                   age=ages, 
-                                                   sex = sexes, 
-                                                   data.type="prevalence", 
-                                                   keep.dimensions = keep.dimensions)
-                    }
-                    
-                    else 
-                        stop("invalid denominator")
                     
                     # set up a dataframe with columns: year, value, sim id, data.type 
-                    one.df.denom = reshape2::melt(denominator) 
-                    one.df.denom$sim.id = i
-                    one.df.denom$sim.number = j
-                    one.df.denom$data.type = d
+                    one.df = reshape2::melt(value) 
+                    one.df$sim.id = i
+                    one.df$sim.number = j
+                    one.df$data.type = d
+                    one.df$lower = as.numeric(NA)
+                    one.df$upper = as.numeric(NA)
                     
-                    df.sim.denominator = rbind(df.sim.denominator, one.df.denom)   
+                    df.sim = rbind(df.sim, one.df)   
                 }
+                
+                # SHOW 95% CONFIDENCE INTERVAL FROM SIMS
+            } else {
+                
+                value.1 = extract.data(sims.for.i[[1]], years = years, age=ages, sex = sexes, data.type=d, keep.dimensions = keep.dimensions)
+                values = sapply(sims.for.i, extract.data, years = years, age=ages, sex = sexes, data.type=d, keep.dimensions = keep.dimensions)
+                
+                dim.names = c(dimnames(value.1),list(sim=1:length(sims.for.i)))
+                dim(values) = sapply(dim.names, length)
+                dimnames(values) = dim.names
+        
+                if(proportion){
+                    # Extract denominator from simulation (denom for eng/supp is aware; denom for aware/mort is prev)
+                    if((d=="engagement") | (d=="suppression")){
+                        denominator.1 = extract.data(sims.for.i[[1]],
+                                                     years = years,
+                                                     age=ages,
+                                                     sex = sexes,
+                                                     data.type="awareness",
+                                                     keep.dimensions = keep.dimensions)
+                        denominator = sapply(sims.for.i, extract.data, 
+                                             years = years, age=ages, sex = sexes, 
+                                             data.type="awareness", keep.dimensions = keep.dimensions)
+                    } else if((d=="awareness") | (d=="hiv.mortality")){
+                        denominator.1 = extract.data(sims.for.i[[1]],
+                                                     years = years,
+                                                     age=ages,
+                                                     sex = sexes,
+                                                     data.type="prevalence",
+                                                     keep.dimensions = keep.dimensions)
+                        denominator = sapply(sims.for.i, extract.data, 
+                                             years = years, age=ages, sex = sexes, 
+                                             data.type="prevalence", keep.dimensions = keep.dimensions)
+                    } else
+                        stop("invalid denominator")
+                    
+                    dim.names.denominator = c(dimnames(denominator.1),list(sim=1:length(sims.for.i)))
+                    dim(denominator) = sapply(dim.names.denominator, length)
+                    dimnames(denominator) = dim.names.denominator
+                    
+                    values = values/denominator
+                }
+    
+                value = apply(values,names(dim(value.1)),mean, na.rm=T)
+                lower = apply(values,names(dim(value.1)),quantile,probs=.025, na.rm=T)
+                upper = apply(values,names(dim(value.1)),quantile,probs=.975, na.rm=T)
+                
+                dim.names.value = dimnames(value.1)
+                dim(value) = dim(lower) = dim(upper) = sapply(dim.names.value, length)
+                dimnames(value) = dimnames(lower) = dimnames(upper) = dim.names.value
+                
+                one.df = reshape2::melt(value) 
+                one.df$sim.id = i
+                one.df$sim.number = 1
+                one.df$data.type = d
+                one.df$lower = as.numeric(lower)
+                one.df$upper = as.numeric(upper)
+                
+                df.sim = rbind(df.sim, one.df)  
+                
             }
         }
-        
-        
-        df.sim$value = (df.sim$value/df.sim.denominator$value)
-        
     }
     
     df.sim$sim.id = as.character(df.sim$sim.id)
@@ -203,13 +239,13 @@ simplot = function(...,
     facet_formula = as.formula(facet_string)
     
     plot = ggplot() + 
+        geom_ribbon(data = df.sim, aes(x = year, ymin = lower, ymax = upper, fill = sim.id),alpha = 0.3) + 
         geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id)) +
         geom_point(data = df.truth, aes(x = year, y = value, color = sim.id, group = group.id, shape = split)) +
         facet_wrap(facet_formula, scales = "free_y") + 
         ylim(0,NA)
     
     suppressWarnings(print(plot))
-    
     
 }
 
