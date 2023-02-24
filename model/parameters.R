@@ -782,8 +782,6 @@ map.model.parameters <- function(parameters,
                                              parameter.name = "ENGAGEMENT.RATES")
     
     
-    
-    
     #-- DISENGAGEMENT --#
     unsuppressed.disengagement.times = c(2000)
     unsuppressed.disengagement.rates = list(array(sampled.parameters['unsuppressed.disengagement.rates'],
@@ -1259,7 +1257,8 @@ set.rates.for.interventions = function(baseline.rates,
             
             new.times = c(times,intervention.unit$start.time,intervention.unit$effect.times,intervention.unit$end.time)
             new.times = sort(unique(new.times))
-            
+            new.times = new.times[new.times<Inf]
+
             new.rates = interpolate(values = rates, value.times = times, desired.times = new.times)
             names(new.rates) = new.times
             
@@ -1283,18 +1282,13 @@ set.rates.for.interventions = function(baseline.rates,
                     new.rates[[time]][ages,sexes,] = effect.values[i]
             }
             
-            times.between.start.and.effect = new.times[new.times>intervention.unit$start.time & new.times<intervention.unit$effect.times[1]]
-            for(time in times.between.start.and.effect){
-                new.rates[[as.character(time)]][ages,sexes,] = interpolate(values = new.rates, 
-                                                                           value.times = new.times,
-                                                                           desired.times = time)[[1]][ages,sexes,]
-            }
+            times.to.overwrite = new.times[new.times>intervention.unit$start.time & new.times<intervention.unit$end.time]
+            interpolate.from.times = c(intervention.unit$start.time,intervention.unit$effect.times,intervention.unit$end.time)
+            interpolate.from.times = interpolate.from.times[interpolate.from.times<Inf]
             
-            times.between.effect.and.end = new.times[new.times>intervention.unit$effect.times[length(intervention.unit$effect.times)] & 
-                                                         new.times<intervention.unit$end.time]
-            for(time in times.between.effect.and.end){
-                new.rates[[as.character(time)]][ages,sexes,] = interpolate(values = new.rates, 
-                                                                           value.times = new.times,
+            for(time in times.to.overwrite){
+                new.rates[[as.character(time)]][ages,sexes,] = interpolate(values = new.rates[as.character(interpolate.from.times)], 
+                                                                           value.times = interpolate.from.times,
                                                                            desired.times = time)[[1]][ages,sexes,]
             }
             
