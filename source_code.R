@@ -1,7 +1,7 @@
 source('data_manager.R')
 source('model/diffeq.R')
 source('model/age_mappings.R') 
-source('interventions/interventions.R')
+source('interventions/intervention_set_v1.R')
 
 # load('cached/data.manager.Rdata') # without scaling calibration targets
 load('cached/data.manager_2023-02-06.Rdata') # with scaled calibration targets
