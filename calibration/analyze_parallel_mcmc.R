@@ -3,10 +3,20 @@ source("model/run_systematic.R")
 # load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
 # load("mcmcruns/mcmc_v13_2023-01-30.Rdata")
 
-mcmc=mcmc.17
+mcmc=mcmc.18
 simset = extract.simset(mcmc,
                            additional.burn=500,  # throw away first 500
-                           additional.thin=15) 
+                           additional.thin=20) 
+
+simset.17 = extract.simset(mcmc.17,
+                           additional.burn=500,  # throw away first 500
+                           additional.thin=14) 
+
+simset.18 = extract.simset(mcmc.18,
+                           additional.burn=500,  # throw away first 500
+                           additional.thin=20) 
+
+simplot(simset.17,simset.18, years=2010:2020, facet.by='age', data.types='incidence', show.individual.sims = F)
 
 ## FIRST, LOOK AT OVERALL FIT (don't look at other plots until I look at mixing/MCMC properties)
 simplot(simset, years = 1980:2020)
@@ -56,7 +66,7 @@ simplot(simset, years=1980:2020, facet.by='age', data.types='prevalence')
 simplot(simset, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='prevalence')
 simplot(simset, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='incidence')
 simplot(simset, years=1980:2020, facet.by='age', data.types='hiv.mortality',proportion = T)
-simplot(simset, years=1980:2020,  data.types=c('awareness',"engagement","suppression"), proportion=T)
+simplot(simset, years=1980:2020, data.types=c('awareness',"engagement","suppression"), proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='awareness', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='engagement', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='suppression', proportion=T)
