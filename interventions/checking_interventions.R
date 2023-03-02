@@ -12,12 +12,33 @@ RUN.SIMULATIONS.TO.YEAR = 2040
 ##-------------------------------##
 simset.17 = extract.simset(mcmc.17,
                            additional.burn=500, 
-                           additional.thin=100) 
+                           additional.thin=100) # 12 sims
 
 
 simset.18 = extract.simset(mcmc.18,
                            additional.burn=500, 
-                           additional.thin=200) 
+                           additional.thin=200) # 12 sims
+
+simset.17.small = extract.simset(mcmc.17,
+                           additional.burn=500, 
+                           additional.thin=100) # 12 sims
+
+
+simset.18.small = extract.simset(mcmc.18,
+                           additional.burn=500, 
+                           additional.thin=200) # 12 sims
+
+simset.17.large = extract.simset(mcmc.17,
+                                 additional.burn=500, 
+                                 additional.thin=14) # 100 sims
+
+simset.18.large = extract.simset(mcmc.18,
+                                 additional.burn=500, 
+                                 additional.thin=20) # 105 sims
+
+simset.18.large = run.intervention.on.simset(simset.18.large,
+                                             end.year = RUN.SIMULATIONS.TO.YEAR,
+                                             intervention = NO.INTERVENTION)
 
 simset.no.int.17 = run.intervention.on.simset(simset.17,
                                               end.year = RUN.SIMULATIONS.TO.YEAR,
@@ -37,6 +58,9 @@ simset.all.int.18 = run.intervention.on.simset(simset.18,
 
 simplot(simset.no.int.17,simset.all.int.17, years=2010:2030, facet.by='age', data.types='incidence', show.individual.sims = F)
 simplot(simset.no.int.18,simset.all.int.18, years=2010:2030, facet.by='age', data.types='incidence', show.individual.sims = F)
+
+simplot(simset.17.large,years=2010:2030, facet.by='age', data.types='incidence', show.individual.sims = F)
+simplot(simset.18.large,years=2010:2030, facet.by='age', data.types='incidence', show.individual.sims = F)
 
 ##-------------------------------##
 

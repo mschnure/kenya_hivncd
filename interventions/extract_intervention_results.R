@@ -50,12 +50,84 @@ generate.full.results.array = function(simset.list,
     rv
 }
 
-# making age structure summary 
+
+# new version:
+# can display % or # 
+# can have two different interventions (e.g., no.int vs. all.max) and two different years (e.g., no.int/2025 vs. all.max/2040)
 generate.age.distribution = function(results.array,
-                                     interventions,
+                                     intervention.1,
+                                     year.1,
+                                     intervention.2,
+                                     year.2,
                                      outcome,
-                                     year="2040",
+                                     percent=T,
                                      display="figure"){
+    
+    results.array.1 = results.array[,,,,,intervention.1]
+    results.array.2 = results.array[,,,,,intervention.2]
+    
+    # get age counts
+    age.counts.1 = apply(results.array.1[year.1,,,outcome,],c("age","sim"),sum)
+    age.counts.2 = apply(results.array.2[year.2,,,outcome,],c("age","sim"),sum)
+    
+    if(percent){
+        # get totals 
+        total.counts.1 = apply(age.counts.1,c("sim"),sum)
+        total.counts.2 = apply(age.counts.2,c("sim"),sum)
+        
+        age.proportions.1 = age.counts.1/rep(as.numeric(total.counts.1), each=17)
+        age.proportions.2 = age.counts.2/rep(as.numeric(total.counts.2), each=17)
+        
+        # marginalizing over sim now
+        age.summary.1 = apply(age.proportions.1,c("age"),quantile,probs=c(.025,.5,.975),na.rm=T)
+        age.summary.2 = apply(age.proportions.2,c("age"),quantile,probs=c(.025,.5,.975),na.rm=T)
+    } else {
+        # marginalizing over sim now
+        age.summary.1 = apply(age.counts.1,c("age"),quantile,probs=c(.025,.5,.975),na.rm=T)
+        age.summary.2 = apply(age.counts.2,c("age"),quantile,probs=c(.025,.5,.975),na.rm=T)
+    }
+    
+    
+    if(display=="table"){
+        tab.1 = c(paste0(round(100*age.summary.1[2,],1),"% [",
+                         round(100*age.summary.1[1,],1),"-",
+                         round(100*age.summary.1[3,],1),"]"),
+                  paste0(round(100*age.summary.2[2,],1),"% [",
+                         round(100*age.summary.2[1,],1),"-",
+                         round(100*age.summary.2[3,],1),"]"))
+        tab.dim.names.1 = list(age=dimnames(age.counts.1)[[1]],
+                               intervention=c(paste0(intervention.1,"/",year.1),
+                                              paste0(intervention.2,"/",year.2)))
+        dim(tab.1) = sapply(tab.dim.names.1,length)
+        dimnames(tab.1) = tab.dim.names.1
+        
+        return(tab.1)
+    } else if(display=="figure"){
+        age.summary = c(age.summary.1,age.summary.2)
+        dim.names = list(stat = c("lower","median","upper"),
+                         age=dimnames(age.counts.1)[[1]],
+                         intervention=c(paste0(intervention.1,"/",year.1),
+                                        paste0(intervention.2,"/",year.2)))
+        dim(age.summary) = sapply(dim.names,length)
+        dimnames(age.summary) = dim.names
+        
+        age.summary = age.summary["median",,]
+        df = melt(age.summary)
+        
+        ggplot(data = df,aes(x=age,y=value,fill=intervention)) + 
+            geom_bar(stat="identity",position = "dodge") + 
+            ggtitle(paste0(outcome))
+    }
+    
+}
+
+
+# old version - have to have the same year, same intervention  
+generate.age.distribution.old = function(results.array,
+                                         interventions,
+                                         outcome,
+                                         year="2040",
+                                         display="figure"){
     
     results.array = results.array[,,,,,interventions]
     
@@ -68,19 +140,20 @@ generate.age.distribution = function(results.array,
     # apply(age.proportions,c("sim","intervention"),sum) # checking to make sure it sums to 1 in the right dimension
     
     # marginalizing over sim now
-    age.summary = apply(age.proportions,c("age","intervention"),quantile,probs=c(.025,.5,.975))
-    
-    tab = paste0(round(100*age.summary[2,,]),"% [",
-                 round(100*age.summary[1,,]),"-",
-                 round(100*age.summary[3,,]),"]")
-    tab.dim.names = dimnames(age.counts)[c("age","intervention")]
-    dim(tab) = sapply(tab.dim.names,length)
-    dimnames(tab) = tab.dim.names
+    age.summary = apply(age.proportions,c("age","intervention"),quantile,probs=c(.025,.5,.975),na.rm=T)
     
     if(display=="table"){
+        tab = paste0(round(100*age.summary[2,,],1),"% [",
+                     round(100*age.summary[1,,],1),"-",
+                     round(100*age.summary[3,,],1),"]")
+        tab.dim.names = dimnames(age.counts)[c("age","intervention")]
+        dim(tab) = sapply(tab.dim.names,length)
+        dimnames(tab) = tab.dim.names
+        
         return(tab)
     } else if(display=="figure"){
         dimnames(age.summary)[1] = list(stat = c("lower","median","upper"))
+        age.summary = age.summary["median",,]
         df = melt(age.summary)
         
         ggplot(data = df,aes(x=age,y=value,fill=intervention)) + 
