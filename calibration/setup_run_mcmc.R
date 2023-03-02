@@ -80,7 +80,7 @@ control = create.adaptive.blockwise.metropolis.control(var.names = prior@var.nam
                                                        thin = 5) 
 
 # set starting.values 
-mcmc.18 = run.mcmc.with.cache(control = control,
+mcmc.19 = run.mcmc.with.cache(control = control,
                               n.iter = 10000,
                               starting.values = params.start.values, 
                               update.frequency = 5,
@@ -93,7 +93,7 @@ mcmc.18 = run.mcmc.with.cache(control = control,
 
 # run.mcmc.from.cache(dir = "mcmc_cache/")
 
-save(mcmc.16,file=paste0("mcmcruns/mcmc",Sys.Date(),".Rdata"))
+save(mcmc.19,file=paste0("mcmcruns/mcmc",Sys.Date(),".Rdata"))
 
 
 if(1==2)
