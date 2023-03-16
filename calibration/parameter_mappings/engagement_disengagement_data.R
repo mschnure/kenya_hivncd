@@ -107,44 +107,14 @@ if(fit.to.use=="fit2"){
 }
 
 
-# testing out code to put in parameters code
-if(1==2){
-    engagement.years.to.project = c(1975:2030)
-    
-    for(year in engagement.years.to.project){
-        if(fit.to.use=="fit1"){
-            projected.log.odds = (ENGAGEMENT.MODEL$intercept+sampled.parameters['log.OR.engagement.intercept'])+
-                ((ENGAGEMENT.MODEL$pre.universal.slope+sampled.parameters['log.OR.engagement.pre.universal.slope'])*year)+
-                ((ENGAGEMENT.MODEL$post.universal.slope+sampled.parameters['log.OR.engagement.post.universal.slope'])*pmax(0,(year-2015)))
-            
-        } else if(fit.to.use=="fit2"){
-            if(year<2016 | year>2017){
-                projected.log.odds = (ENGAGEMENT.MODEL$intercept+sampled.parameters['log.OR.engagement.intercept'])+
-                    ((ENGAGEMENT.MODEL$pre.universal.slope+sampled.parameters['log.OR.engagement.pre.universal.slope'])*year)+
-                    ((ENGAGEMENT.MODEL$post.universal.slope+sampled.parameters['log.OR.engagement.post.universal.slope'])*pmax(0,(year-2015)))
-            } else if(year==2016 | year==2017){
-                projected.log.odds = (ENGAGEMENT.MODEL$intercept+sampled.parameters['log.OR.engagement.intercept'])+
-                    ((ENGAGEMENT.MODEL$pre.universal.slope+sampled.parameters['log.OR.engagement.pre.universal.slope'])*year)+
-                    ((ENGAGEMENT.MODEL$intermediate.slope.2016.2017+sampled.parameters['log.OR.engagement.intermediate.slope'])*pmax(0,(year-2015)))+
-                    ((ENGAGEMENT.MODEL$post.universal.slope+sampled.parameters['log.OR.engagement.post.universal.slope'])*pmax(0,(year-2015)))
-            }
-        }
-        projected.p = 1/(1+exp(-projected.log.odds)) # didn't do a max proportion here - okay? 
-        projected.rate = -log(1-projected.p)
-        
-        projected.rate.age.sex = array(projected.rate,
-                                       dim=sapply(trans.dim.names, length),
-                                       dimnames=trans.dim.names)
-        
-        projected.rate.age.sex[,"male",] = projected.rate.age.sex[,"male",]*sampled.parameters["male.cascade.multiplier"]
-        
-        parameters = add.time.varying.parameter.value(parameters,
-                                                      parameter.name='ENGAGEMENT.RATES',
-                                                      value = projected.rate.age.sex,
-                                                      time = year)
-        
-    }
-}
+exp(fit$coefficients[1] + fit$coefficients[2]*15)
+odds = exp(fit$coefficients[1] + fit$coefficients[2]*15)
+p = odds/(1+odds)
+p
+exp(fit$coefficients[2])
+exp(fit$coefficients[2] +  fit$coefficients[3] + fit$coefficients[4])
+exp(fit$coefficients[2] +  fit$coefficients[3])
+
 
 # Checking what functional form to use for smoothing
 if(1==2){
@@ -182,34 +152,3 @@ if(1==2){
 }
 
 
-
-# old scratch code
-if(1==2){
-    sample.diagnosed.pop = 10000 # NEED THIS
-    engaged.among.diagnosed.prop = 0.893
-    engaged.within.3.months.among.engaged = .794
-    
-    engaged.within.3.months.among.diagnosed = engaged.among.diagnosed.prop*engaged.within.3.months.among.engaged
-    engaged.after.3.months.among.diagnosed = 1-engaged.within.3.months.among.diagnosed
-    
-    engaged = engaged.among.diagnosed.prop*sample.diagnosed.pop
-    unengaged.not.new.diagnoses = (1-engaged.among.diagnosed.prop)*sample.diagnosed.pop # assume all unengaged are disengaged
-    
-    new.diagnoses = 1000 # NEED THIS - have to have some sense of what % of the unengaged pool is newly diagnosed 
-    new.diagnoses.not.yet.linked = new.diagnoses/4 # assuming three months to link
-    
-    new.diagnoses.prop.of.all.unengaged = new.diagnoses.not.yet.linked/(new.diagnoses.not.yet.linked + unengaged.not.new.diagnoses)
-    
-    new.diagnoses.engagement.prop = .794 # 79.4% enrolled within 3 months - BUT THIS IS AMONG THOSE ENROLLED, NOT DIAGNOSED
-    new.diagnoses.engagement.rate = -log(1-new.diagnoses.engagement.prop)/(1/4) # -log(1-p)/t; time is 1/4 of a year
-    
-    # Lee et al, average of disengaged 2 and disengaged 3? 
-    unengaged.engagement.prop = (.02+.05)/2
-    unengaged.engagement.rate = -log(1-unengaged.engagement.prop)
-    
-    weighted.engagement.rate = (new.diagnoses.engagement.rate*new.diagnoses.prop.of.all.unengaged) + 
-        (unengaged.engagement.rate*(1-new.diagnoses.prop.of.all.unengaged))
-    
-    weighted.engagement.prop = 1-exp(-(weighted.engagement.rate))
-    
-}

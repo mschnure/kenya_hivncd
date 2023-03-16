@@ -72,6 +72,46 @@ TESTING.MODEL = list(intercepts=intercepts,
                      max.proportion=max.proportion)
 
 
+if(1==2){
+    # For parameters table 
+    # Young
+    sex="female"
+    fit.young = suppressWarnings(glm(prop ~ year, family=binomial, data = master.df[master.df$sex==sex & master.df$age==17,]))
+    year = 2015
+    young.log.odds  = fit.young$coefficients[1] + 
+        fit.young$coefficients["year"]*(2015-testing.anchor.year)
+    young.odds = exp(young.log.odds)
+    young.p = 1/(1+exp(-young.log.odds))
+    young.p = young.p*TESTING.MODEL$max.proportion
+    
+    # Old
+    fit.old = suppressWarnings(glm(prop ~ year*age, family=binomial, data = master.df[master.df$sex==sex & master.df$age!=17,])) 
+    old.age=35
+    old.log.odds = fit.old$coefficients[1] + # intercept 
+        fit.old$coefficients["year"]*(2015-testing.anchor.year) + # old*year
+        fit.old$coefficients["age"]*old.age + # old*age
+        fit.old$coefficients["year:age"]*(2015-testing.anchor.year)*old.age # old*year*age
+    old.odds = exp(old.log.odds)
+    old.p = 1/(1+exp(-old.odds))
+    old.p = old.p*TESTING.MODEL$max.proportion
+    
+    exp(fit.young$coefficients["year"]) # OR for year, young age
+    exp(fit.old$coefficients["age"]) # OR for older age
+    exp(fit.old$coefficients["year"]) # OR for year, older age
+    exp(fit.old$coefficients["year:age"])
+    
+    # OR by year for older age 
+    exp(fit.old$coefficients["year"])*exp(fit.old$coefficients["year:age"]*old.age)
+    
+    x = NULL
+    for(i in 1:simset@n.sim){
+        x[i] = simset@simulations[[i]]$parameters$time.varying.parameters$TESTING.RATES$values[41][[1]]["30-34","female",]
+    }
+    quantile(x,probs = c(.025,.5,.975))
+    
+}
+
+
 
 
 # old version with linear splines to three models 

@@ -1,19 +1,26 @@
 source("model/run_systematic.R")
 
+# Functions
+# Collecting output for whole simset 
+#     1. extract.simset.output
+#     2. add.sim.ids
+#     3. add.model.type
+#     4. add.sim.intervention.id
+# Collecting output from single sim
+#     5. extract.hiv.data.for.ncd
+#     6. extract.parameter.by.year
+#     7. calculate.proportion
+#     8. extract.parameter.all.years
+#     9. extract.fertility.and.maternal.transmission
+#     10. return.births.by.hiv.status
+#     11. return.all.parameters
+
 ##-----------------------------##
 ##-- OUTPUT FROM MCMC SIMSET --##
 ##-----------------------------##
-## Choose MCMC run 
-load("mcmcruns/mcmc2023-01-05 22:10:23.Rdata")
-mcmc=mcmc.7
-
-# 10 sims for now 
-simset.for.ncd = extract.simset(mcmc,
-                                additional.burn=1000, # throw away first 1000
-                                additional.thin=100) # thin by 10, 100 remaining
 
 extract.simset.output = function(simset,
-                                 years=c(2014:2030),
+                                 years=c(2014:2040),
                                  id.prefix="khm.sim",
                                  intervention.id) {
     
@@ -85,11 +92,10 @@ add.sim.intervention.id = function(simset,
 ##----------------------------##
 ##-- OUTPUT FROM SINGLE SIM --##
 ##----------------------------##
-sim = run.model.for.parameters(variable.parameters = params.start.values)
 
 ## Extracts outputs needed for NCD model
 extract.hiv.data.for.ncd = function(sim,
-                                    years=c(2014:2030)){
+                                    years=c(2014:2040)){
     
     # These will be combined into one "disengagement" output (Parastu's request)
     disengagement.suppressed = extract.data(sim, 
@@ -327,96 +333,5 @@ return.all.parameters = function(sim,
     
     rv
 }
-
-
-
-# SAVE NEW OUTPUT
-khm = extract.simset.output(simset.for.ncd,
-                            intervention.id="no.int")
-
-
-# save(simset.for.ncd,khm,file="~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_simset.RData")
-save(khm,file="~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_simset.RData")
-
-
-
-## OLD OUTPUT FROM SINGLE SIM
-# renamed from hiv.output.for.ncd to khm (for "kenya hiv model")
-# khm = extract.hiv.data.for.ncd(sim=sim)
-# hiv.sim = sim
-# target.parameters = return.all.parameters(sim=hiv.sim,
-#                                           years=hiv.sim$years)
-
-# testing plotting hiv distribution 
-if(1==2) {
-    
-    if(hiv.positive.population.only) {
-        pop = khm$population[,-1,,]  
-    } else 
-        pop = khm$population
-    
-    full.dim.names = dimnames(pop)
-    hiv.dim.names =  dimnames(pop)[-1]
-    
-    hiv.distr = array(0,
-                      dim = sapply(full.dim.names,length),
-                      dimnames = full.dim.names)
-    
-    years = full.dim.names[[1]]
-    for(i in 1:length(years)){
-        
-        hiv.probs = 
-            sapply(1:length(hiv.dim.names$age), function(age){
-                sapply(1:length(hiv.dim.names$sex), function(sex){
-                    rowSums(pop[i,,,],1)/sum(pop[i,,,])
-                })
-            })
-        
-        dim(hiv.probs) = sapply(hiv.dim.names,length)
-        dimnames(hiv.probs) = hiv.dim.names
-        
-        # test
-        # colSums(hiv.probs,1)
-        
-        hiv.distr[i,,,] = round(hiv.probs,5)
-        
-        # test
-        # apply(hiv.distr,c(1,3,4),sum)
-    }
-    
-    df.for.plot = melt(hiv.distr)
-    
-    # total
-    ggplot(df.for.plot, aes(fill=hiv.status, x = year, y = value)) + 
-        geom_bar(position="fill", stat="identity") 
-
-    # age
-    ggplot(df.for.plot, aes(fill=hiv.status, x = year, y = value)) + 
-        geom_bar(position="fill", stat="identity") + 
-        facet_wrap(~age, scales = "free_y")
-    
-    # sex
-    ggplot(df.for.plot, aes(fill=hiv.status, x = year, y = value)) + 
-        geom_bar(position="fill", stat="identity") + 
-        facet_wrap(~sex, scales = "free_y")
-    
-}
-
-
-
-
-# Not sure if I still need this?
-if(1==2){
-    # Population distribution 
-    pop.2015 = khm$population[1,,,]
-    pop.2015 = apply(pop.2015,c(1:2),sum) # combine over hiv states to only return age/sex distribution 
-    
-    pop.2015.distribution = round(100*apply(pop.2015,2,function(x){x/sum(x)}),2) # get proportions (divide by total)
-    pop.2015.distribution = rbind(pop.2015.distribution,colSums(pop.2015.distribution))
-    rownames(pop.2015.distribution)[nrow(pop.2015.distribution)] = "Total"
-    
-    write.csv(pop.2015.distribution,file="pop.2015.distribution.csv")
-}
-
 
     

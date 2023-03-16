@@ -60,7 +60,7 @@ prior = join.distributions(
                                      median.r3.to.r2 = 1,
                                      sd.r3.to.r2 = log(2)/2,
                                      median.r4.to.r3 = 1,
-                                     sd.r4.to.r3 = log(2)/2),
+                                     sd.r4.to.r3 = log(4)/2),
     
     
     # trate.0 = Lognormal.Distribution(log(.5), log(8)/2), # ORIGINALLY 1; (log(1) = 0, but leaving this way for clarity)

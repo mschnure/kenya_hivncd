@@ -3,17 +3,17 @@ source("model/run_systematic.R")
 # load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
 # load("mcmcruns/mcmc_v13_2023-01-30.Rdata")
 
-mcmc=mcmc.18
+mcmc=mcmc.19
 simset = extract.simset(mcmc,
-                           additional.burn=500,  # throw away first 500
+                           additional.burn=500,  
                            additional.thin=20) 
 
 simset.17 = extract.simset(mcmc.17,
-                           additional.burn=500,  # throw away first 500
+                           additional.burn=500,  
                            additional.thin=14) 
 
 simset.18 = extract.simset(mcmc.18,
-                           additional.burn=500,  # throw away first 500
+                           additional.burn=500,  
                            additional.thin=20) 
 
 simplot(simset.17,simset.18, years=2010:2020, facet.by='age', data.types='incidence', show.individual.sims = F)
@@ -75,20 +75,21 @@ simplot(simset, years=1980:2020, facet.by='age', data.types='population')
 
 # Can check last run of mcmc to change parameters manually 
 params.0 = simset@parameters[simset@n.sim,] # get the last set of values for parameters
-sim.0 = simset@simulations[[simset@n.sim]] # last simulation
-simplot(sim.0,data.types = c("incidence"),facet.by = "age",years = 1980:2020)
-simplot(sim.0,data.types = c("prevalence"),facet.by = "age",years = 1980:2020)
-simplot(sim.0,data.types = c("awareness","engagement","suppression"),proportion=T)
+sim.better = simset@simulations[[simset@n.sim]] # last simulation
+sim.worse = simset@simulations[[50]] 
+simplot(sim.better,sim.worse,data.types = c("incidence"),facet.by = "age",years = 1980:2040)
+
+simplot(sim.better,sim.worse,data.types = c("prevalence"),facet.by = "age",years = 2000:2020)
+simplot(sim.better,sim.worse,data.types = c("awareness","engagement","suppression"),proportion=T)
 simplot(sim.0,data.types = c("hiv.mortality"),facet.by="age",proportion = F,years=1980:2020) 
 simplot(sim.0,data.types = c("hiv.mortality"),facet.by="age",proportion = T,years=1980:2020)  # fixed this plot finally 
 simplot(sim.0,data.types = c("population"),facet.by = "age",years=1980:2020) 
 
 # Check likelihood 
-lik = create.likelihood(parameters=sim.from.mcmc$parameters) 
+lik = create.likelihood(parameters=sim.0$parameters) 
 lik.components = attr(lik,"components")
-lik(sim.10)
-round(sapply(lik.components,function(sub.lik){exp(sub.lik(sim.10) - sub.lik(sim.11))}),2) 
-round(exp(lik(sim.10) - lik(sim.11)),2) 
+round(sapply(lik.components,function(sub.lik){exp(sub.lik(sim.better) - sub.lik(sim.worse))}),2) 
+round(exp(lik(sim.better) - lik(sim.worse)),2) 
 print(lik.components$hiv.mortality(sim.11,debug = T))
 
 
