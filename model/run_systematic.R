@@ -7,6 +7,7 @@
 #     2. extract.hiv.data.for.ncd 
 
 source('source_code.R')
+library(bayesian.simulations)
 
 ## Added this in so that parameters objects exists without running a sim - need this for likelihood functions 
 if(1==2){

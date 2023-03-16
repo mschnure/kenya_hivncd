@@ -26,13 +26,14 @@ simplot = function(...,
                    show.individual.sims=T,
                    proportion = F, # default denominator for engagement/suppression is awareness
                    ages = data.manager[[data.types[1]]]$AGES, #use what's in the data as the default - there is a problem here if you have multiple data types
-                   sexes = data.manager[[data.types[1]]]$SEXES
+                   sexes = data.manager[[data.types[1]]]$SEXES,
+                   for.paper=F,
+                   show.calibration.data=T
                    #subgroups = data.manager$SUBGROUPS
 ){
     sims = list(...)
     keep.dimensions = union('year',union(facet.by, split.by))
 
-    
     if(any(data.types=="hiv.mortality") & any(keep.dimensions=="sex"))
         stop("no hiv mortality data by sex")
     
@@ -144,7 +145,7 @@ simplot = function(...,
                     values = values/denominator
                 }
     
-                value = apply(values,names(dim(value.1)),mean, na.rm=T)
+                value = apply(values,names(dim(value.1)),median, na.rm=T)
                 lower = apply(values,names(dim(value.1)),quantile,probs=.025, na.rm=T)
                 upper = apply(values,names(dim(value.1)),quantile,probs=.975, na.rm=T)
                 
@@ -238,12 +239,79 @@ simplot = function(...,
         facet_string = paste0(facet_string, '+', paste0(facet.by,collapse = '+'))
     facet_formula = as.formula(facet_string)
     
-    plot = ggplot() + 
-        geom_ribbon(data = df.sim, aes(x = year, ymin = lower, ymax = upper, fill = sim.id),alpha = 0.3) + 
-        geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id)) +
-        geom_point(data = df.truth, aes(x = year, y = value, color = sim.id, group = group.id, shape = split)) +
-        facet_wrap(facet_formula, scales = "free_y") + 
-        ylim(0,NA)
+    if(proportion){
+        
+        if(for.paper==T){
+            if(show.calibration.data==T){
+                plot = ggplot() + 
+                    geom_ribbon(data = df.sim, aes(x = year, ymin = lower, ymax = upper, fill = sim.id),alpha = 0.3) + 
+                    geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id), show.legend = F) +
+                    geom_point(data = df.truth, aes(x = year, y = value, color = sim.id, group = group.id, shape = split), show.legend = F) +
+                    facet_wrap(facet_formula, scales = "free_y") + 
+                    scale_y_continuous(labels = scales::percent,name = NULL, limits = c(0,NA)) + 
+                    theme_bw() +
+                    theme(legend.position = "bottom") + # move legend to the bottom
+                    scale_fill_discrete(labels=c("1" = "No intervention","2" = "Combined interventions"), 
+                                        name=NULL) + 
+                    xlab("Year") # x axis label 
+            } else {
+                plot = ggplot() + 
+                    geom_ribbon(data = df.sim, aes(x = year, ymin = lower, ymax = upper, fill = sim.id),alpha = 0.3) + 
+                    geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id), show.legend = F) +
+                    # geom_point(data = df.truth, aes(x = year, y = value, color = sim.id, group = group.id, shape = split), show.legend = F) +
+                    facet_wrap(facet_formula, scales = "free_y") + 
+                    scale_y_continuous(labels = scales::percent,name = NULL, limits = c(0,NA)) + 
+                    theme(panel.background = element_blank(), legend.position = "bottom") + # move legend to the bottom
+                    scale_fill_discrete(labels=c("1" = "No intervention","2" = "Combined interventions"), 
+                                        name=NULL) + 
+                    xlab("Year") # x axis label 
+            }
+        } else {
+            plot = ggplot() + 
+                geom_ribbon(data = df.sim, aes(x = year, ymin = lower, ymax = upper, fill = sim.id),alpha = 0.3) + 
+                geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id)) +
+                geom_point(data = df.truth, aes(x = year, y = value, color = sim.id, group = group.id, shape = split)) +
+                facet_wrap(facet_formula, scales = "free_y") + 
+                ylim(0,NA)
+        }
+    } else {
+        if(for.paper==T){
+            if(show.calibration.data==T){
+                plot = ggplot() + 
+                    geom_ribbon(data = df.sim, aes(x = year, ymin = lower, ymax = upper, fill = sim.id),alpha = 0.3) + 
+                    geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id), show.legend = F) +
+                    geom_point(data = df.truth, aes(x = year, y = value, color = sim.id, group = group.id, shape = split), show.legend = F) +
+                    facet_wrap(facet_formula, scales = "free_y") + 
+                    scale_y_continuous(labels = function(x){format(x,big.mark=",")},name = NULL, limits = c(0,NA)) + 
+                    theme_bw() +
+                    theme(legend.position = "bottom") + # move legend to the bottom
+                    scale_fill_discrete(labels=c("1" = "No intervention","2" = "Combined interventions"), 
+                                        name=NULL) + 
+                    xlab("Year") # x axis label 
+            } else {
+                plot = ggplot() + 
+                    geom_ribbon(data = df.sim, aes(x = year, ymin = lower, ymax = upper, fill = sim.id),alpha = 0.3) + 
+                    geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id), show.legend = F) +
+                    # geom_point(data = df.truth, aes(x = year, y = value, color = sim.id, group = group.id, shape = split), show.legend = F) +
+                    facet_wrap(facet_formula, scales = "free_y") + 
+                    scale_y_continuous(labels = function(x){format(x,big.mark=",")},name = NULL, limits = c(0,NA)) + 
+                    theme(panel.background = element_blank(), legend.position = "bottom") + # move legend to the bottom
+                    scale_fill_discrete(labels=c("1" = "No intervention","2" = "Combined interventions"), 
+                                        name=NULL) + 
+                    xlab("Year") # x axis label 
+            }
+        } else {
+            plot = ggplot() + 
+                geom_ribbon(data = df.sim, aes(x = year, ymin = lower, ymax = upper, fill = sim.id),alpha = 0.3) + 
+                geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id)) +
+                geom_point(data = df.truth, aes(x = year, y = value, color = sim.id, group = group.id, shape = split)) +
+                facet_wrap(facet_formula, scales = "free_y") + 
+                ylim(0,NA)
+        }
+    }
+    
+    
+
     
     suppressWarnings(print(plot))
     
