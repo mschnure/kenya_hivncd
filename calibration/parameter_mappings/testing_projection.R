@@ -81,7 +81,9 @@ if(1==2){
     young.log.odds  = fit.young$coefficients[1] + 
         fit.young$coefficients["year"]*(2015-testing.anchor.year)
     young.odds = exp(young.log.odds)
-    young.p = 1/(1+exp(-young.log.odds))
+    lower.young.odds = young.odds/4
+    upper.young.odds = young.odds*4
+    young.p = young.odds/(1+young.odds)
     young.p = young.p*TESTING.MODEL$max.proportion
     
     # Old
@@ -92,20 +94,30 @@ if(1==2){
         fit.old$coefficients["age"]*old.age + # old*age
         fit.old$coefficients["year:age"]*(2015-testing.anchor.year)*old.age # old*year*age
     old.odds = exp(old.log.odds)
-    old.p = 1/(1+exp(-old.odds))
+    lower.old.odds = old.odds/4
+    upper.old.odds = old.odds*4
+    old.p = old.odds/(1+old.odds)
     old.p = old.p*TESTING.MODEL$max.proportion
     
-    exp(fit.young$coefficients["year"]) # OR for year, young age
-    exp(fit.old$coefficients["age"]) # OR for older age
-    exp(fit.old$coefficients["year"]) # OR for year, older age
-    exp(fit.old$coefficients["year:age"])
     
+    # For parameters table 
+    # probability, age 35-59
+    c(old.p, (lower.old.odds/(1+lower.old.odds))*TESTING.MODEL$max.proportion, (upper.old.odds/(1+upper.old.odds))*TESTING.MODEL$max.proportion) 
     # OR by year for older age 
-    exp(fit.old$coefficients["year"])*exp(fit.old$coefficients["year:age"]*old.age)
+    old.year.OR = exp(fit.old$coefficients["year"])*exp(fit.old$coefficients["year:age"]*old.age) 
+    c(old.year.OR,old.year.OR/4,old.year.OR*4)
+    # OR by age for older age
+    old.age.OR = exp(fit.old$coefficients["age"]) 
+    c(old.age.OR, old.age.OR/4, old.age.OR*4)
+    # probability, age 17 and under
+    c(young.p, (lower.young.odds/(1+lower.young.odds))*TESTING.MODEL$max.proportion, (upper.young.odds/(1+upper.young.odds))*TESTING.MODEL$max.proportion) 
+    # OR by year for younger age
+    young.year.OR = exp(fit.young$coefficients["year"]) 
+    c(young.year.OR,young.year.OR/4,young.year.OR*4)
     
     x = NULL
     for(i in 1:simset@n.sim){
-        x[i] = simset@simulations[[i]]$parameters$time.varying.parameters$TESTING.RATES$values[41][[1]]["30-34","female",]
+        x[i] = simset@simulations[[i]]$parameters$time.varying.parameters$TESTING.RATES$values[41][[1]]["35-39","female",]
     }
     quantile(x,probs = c(.025,.5,.975))
     

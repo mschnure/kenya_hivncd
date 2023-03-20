@@ -106,14 +106,27 @@ if(fit.to.use=="fit2"){
                             max.proportion=max.proportion)
 }
 
+if(1==2){
+    # For parameters table 
+    exp(fit$coefficients[1] + fit$coefficients[2]*15)
+    odds = exp(fit$coefficients[1] + fit$coefficients[2]*15)
+    lower.odds = odds/4
+    upper.odds = odds*4
+    p = odds/(1+odds)
+    # For table 
+    # Probability of engaging, 2015
+    c(p,(odds/(1+odds))/4,(odds/(1+odds))*4)
+    # pre-2015 slope 
+    pre.2015.OR = exp(fit$coefficients[2])
+    c(pre.2015.OR, pre.2015.OR/4, pre.2015.OR*4)
+    # 2016-2017 slope 
+    universal.ART.OR = exp(fit$coefficients[2] +  fit$coefficients[3] + fit$coefficients[4])
+    c(universal.ART.OR,universal.ART.OR/4,universal.ART.OR*4)
+    # post-2017 slope 
+    post.2017.OR = exp(fit$coefficients[2] +  fit$coefficients[3])
+    c(post.2017.OR,post.2017.OR/4,post.2017.OR*4)
+}
 
-exp(fit$coefficients[1] + fit$coefficients[2]*15)
-odds = exp(fit$coefficients[1] + fit$coefficients[2]*15)
-p = odds/(1+odds)
-p
-exp(fit$coefficients[2])
-exp(fit$coefficients[2] +  fit$coefficients[3] + fit$coefficients[4])
-exp(fit$coefficients[2] +  fit$coefficients[3])
 
 
 # Checking what functional form to use for smoothing
