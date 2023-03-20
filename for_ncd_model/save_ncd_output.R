@@ -15,9 +15,17 @@ simset.for.ncd = run.intervention.on.simset(simset.for.ncd,
                                             end.year = 2040,
                                             intervention = NO.INTERVENTION)
 
+simset.for.ncd.all.max = run.intervention.on.simset(simset.for.ncd,
+                                                    end.year = 2040,
+                                                    intervention = all.max)
+
 # SAVE NEW OUTPUT
 khm = extract.simset.output(simset.for.ncd,
                             intervention.id="no.int")
 
+khm.all.max.interventions = extract.simset.output(simset.for.ncd.all.max,
+                                                  intervention.id="all.max.int")
+
 
 save(khm,file="~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_simset.RData")
+save(khm.all.max.interventions,file="~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_simset_intervention.RData")
