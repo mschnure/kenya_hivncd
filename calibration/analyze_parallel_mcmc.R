@@ -3,10 +3,14 @@ source("model/run_systematic.R")
 # load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
 # load("mcmcruns/mcmc_v13_2023-01-30.Rdata")
 
-mcmc=mcmc.19
+mcmc=mcmc.20
 simset = extract.simset(mcmc,
                            additional.burn=500,  
                            additional.thin=20) 
+
+simset.no.int = run.intervention.on.simset(simset,
+                                           end.year = 2040,
+                                           intervention = NO.INTERVENTION)
 
 simset.17 = extract.simset(mcmc.17,
                            additional.burn=500,  
@@ -55,18 +59,18 @@ trace.plot(mcmc, '*hiv.specific.mortality')
 
 trace.plot(mcmc,"birth")
 trace.plot(mcmc,"*fertility")
-trace.plot(mcmc,"*aging")
+trace.plot(mcmc,"*aging.factor")
 
 get.rhats(mcmc)
 
 ## NOW BACK TO OTHER PLOTS/FITS
-simplot(simset, years=1980:2020, facet.by='age', data.types='incidence')
+simplot(simset.no.int, years=2000:2040, facet.by='age', data.types='incidence', show.individual.sims = T)
 simplot(simset, years=1980:2020, data.types='prevalence')
-simplot(simset, years=1980:2020, facet.by='age', data.types='prevalence')
+simplot(simset.no.int, years=2000:2040, facet.by='age', data.types='prevalence', show.individual.sims = F)
 simplot(simset, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='prevalence')
 simplot(simset, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='incidence')
 simplot(simset, years=1980:2020, facet.by='age', data.types='hiv.mortality',proportion = T)
-simplot(simset, years=1980:2020, data.types=c('awareness',"engagement","suppression"), proportion=T)
+simplot(simset.no.int, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T, show.individual.sims = F)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='awareness', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='engagement', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='suppression', proportion=T)
@@ -78,6 +82,25 @@ params.0 = simset@parameters[simset@n.sim,] # get the last set of values for par
 sim.better = simset@simulations[[simset@n.sim]] # last simulation
 sim.worse = simset@simulations[[50]] 
 simplot(sim.better,sim.worse,data.types = c("incidence"),facet.by = "age",years = 1980:2040)
+
+sim.test = simset.no.int@simulations[[simset@n.sim]]
+params.test = simset.no.int@parameters[simset@n.sim,]
+
+simplot(sim.test,years=2000:2040, facet.by='age', data.types='prevalence')
+
+params.test["cascade.improvement.end.year"] = 2030
+params.2 = params.test
+params.2["over.50.aging.factor"] = 2
+params.2["age.25.to.50.aging.factor"] = 1.5
+params.2["age.20.to.24.aging.factor"] = 2
+params.2["cascade.improvement.end.year"] = 2025
+
+
+sim.test = run.model.for.parameters(params.test, end.year = 2040)
+sim.2 = run.model.for.parameters(params.2, end.year = 2040)
+
+simplot(sim.test,sim.2,years=1980:2040, facet.by='age', data.types='incidence')
+simplot(sim.test, sim.2, years = 2010:2040,data.types = c("awareness","engagement","suppression"),proportion=T)
 
 simplot(sim.better,sim.worse,data.types = c("prevalence"),facet.by = "age",years = 2000:2020)
 simplot(sim.better,sim.worse,data.types = c("awareness","engagement","suppression"),proportion=T)

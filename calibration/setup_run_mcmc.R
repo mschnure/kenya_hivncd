@@ -12,7 +12,8 @@ source("model/run_systematic.R")
 # load("calibration/starting_values_01-05.Rdata") # with aging rates added in - used these for mcmc.7 and mcmc.8
 # load("calibration/starting_values_01-09.Rdata") # with all age transmission splines and male cascade multipliers - used these for mcmc.9-mcmc.12
 # load("calibration/starting_values/starting_values_01-26.Rdata") # with male hiv mortality multiplier 
-load("calibration/starting_values/starting_values_02-09.Rdata") # with scaled calibration targets and starting with final values from mcmc.15 run
+# load("calibration/starting_values/starting_values_02-09.Rdata") # with scaled calibration targets and starting with final values from mcmc.15 run
+load("calibration/starting_values/starting_values_03-20.Rdata") # added cascade.improvement.end.year
 
 set.seed(1234) 
 
@@ -39,6 +40,9 @@ set.seed(1234)
 # mcmc.16 (2/13) - (seed: 1234); using params at end of 15 as new starting values; separate sampling blocks; Todd running on multiple chains
 # mcmc.17 (2/16) - (seed: 1234); changed year weighting; added trate.4
 # mcmc.18 (2/17) - (seed: 1234); corrected trate.4 to be relative to trate.3 instead of trate.2
+# mcmc.19 (3/6) - (seed: 1234); trate.3 at 2018 instead of 2015
+# mcmc.20 (3/20) - incidence weight x2; years 2018 and after weight x2; trate.4 to trate.3 SD widened to log(4)/2
+# mcmc.21 (3/2_) - moved trate.4 spline out to 2040; added cascade improvement end year
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
@@ -80,7 +84,7 @@ control = create.adaptive.blockwise.metropolis.control(var.names = prior@var.nam
                                                        thin = 5) 
 
 # set starting.values 
-mcmc.19 = run.mcmc.with.cache(control = control,
+mcmc.21 = run.mcmc.with.cache(control = control,
                               n.iter = 10000,
                               starting.values = params.start.values, 
                               update.frequency = 5,
