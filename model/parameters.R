@@ -70,7 +70,7 @@ get.default.parameters = function(){
         time.1=1997,
         time.2=2008, 
         time.3=2018,
-        time.4=2030,
+        time.4=2040,
         trate.0=0.7,
         trate.1=0.2,
         trate.2=0.2, 
@@ -124,6 +124,7 @@ get.default.parameters = function(){
         male.awareness.multiplier=1,
         male.engagement.multiplier=1,
         male.suppression.multiplier=1,
+        cascade.improvement.end.year=2030,
         
         ## Mortality/fertility parameters ##
         # multiplies intercept or slope before projecting
@@ -249,11 +250,12 @@ map.model.parameters <- function(parameters,
                                high.time, # when aging rate in that age span is highest; i.e., when bulk of the age span is oldest and aging out
                                post.time) # a few years after the high time 
     {
-        rv = spline(x=c(pre.time, low.time, high.time, post.time),
-                    y=c(base.rate, base.rate/factor, base.rate*factor, base.rate),
+        rv = exp(spline(x=c(pre.time, low.time, high.time, post.time),
+                    y=log(c(base.rate, base.rate/factor, base.rate*factor, base.rate)),
                     method='natural',
-                    xout = times)$y
+                    xout = times)$y)
         rv[times<pre.time | times>post.time] = base.rate
+        
         rv
     }
     
@@ -285,6 +287,7 @@ map.model.parameters <- function(parameters,
                                                               upper = 50) 
         over.50.age.brackets = get.age.brackets.in.range(lower = 50, 
                                                          upper = Inf) 
+        
         if(age=="15-19")
             factor=sampled.parameters['age.15.to.19.aging.factor']
         else if (age=="20-24")
@@ -302,20 +305,18 @@ map.model.parameters <- function(parameters,
                         high.time=high.time,
                         post.time=post.time)
     })
-    
+
     for (year in 1:length(aging.years)) {
         aging.rates = base.aging.rates
         for (age in 1:length(age.brackets.to.update)){
             age.name = age.brackets.to.update[age]
-            aging.rates[age.name,,,] = rates.per.age[[age]][year] }
+            aging.rates[age.name,,,setdiff(dimnames(aging.rates)$hiv.status,"hiv_negative")] = rates.per.age[[age]][year] }
         
         parameters = add.time.varying.parameter.value(parameters,
                                                       parameter.name='AGING.RATES',
                                                       value = aging.rates,
-                                                      time = year)
+                                                      time = aging.years[year])
     }
-    
-    
     
     #-- MORTALITY --#
     ## HIV MORTALITY ## 
@@ -442,9 +443,8 @@ map.model.parameters <- function(parameters,
     }
     
     
-    
     #-- DIAGNOSES --#
-    testing.times = c(1976:project.to.year)
+    testing.times = c(1976:min(project.to.year,sampled.parameters["cascade.improvement.end.year"], na.rm = T))
     testing.rates = c(lapply(testing.times, function(year){
     
         projected.log.odds = (TESTING.MODEL$intercepts+sampled.parameters['log.OR.testing.intercept'])+
@@ -749,7 +749,7 @@ map.model.parameters <- function(parameters,
     
     
     #-- ENGAGEMENT --#
-    engagement.times = c(1975:project.to.year)
+    engagement.times = c(1975:min(project.to.year,sampled.parameters["cascade.improvement.end.year"], na.rm = T))
     engagement.rates = c(lapply(engagement.times, function(year){
         
         if(year<2016 | year>2017){
