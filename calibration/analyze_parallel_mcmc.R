@@ -3,27 +3,24 @@ source("model/run_systematic.R")
 # load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
 # load("mcmcruns/mcmc_v13_2023-01-30.Rdata")
 
-mcmc=mcmc.20
-simset = extract.simset(mcmc,
+mcmc=mcmc.21
+simset.21 = extract.simset(mcmc.21,
+                           additional.burn=125,  
+                           additional.thin=3) 
+simset.20 = extract.simset(mcmc.20,
                            additional.burn=500,  
                            additional.thin=20) 
 
-simset.no.int = run.intervention.on.simset(simset,
-                                           end.year = 2040,
-                                           intervention = NO.INTERVENTION)
+simset.no.int.21 = run.intervention.on.simset(simset.21,
+                                              end.year = 2040,
+                                              intervention = NO.INTERVENTION)
 
-simset.17 = extract.simset(mcmc.17,
-                           additional.burn=500,  
-                           additional.thin=14) 
-
-simset.18 = extract.simset(mcmc.18,
-                           additional.burn=500,  
-                           additional.thin=20) 
-
-simplot(simset.17,simset.18, years=2010:2020, facet.by='age', data.types='incidence', show.individual.sims = F)
+simset.no.int.20 = run.intervention.on.simset(simset.20,
+                                              end.year = 2040,
+                                              intervention = NO.INTERVENTION)
 
 ## FIRST, LOOK AT OVERALL FIT (don't look at other plots until I look at mixing/MCMC properties)
-simplot(simset, years = 1980:2020)
+simplot(simset.no.int, years = 1980:2040)
 
 ## MCMC PROPERTIES ##
 
@@ -41,7 +38,7 @@ acceptance.plot(mcmc,window.iterations = 200,by.block = T,aggregate.chains = T)
 # if it's getting dragged, there should be data justifying this drag
 
 # matches parameters with string, use * if the parameter doesn't start with that string
-trace.plot(mcmc, 'trate')
+trace.plot(mcmc.21, 'trate')
 trace.plot(mcmc,"*transmission")
 
 trace.plot(mcmc, 'female.to.male.m')
@@ -49,6 +46,7 @@ trace.plot(mcmc, 'female.to.male.m')
 trace.plot(mcmc,"*testing") 
 trace.plot(mcmc,"*engagement") 
 trace.plot(mcmc,"*suppression") 
+trace.plot(mcmc,"*improvement") 
 
 trace.plot(mcmc,"age.") 
 trace.plot(mcmc,"age.",additional.burn = 1000)
@@ -64,13 +62,13 @@ trace.plot(mcmc,"*aging.factor")
 get.rhats(mcmc)
 
 ## NOW BACK TO OTHER PLOTS/FITS
-simplot(simset.no.int, years=2000:2040, facet.by='age', data.types='incidence', show.individual.sims = T)
+simplot(simset.no.int.21, years=2000:2040, facet.by='age', data.types='incidence', show.individual.sims = F)
 simplot(simset, years=1980:2020, data.types='prevalence')
 simplot(simset.no.int, years=2000:2040, facet.by='age', data.types='prevalence', show.individual.sims = F)
 simplot(simset, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='prevalence')
 simplot(simset, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='incidence')
 simplot(simset, years=1980:2020, facet.by='age', data.types='hiv.mortality',proportion = T)
-simplot(simset.no.int, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T, show.individual.sims = F)
+simplot(simset.no.int.21, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T, show.individual.sims = F)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='awareness', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='engagement', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='suppression', proportion=T)
@@ -88,19 +86,29 @@ params.test = simset.no.int@parameters[simset@n.sim,]
 
 simplot(sim.test,years=2000:2040, facet.by='age', data.types='prevalence')
 
-params.test["cascade.improvement.end.year"] = 2030
-params.2 = params.test
-params.2["over.50.aging.factor"] = 2
-params.2["age.25.to.50.aging.factor"] = 1.5
-params.2["age.20.to.24.aging.factor"] = 2
-params.2["cascade.improvement.end.year"] = 2025
+params.first = simset.no.int.21@parameters[1,]
+sim.first = simset.no.int.21@simulations[[1]]
+
+simplot(sim.last, sim.last.run, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T)
+
+sim.last = simset.no.int.21@simulations[[simset.no.int.21@n.sim]]
+params.last = simset.no.int.21@parameters[simset.no.int.21@n.sim,]
+
+params.last.end.2040 = params.last
+params.last.end.2040["cascade.improvement.end.year"] = 2040
+
+params.last.new.trate.4 = params.last
+params.last.new.trate.4["trate.4"] = 0.5
+
+sim.last.end.2040 = run.model.for.parameters(params.last.end.2040, end.year = 2040)
+sim.last.new.trate.4 = run.model.for.parameters(params.last.new.trate.4, end.year = 2040)
+
+simplot(sim.last.end.2040, sim.last.new.trate.4, years=2000:2040, facet.by='age', data.types='incidence')
+simplot(sim.last.end.2040, sim.last.new.trate.4, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T)
 
 
-sim.test = run.model.for.parameters(params.test, end.year = 2040)
-sim.2 = run.model.for.parameters(params.2, end.year = 2040)
+x = sapply(simset.no.int.21@simulations,extract.incidence,years=2040)
 
-simplot(sim.test,sim.2,years=1980:2040, facet.by='age', data.types='incidence')
-simplot(sim.test, sim.2, years = 2010:2040,data.types = c("awareness","engagement","suppression"),proportion=T)
 
 simplot(sim.better,sim.worse,data.types = c("prevalence"),facet.by = "age",years = 2000:2020)
 simplot(sim.better,sim.worse,data.types = c("awareness","engagement","suppression"),proportion=T)
@@ -109,9 +117,9 @@ simplot(sim.0,data.types = c("hiv.mortality"),facet.by="age",proportion = T,year
 simplot(sim.0,data.types = c("population"),facet.by = "age",years=1980:2020) 
 
 # Check likelihood 
-lik = create.likelihood(parameters=sim.0$parameters) 
+lik = create.likelihood(parameters=sim.last$parameters) 
 lik.components = attr(lik,"components")
-round(sapply(lik.components,function(sub.lik){exp(sub.lik(sim.better) - sub.lik(sim.worse))}),2) 
+round(sapply(lik.components,function(sub.lik){exp(sub.lik(sim.last.end.2040) - sub.lik(sim.last.new.trate.4))}),2) 
 round(exp(lik(sim.better) - lik(sim.worse)),2) 
 print(lik.components$hiv.mortality(sim.11,debug = T))
 
