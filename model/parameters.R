@@ -70,12 +70,14 @@ get.default.parameters = function(){
         time.1=1997,
         time.2=2008, 
         time.3=2018,
+        time.3.5=2030,
         time.4=2040,
         trate.0=0.7,
         trate.1=0.2,
         trate.2=0.2, 
         trate.3=0.15,
         trate.4=0.15,
+        proportion.trate.change.by.3.5=0.75,
         # sex transmission multipliers
         male.to.male.multiplier=1,
         female.to.male.multiplier=1,
@@ -124,7 +126,7 @@ get.default.parameters = function(){
         male.awareness.multiplier=1,
         male.engagement.multiplier=1,
         male.suppression.multiplier=1,
-        cascade.improvement.end.year=2030,
+        cascade.improvement.end.year=2040,
         
         ## Mortality/fertility parameters ##
         # multiplies intercept or slope before projecting
@@ -712,6 +714,12 @@ map.model.parameters <- function(parameters,
                                                   value = transmission.rates.4,
                                                   time = sampled.parameters['time.4'])
     
+    
+    transmission.rates.3.5 = transmission.rates.3 + (transmission.rates.4-transmission.rates.3)*sampled.parameters["proportion.trate.change.by.3.5"]
+    parameters = add.time.varying.parameter.value(parameters,
+                                                  parameter.name='TRANSMISSION.RATES',
+                                                  value = transmission.rates.3.5,
+                                                  time = sampled.parameters['time.3.5'])
     
     infectiousness.h = array(0,
                              dim=sapply(state.dim.names, length),
