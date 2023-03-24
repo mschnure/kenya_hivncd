@@ -122,7 +122,7 @@ prior = join.distributions(
     male.engagement.multiplier = Lognormal.Distribution(log(1), log(4)/2),
     male.suppression.multiplier = Lognormal.Distribution(log(1), log(4)/2),
     
-    cascade.improvement.end.year = Uniform.Distribution(2025,2031), # randomly sampled in this range
+    # cascade.improvement.end.year = Uniform.Distribution(2025,2031), # randomly sampled in this range
     
     # mortality/fertility parameters 
     age.45.to.65.mortality.intercept.multiplier = Lognormal.Distribution(log(1), log(4)/2),
@@ -222,7 +222,7 @@ parameter.var.blocks = list(
                                 "male.engagement.multiplier",
                                 "male.suppression.multiplier"),
     
-    cascade.improvement.end.year = c("cascade.improvement.end.year"),
+    # cascade.improvement.end.year = c("cascade.improvement.end.year"),
     
     general.mortality = c("age.45.to.65.mortality.intercept.multiplier",
                           "age.45.to.65.mortality.slope.multiplier",
