@@ -60,13 +60,15 @@ prior = join.distributions(
                                      median.r3.to.r2 = 1,
                                      sd.r3.to.r2 = log(2)/2,
                                      median.r4.to.r3 = 1,
-                                     sd.r4.to.r3 = log(4)/2),
+                                     sd.r4.to.r3 = log(2)/2),
     
     
     # trate.0 = Lognormal.Distribution(log(.5), log(8)/2), # ORIGINALLY 1; (log(1) = 0, but leaving this way for clarity)
     # trate.1 = Lognormal.Distribution(log(.25), log(8)/2), # ORIGINALLY 1
     # trate.2 = Lognormal.Distribution(log(.25), log(8)/2), # ORIGINALLY 1
     # trate.3 = Lognormal.Distribution(log(.25), log(8)/2), # ORIGINALLY 1
+    
+    proportion.trate.change.by.3.5 = Beta.Distribution(alpha = 12,beta = 4),
     
     # sex transmission multipliers
     female.to.male.multiplier = Lognormal.Distribution(log(1), log(4)/2), 
@@ -168,7 +170,8 @@ parameter.var.blocks = list(
     trate1 = "trate.1",
     trate2 = "trate.2",
     trate3 = "trate.3", 
-    trate4 = "trate.4", 
+    trate4 = c("trate.4", 
+               "proportion.trate.change.by.3.5"),
     
     sex.transmission.multiplier = c("female.to.male.multiplier"),
     

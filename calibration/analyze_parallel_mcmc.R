@@ -3,13 +3,20 @@ source("model/run_systematic.R")
 # load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
 # load("mcmcruns/mcmc_v13_2023-01-30.Rdata")
 
-mcmc=mcmc.21
+mcmc=mcmc.22
+simset.22 = extract.simset(mcmc.22,
+                           additional.burn=500,  
+                           additional.thin=20) 
 simset.21 = extract.simset(mcmc.21,
                            additional.burn=125,  
                            additional.thin=3) 
 simset.20 = extract.simset(mcmc.20,
                            additional.burn=500,  
                            additional.thin=20) 
+
+simset.no.int.22 = run.intervention.on.simset(simset.22,
+                                              end.year = 2040,
+                                              intervention = NO.INTERVENTION)
 
 simset.no.int.21 = run.intervention.on.simset(simset.21,
                                               end.year = 2040,
@@ -20,7 +27,7 @@ simset.no.int.20 = run.intervention.on.simset(simset.20,
                                               intervention = NO.INTERVENTION)
 
 ## FIRST, LOOK AT OVERALL FIT (don't look at other plots until I look at mixing/MCMC properties)
-simplot(simset.no.int, years = 1980:2040)
+simplot(simset.no.int.22, years = 1980:2040)
 
 ## MCMC PROPERTIES ##
 
@@ -38,7 +45,7 @@ acceptance.plot(mcmc,window.iterations = 200,by.block = T,aggregate.chains = T)
 # if it's getting dragged, there should be data justifying this drag
 
 # matches parameters with string, use * if the parameter doesn't start with that string
-trace.plot(mcmc.21, 'trate')
+trace.plot(mcmc, 'trate')
 trace.plot(mcmc,"*transmission")
 
 trace.plot(mcmc, 'female.to.male.m')
@@ -46,7 +53,6 @@ trace.plot(mcmc, 'female.to.male.m')
 trace.plot(mcmc,"*testing") 
 trace.plot(mcmc,"*engagement") 
 trace.plot(mcmc,"*suppression") 
-trace.plot(mcmc,"*improvement") 
 
 trace.plot(mcmc,"age.") 
 trace.plot(mcmc,"age.",additional.burn = 1000)
@@ -62,13 +68,14 @@ trace.plot(mcmc,"*aging.factor")
 get.rhats(mcmc)
 
 ## NOW BACK TO OTHER PLOTS/FITS
-simplot(simset.no.int.21, years=2000:2040, facet.by='age', data.types='incidence', show.individual.sims = F)
+simplot(simset.no.int.22, years=2000:2040, facet.by='age', data.types='incidence', show.individual.sims = T)
 simplot(simset, years=1980:2020, data.types='prevalence')
-simplot(simset.no.int, years=2000:2040, facet.by='age', data.types='prevalence', show.individual.sims = F)
+simplot(simset.no.int.22, years=2000:2040, facet.by='age', data.types='prevalence', show.individual.sims = F)
 simplot(simset, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='prevalence')
 simplot(simset, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='incidence')
 simplot(simset, years=1980:2020, facet.by='age', data.types='hiv.mortality',proportion = T)
-simplot(simset.no.int.21, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T, show.individual.sims = F)
+simplot(simset.no.int.22, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T, show.individual.sims = F)
+simplot(simset.no.int.22, years=2010:2040, data.types=c('awareness',"engagement","suppression"), facet.by=c('age','sex'), proportion=T, show.individual.sims = F)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='awareness', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='engagement', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='suppression', proportion=T)
@@ -105,6 +112,13 @@ sim.last.new.trate.4 = run.model.for.parameters(params.last.new.trate.4, end.yea
 
 simplot(sim.last.end.2040, sim.last.new.trate.4, years=2000:2040, facet.by='age', data.types='incidence')
 simplot(sim.last.end.2040, sim.last.new.trate.4, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T)
+
+# checking sims with high trate.4
+qplot(simset.22@parameters[,"trate.4"])
+z= (1:simset.22@n.sim)[simset.22@parameters[,"trate.4"]>.4]
+
+qplot(simset.22@parameters[,"trate.4"]/simset.22@parameters[,"trate.3"])
+qplot(simset.22@parameters[z,"trate.4"]/simset.22@parameters[z,"trate.3"])
 
 
 x = sapply(simset.no.int.21@simulations,extract.incidence,years=2040)
