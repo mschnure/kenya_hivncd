@@ -1,5 +1,5 @@
 
-MCMC.DIR = "R:melissa/mcmcruns"
+source('calibration/file_settings.R')
 
 N.CHAINS = 4
 
@@ -60,6 +60,6 @@ create.mcmc.cache(control = control,
                   n.iter = 100000,
                   starting.values = n.start.values, 
                   cache.frequency = 500,
-                  dir = file.path(MCMC.DIR, "mcmc_cache"))
+                  dir = file.path(MCMC.DIR, CACHE.NAME))
 
 
