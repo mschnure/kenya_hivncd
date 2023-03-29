@@ -59,8 +59,8 @@ prior = join.distributions(
                                      sd.r1.to.r2 = log(2)/2,
                                      median.r3.to.r2 = 1,
                                      sd.r3.to.r2 = log(2)/2,
-                                     median.r4.to.r3 = 1, # change to 1.25 for v25 
-                                     sd.r4.to.r3 = log(4)/2), # change to log(2)/2 for v25
+                                     median.r4.to.r3 = 1.25, # change to 1.25 for v25 
+                                     sd.r4.to.r3 = log(2)/2), # change to log(2)/2 for v25
     
     # trate.0 = Lognormal.Distribution(log(.5), log(8)/2), # ORIGINALLY 1; (log(1) = 0, but leaving this way for clarity)
     # trate.1 = Lognormal.Distribution(log(.25), log(8)/2), # ORIGINALLY 1
