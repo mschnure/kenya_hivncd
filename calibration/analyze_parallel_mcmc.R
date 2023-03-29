@@ -3,7 +3,10 @@ source("model/run_systematic.R")
 # load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
 # load("mcmcruns/mcmc_v13_2023-01-30.Rdata")
 
-mcmc=mcmc.22
+mcmc=mcmc.23
+simset.23 = extract.simset(mcmc.23,
+                           additional.burn=500,  
+                           additional.thin=6) 
 simset.22 = extract.simset(mcmc.22,
                            additional.burn=500,  
                            additional.thin=20) 
@@ -13,6 +16,14 @@ simset.21 = extract.simset(mcmc.21,
 simset.20 = extract.simset(mcmc.20,
                            additional.burn=500,  
                            additional.thin=20) 
+simset.19 = extract.simset(mcmc.19,
+                           additional.burn=500,  
+                           additional.thin=20) 
+
+
+simset.no.int.23 = run.intervention.on.simset(simset.23,
+                                              end.year = 2040,
+                                              intervention = NO.INTERVENTION)
 
 simset.no.int.22 = run.intervention.on.simset(simset.22,
                                               end.year = 2040,
@@ -26,8 +37,12 @@ simset.no.int.20 = run.intervention.on.simset(simset.20,
                                               end.year = 2040,
                                               intervention = NO.INTERVENTION)
 
-## FIRST, LOOK AT OVERALL FIT (don't look at other plots until I look at mixing/MCMC properties)
-simplot(simset.no.int.22, years = 1980:2040)
+simset.no.int.19 = run.intervention.on.simset(simset.19,
+                                              end.year = 2040,
+                                              intervention = NO.INTERVENTION)
+
+p## FIRST, LOOK AT OVERALL FIT (don't look at other plots until I look at mixing/MCMC properties)
+simplot(simset.no.int.23, years = 1980:2040)
 
 ## MCMC PROPERTIES ##
 
@@ -68,19 +83,21 @@ trace.plot(mcmc,"*aging.factor")
 get.rhats(mcmc)
 
 ## NOW BACK TO OTHER PLOTS/FITS
-simplot(simset.no.int.22, years=2000:2040, facet.by='age', data.types='incidence', show.individual.sims = T)
+simplot(simset.no.int.23, simset.no.int.19, years=2000:2040, facet.by='age', data.types='incidence', show.individual.sims = F)
 simplot(simset, years=1980:2020, data.types='prevalence')
-simplot(simset.no.int.22, years=2000:2040, facet.by='age', data.types='prevalence', show.individual.sims = F)
-simplot(simset, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='prevalence')
-simplot(simset, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='incidence')
+simplot(simset.no.int.23, years=2000:2040, facet.by='age', data.types='prevalence', show.individual.sims = F)
+simplot(simset.no.int.23, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='prevalence')
+simplot(simset.no.int.23, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='incidence')
 simplot(simset, years=1980:2020, facet.by='age', data.types='hiv.mortality',proportion = T)
-simplot(simset.no.int.22, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T, show.individual.sims = F)
-simplot(simset.no.int.22, years=2010:2040, data.types=c('awareness',"engagement","suppression"), facet.by=c('age','sex'), proportion=T, show.individual.sims = F)
+simplot(simset.no.int.23, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T, show.individual.sims = F)
+simplot(simset.no.int.23, years=2010:2040, data.types=c('awareness',"engagement","suppression"), facet.by=c('age','sex'), proportion=T, show.individual.sims = F)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='awareness', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='engagement', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='suppression', proportion=T)
 
-simplot(simset, years=1980:2020, facet.by='age', data.types='population')
+simplot(simset.no.int.23, years=1980:2040, facet.by='age', data.types='population', show.individual.sims = F)
+simplot(simset.no.int.23, years=1980:2030, facet.by='age', data.types='population', 
+        ages = c("60-64","65-69","70-74","75-79","80 and over"), show.individual.sims = F)
 
 # Can check last run of mcmc to change parameters manually 
 params.0 = simset@parameters[simset@n.sim,] # get the last set of values for parameters

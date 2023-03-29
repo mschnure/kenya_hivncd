@@ -46,7 +46,9 @@ set.seed(1234)
 # mcmc.20 (3/20) - incidence weight x2; years 2018 and after weight x2; trate.4 to trate.3 SD widened to log(4)/2
 # mcmc.21 (3/24) - moved trate.4 spline out to 2040; added cascade improvement end year
 # mcmc.22 (3/27) - removed cascade improvement end year; added proportion.trate.change.by.3.5
-# mcmc.22 (3/2_) - added proportion.trate.change.by.3.5 to sampling; trate.4 to trate.3 SD narrowed back to log(2)/2
+# mcmc.23 (3/29) - added proportion.trate.change.by.3.5 to sampling; trate.4 to trate.3 SD narrowed back to log(2)/2
+# mcmc.24 (3/3_) - narrowed prior on proportion.trate.change.by.3.5; trate.4 to trate.3 SD widened back to log(4)/2
+# mcmc.25 (3/3_ - simultaneous with v24) - median trate.4.to.3 up to 1.25; trate.4 to trate.3 SD narrowed back to log(2)/2
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
