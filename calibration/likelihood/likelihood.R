@@ -18,7 +18,7 @@ library("mvtnorm")
 
 WEIGHT.YEARS = 1970:2030
 WEIGHTS.BY.YEAR = (1/4)^(WEIGHT.YEARS<2010) # before 2010, 1/4
-WEIGHTS.BY.YEAR[WEIGHT.YEARS>=2018] = 2
+WEIGHTS.BY.YEAR[WEIGHT.YEARS>=2018] = 4
 # WEIGHTS.BY.YEAR=rep(1,length(WEIGHT.YEARS))
 names(WEIGHTS.BY.YEAR) = WEIGHT.YEARS
 
@@ -42,17 +42,17 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                              prevalence.correlation.structure="auto.regressive",
                              #awareness
                              awareness.years=years,
-                             awareness.weight=1*6.785714, # ratio of points, when accounting for weighting by year (see data_point_weighting)
+                             awareness.weight=1*4.184211, # ratio of points, when accounting for weighting by year (see data_point_weighting)
                              awareness.obs.correlation=0.5,
                              awareness.correlation.structure="compound.symmetry",
                              #engagement
                              engagement.years=years,
-                             engagement.weight=1*6.785714, # ratio of points, when accounting for weighting by year (see data_point_weighting)
+                             engagement.weight=1*4.184211, # ratio of points, when accounting for weighting by year (see data_point_weighting)
                              engagement.obs.correlation=0.5,
                              engagement.correlation.structure="compound.symmetry",
                              #suppression
                              suppression.years=years,
-                             suppression.weight=1*23.75, # ratio of points, when accounting for weighting by year (see data_point_weighting)
+                             suppression.weight=1*9.9375, # ratio of points, when accounting for weighting by year (see data_point_weighting)
                              suppression.obs.correlation=0.5,
                              suppression.correlation.structure="compound.symmetry",
                              #population
