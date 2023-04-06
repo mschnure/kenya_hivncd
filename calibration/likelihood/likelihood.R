@@ -147,13 +147,20 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                         use.age=T,
                                                         use.age.sex=F)
     
+    awareness.trend.lik = create.likelihood.for.trend(data.type = "awareness",
+                                                      year.1=2025,
+                                                      year.2=2030,
+                                                      probability.of.decrease=.05,
+                                                      use.strata=F)
+    
     components = list(incidence=incidence.lik,
                       prevalence=prevalence.lik,
                       awareness=awareness.lik,
                       engagement=engagement.lik,
                       suppression=suppression.lik,
                       population=population.lik,
-                      hiv.mortality=hiv.mortality.lik)
+                      hiv.mortality=hiv.mortality.lik,
+                      awareness.trend=awareness.trend.lik)
     
     rv = function(sim){ 
         
@@ -174,6 +181,59 @@ create.likelihood = function(data.manager=DATA.MANAGER,
     
     # returns a function that can then be run on a sim to return the likelihood 
     rv
+}
+
+create.likelihood.for.trend = function(data.type,
+                                       year.1,
+                                       year.2,
+                                       probability.of.decrease,
+                                       use.strata){
+    
+    function(sim){
+        compute.trend.likelihood(sim=sim,
+                                 data.type=data.type,
+                                 year.1=year.1,
+                                 year.2=year.2,
+                                 p=probability.of.decrease,
+                                 use.strata=use.strata)
+    }
+    
+}
+
+compute.trend.likelihood = function(sim,
+                                    data.type,
+                                    year.1,
+                                    year.2,
+                                    use.strata,
+                                    p){
+
+    if(use.strata)
+        keep.dimensions = c("year","age","sex")
+    else
+        keep.dimensions="year"
+    
+    value.1 = extract.data(sim=sim,
+                           data.type=data.type,
+                           keep.dimensions = keep.dimensions,
+                           years=year.1)
+    
+    value.2 = extract.data(sim=sim,
+                           data.type=data.type,
+                           keep.dimensions = keep.dimensions,
+                           years=year.2)
+    
+    y = as.numeric(value.2<value.1) # decreasing
+    
+    # if y=1 (decreasing), d=p
+    # if y=0 (increasing or flat), d=(1-p)
+    # d = (p^y)*((1-p)^(1-y))
+    
+    # log version - not sure which to use/how
+    d = y*log(p) + (1-y)*log(1-p)
+    
+    # return the density 
+    rv = sum(d) # log likelihood so can sum these
+    
 }
 
 # Using a call to get.likelihood.elements.by.data.type, assembles the likelihood elements once per data type (slow), 
