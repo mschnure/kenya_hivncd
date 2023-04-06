@@ -3,7 +3,19 @@ source("model/run_systematic.R")
 # load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
 # load("mcmcruns/mcmc_v13_2023-01-30.Rdata")
 
-mcmc=mcmc.23
+# mcmc=mcmc.23
+simset.26 = extract.simset(mcmc.26.long,
+                           additional.burn=500,  
+                           additional.thin=16) 
+simset.26.short = extract.simset(mcmc.26.short,
+                                 additional.burn=100,  
+                                 additional.thin=8) 
+simset.25 = extract.simset(mcmc.25,
+                           additional.burn=500,  
+                           additional.thin=20) 
+simset.24 = extract.simset(mcmc.24,
+                           additional.burn=500,  
+                           additional.thin=15) 
 simset.23 = extract.simset(mcmc.23,
                            additional.burn=500,  
                            additional.thin=6) 
@@ -20,6 +32,38 @@ simset.19 = extract.simset(mcmc.19,
                            additional.burn=500,  
                            additional.thin=20) 
 
+# set cascade improvement year to 2030 
+simset.no.int.26.test = run.intervention.on.simset(simset.26.long,
+                                                   end.year = 2040,
+                                                   intervention = NO.INTERVENTION)
+
+# set cascade improvement year back to 2040 
+simset.no.int.26 = run.intervention.on.simset(simset.26.long,
+                                              end.year = 2040,
+                                              intervention = NO.INTERVENTION)
+
+# set cascade improvement year to 2030 
+simset.no.int.26.test.short = run.intervention.on.simset(simset.26.short,
+                                                         end.year = 2040,
+                                                         intervention = NO.INTERVENTION)
+
+# set cascade improvement year back to 2040 
+simset.no.int.26.short = run.intervention.on.simset(simset.26.short,
+                                                    end.year = 2040,
+                                                    intervention = NO.INTERVENTION)
+
+# set cascade improvement year to 2030 for test 1 and 2025 for test 2
+simset.no.int.23.test.2 = run.intervention.on.simset(simset.23,
+                                                   end.year = 2040,
+                                                   intervention = NO.INTERVENTION)
+
+simset.no.int.25 = run.intervention.on.simset(simset.25,
+                                              end.year = 2040,
+                                              intervention = NO.INTERVENTION)
+
+simset.no.int.24 = run.intervention.on.simset(simset.24,
+                                              end.year = 2040,
+                                              intervention = NO.INTERVENTION)
 
 simset.no.int.23 = run.intervention.on.simset(simset.23,
                                               end.year = 2040,
@@ -41,8 +85,8 @@ simset.no.int.19 = run.intervention.on.simset(simset.19,
                                               end.year = 2040,
                                               intervention = NO.INTERVENTION)
 
-p## FIRST, LOOK AT OVERALL FIT (don't look at other plots until I look at mixing/MCMC properties)
-simplot(simset.no.int.23, years = 1980:2040)
+## FIRST, LOOK AT OVERALL FIT (don't look at other plots until I look at mixing/MCMC properties)
+simplot(simset.no.int.26.test, years = 2000:2040)
 
 ## MCMC PROPERTIES ##
 
@@ -69,6 +113,8 @@ trace.plot(mcmc,"*testing")
 trace.plot(mcmc,"*engagement") 
 trace.plot(mcmc,"*suppression") 
 
+trace.plot(mcmc,"male.awareness.multiplier")
+
 trace.plot(mcmc,"age.") 
 trace.plot(mcmc,"age.",additional.burn = 1000)
 
@@ -80,22 +126,25 @@ trace.plot(mcmc,"birth")
 trace.plot(mcmc,"*fertility")
 trace.plot(mcmc,"*aging.factor")
 
+trace.plot(mcmc, "proportion.trate.change.by.3.5")
+
 get.rhats(mcmc)
 
 ## NOW BACK TO OTHER PLOTS/FITS
-simplot(simset.no.int.23, simset.no.int.19, years=2000:2040, facet.by='age', data.types='incidence', show.individual.sims = F)
+simplot(simset.no.int.26.test.short, simset.no.int.26.test, years=2000:2040, facet.by='age', data.types='incidence', show.individual.sims = F)
 simplot(simset, years=1980:2020, data.types='prevalence')
-simplot(simset.no.int.23, years=2000:2040, facet.by='age', data.types='prevalence', show.individual.sims = F)
-simplot(simset.no.int.23, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='prevalence')
-simplot(simset.no.int.23, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='incidence')
+simplot(simset.no.int.25, years=2000:2040, facet.by='age', data.types='prevalence', show.individual.sims = F)
+simplot(simset.no.int.25, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='prevalence')
+simplot(simset.no.int.25, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='incidence')
 simplot(simset, years=1980:2020, facet.by='age', data.types='hiv.mortality',proportion = T)
-simplot(simset.no.int.23, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T, show.individual.sims = F)
-simplot(simset.no.int.23, years=2010:2040, data.types=c('awareness',"engagement","suppression"), facet.by=c('age','sex'), proportion=T, show.individual.sims = F)
-simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='awareness', proportion=T)
+simplot(simset.no.int.26.test, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T, show.individual.sims = F)
+simplot(simset.no.int.26.test, years=2010:2040, data.types=c('awareness',"engagement","suppression"), facet.by=c('age','sex'), proportion=T, show.individual.sims = F)
+simplot(simset.no.int.26.test, years=1980:2040, data.types='awareness', proportion=T)
+simplot(simset.no.int.26.test, years=1980:2040, facet.by=c('age','sex'), data.types='awareness', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='engagement', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='suppression', proportion=T)
 
-simplot(simset.no.int.23, years=1980:2040, facet.by='age', data.types='population', show.individual.sims = F)
+simplot(simset.no.int.25, years=1980:2040, facet.by='age', data.types='population', show.individual.sims = F)
 simplot(simset.no.int.23, years=1980:2030, facet.by='age', data.types='population', 
         ages = c("60-64","65-69","70-74","75-79","80 and over"), show.individual.sims = F)
 
@@ -148,10 +197,10 @@ simplot(sim.0,data.types = c("hiv.mortality"),facet.by="age",proportion = T,year
 simplot(sim.0,data.types = c("population"),facet.by = "age",years=1980:2020) 
 
 # Check likelihood 
-lik = create.likelihood(parameters=sim.last$parameters) 
+lik = create.likelihood(parameters=sim$parameters) 
 lik.components = attr(lik,"components")
-round(sapply(lik.components,function(sub.lik){exp(sub.lik(sim.last.end.2040) - sub.lik(sim.last.new.trate.4))}),2) 
-round(exp(lik(sim.better) - lik(sim.worse)),2) 
+round(sapply(lik.components,function(sub.lik){exp(sub.lik(sim.level) - sub.lik(sim.decreasing))}),2) 
+round(exp(lik(sim.level) - lik(sim.decreasing)),2) 
 print(lik.components$hiv.mortality(sim.11,debug = T))
 
 
