@@ -29,7 +29,7 @@ if(1==2){
 run.model.for.parameters = function(variable.parameters,
                                     parameters=create.model.parameters(),
                                     start.year=1970,
-                                    end.year=2021,
+                                    end.year=2031,
                                     interventions=NO.INTERVENTION){
     
     sampled.parameters = get.default.parameters()
