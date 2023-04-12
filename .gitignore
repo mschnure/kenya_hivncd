@@ -10,6 +10,7 @@
 data
 mcmcruns
 cached
+calibration/debug.parameters.Rdata
 
 # Project-specific
 /temp/
