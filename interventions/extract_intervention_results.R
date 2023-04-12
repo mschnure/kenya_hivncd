@@ -149,7 +149,7 @@ generate.age.distribution = function(results.array,
                 geom_bar(stat="identity",position = "dodge") + 
                 labs(title = paste0(outcome),
                      subtitle = paste0(sexes ,collapse=", "))+
-                scale_y_continuous(labels = scales::percent,name = NULL,limits=c(0,0.17)) + 
+                scale_y_continuous(labels = scales::percent,name = NULL,limits=c(0,0.225)) + 
                 theme(panel.background = element_blank(), legend.position = "bottom"
                       # panel.border = element_blank(), axis.line = element_line(color="gray")
                       ) + 
@@ -159,7 +159,7 @@ generate.age.distribution = function(results.array,
                 geom_bar(stat="identity",position = "dodge") + 
                 labs(title = paste0(outcome),
                      subtitle = paste0(sexes ,collapse=", "))+
-                scale_y_continuous(labels = function(x){format(x,big.mark=",")},name = NULL,limits=c(0,100000)) + 
+                scale_y_continuous(labels = function(x){format(x,big.mark=",")},name = NULL,limits=c(0,200000)) + 
                 theme(panel.background = element_blank(), legend.position = "bottom"
                       # panel.border = element_blank(), axis.line = element_line(color="gray")
                 ) + 
