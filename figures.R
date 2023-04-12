@@ -12,7 +12,7 @@ library("ggsci")
 
 source("interventions/run_interventions_on_simset.R")
 calibration.plot.years = 2000:2020
-intervention.plot.years = 2010:2040
+intervention.plot.years = 2000:2040
 
 ##-----------------------------------------##
 ##-- CALIBRATION PLOTS (no intervention) --##
@@ -149,8 +149,10 @@ generate.age.distribution(results.array = full.results.array,
     dim(prop.over.age.export.to.csv) = sapply(dim.names,length)
     dimnames(prop.over.age.export.to.csv) = dim.names
     
-    median.export.to.csv
-    prop.over.age.export.to.csv
+    # median.export.to.csv
+    # prop.over.age.export.to.csv
+    
+    both.sexes.export = cbind(median.export.to.csv,prop.over.age.export.to.csv)
     
     }
 
@@ -163,8 +165,10 @@ generate.age.distribution(results.array = full.results.array,
     dim(prop.over.age.export.to.csv.female) = sapply(dim.names,length)
     dimnames(prop.over.age.export.to.csv.female) = dim.names
     
-    median.export.to.csv.female
-    prop.over.age.export.to.csv.female
+    # median.export.to.csv.female
+    # prop.over.age.export.to.csv.female
+    
+    female.export = cbind(median.export.to.csv.female,prop.over.age.export.to.csv.female)
 }
 
 
@@ -177,9 +181,14 @@ generate.age.distribution(results.array = full.results.array,
     dim(prop.over.age.export.to.csv.male) = sapply(dim.names,length)
     dimnames(prop.over.age.export.to.csv.male) = dim.names
     
-    median.export.to.csv.male
-    prop.over.age.export.to.csv.male
+    # median.export.to.csv.male
+    # prop.over.age.export.to.csv.male
+    
+    male.export = cbind(median.export.to.csv.male,prop.over.age.export.to.csv.male)
 }
+
+full.export = rbind(both.sexes.export,female.export,male.export)
+write.csv(full.export, file = "results/full.export.csv")
 
 calculate.outcome.reduction(full.results.array,target.year="2040",
                             data.type="incidence",
