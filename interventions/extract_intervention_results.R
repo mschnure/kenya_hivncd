@@ -70,7 +70,8 @@ generate.age.distribution = function(results.array,
                                      outcome,
                                      percent=T,
                                      sexes=c("female","male"),
-                                     display="figure"){
+                                     display="figure",
+                                     plot.limits=c(0,200000)){
     
     if(outcome=="incidence"){
         results.array = results.array[,-c(2:3),,,,]
@@ -149,7 +150,7 @@ generate.age.distribution = function(results.array,
                 geom_bar(stat="identity",position = "dodge") + 
                 labs(title = paste0(outcome),
                      subtitle = paste0(sexes ,collapse=", "))+
-                scale_y_continuous(labels = scales::percent,name = NULL,limits=c(0,0.225)) + 
+                scale_y_continuous(labels = scales::percent,name = NULL,limits=plot.limits) + 
                 theme(panel.background = element_blank(), legend.position = "bottom"
                       # panel.border = element_blank(), axis.line = element_line(color="gray")
                       ) + 
@@ -159,7 +160,7 @@ generate.age.distribution = function(results.array,
                 geom_bar(stat="identity",position = "dodge") + 
                 labs(title = paste0(outcome),
                      subtitle = paste0(sexes ,collapse=", "))+
-                scale_y_continuous(labels = function(x){format(x,big.mark=",")},name = NULL,limits=c(0,200000)) + 
+                scale_y_continuous(labels = function(x){format(x,big.mark=",")},name = NULL,limits=plot.limits) + 
                 theme(panel.background = element_blank(), legend.position = "bottom"
                       # panel.border = element_blank(), axis.line = element_line(color="gray")
                 ) + 
@@ -445,12 +446,12 @@ calculate.outcome.reduction = function(results.array,
                                        sexes = c("female","male")){
     
     base = results.array[target.year,,sexes,data.type,,"no.int"]
-    intervention = results.array[target.year,,sexes,data.type,,intervention]
+    int = results.array[target.year,,sexes,data.type,,intervention]
     
-    base = apply(base,c("sim"),sum) # get totals for each sim (sum over age/sex)
-    intervention = apply(intervention,c("sim"),sum)
+    base = apply(base,c("sim"),sum, na.rm=T) # get totals for each sim (sum over age/sex)
+    int = apply(int,c("sim"),sum, na.rm = T)
     
-    reduction = (base-intervention)/base
+    reduction = (base-int)/base
     reduction = quantile(reduction,probs=c(.025,.5,.975),na.rm=T)
     
     reduction

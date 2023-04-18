@@ -120,8 +120,31 @@ annual.engagement.over.30.table.male = generate.percent.over.age.table(simset.li
                                                                        data.types = c("annual.engagement"),
                                                                        years=c(2025,2040),
                                                                        sexes = "male")
-print("saving simset.list.full")
-save(simset.list.full,file = paste0("cached/simset.list.full_",Sys.Date(),".Rdata"))
+# print("saving simset.list.full")
+# save(simset.list.full,file = paste0("cached/simset.list.full_",Sys.Date(),".Rdata"))
+
+print("saving all results")
+save(simset.list.full,
+     full.results.array,
+     prevalence.engagement.median.age.table,
+     incidence.annual.engagement.median.age.table,
+     prevalence.engagement.over.50.table,
+     incidence.over.30.table,
+     annual.engagement.over.30.table,
+     
+     prevalence.engagement.median.age.table.female,
+     incidence.annual.engagement.median.age.table.female,
+     prevalence.engagement.over.50.table.female,
+     incidence.over.30.table.female,
+     annual.engagement.over.30.table.female,
+     
+     prevalence.engagement.median.age.table.male,
+     incidence.annual.engagement.median.age.table.male,
+     prevalence.engagement.over.50.table.male,
+     incidence.over.30.table.male,
+     annual.engagement.over.30.table.male,
+     
+     file = paste0("cached/all.results_",Sys.Date(),".Rdata"))
 
 # individual interventions
 if(1==2){
