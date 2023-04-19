@@ -150,8 +150,8 @@ create.likelihood = function(data.manager=DATA.MANAGER,
     awareness.trend.lik = create.likelihood.for.trend(data.type = "awareness",
                                                       year.1=2025,
                                                       year.2=2030,
-                                                      probability.of.decrease=.05,
-                                                      use.strata=T)
+                                                      probability.of.decrease=.001,
+                                                      use.strata=F)
     
     components = list(incidence=incidence.lik,
                       prevalence=prevalence.lik,
