@@ -259,6 +259,19 @@ extract.fertility.and.maternal.transmission = function(sim,
     
 }
 
+plot.fertility.rates = function(){
+    
+    age.specific.fertility = get.surveillance.data(data.manager = DATA.MANAGER, 
+                                                   data.type = "fertility", 
+                                                   years = DATA.MANAGER$fertility$YEARS, 
+                                                   keep.dimensions = 'age')
+    
+    df = melt(age.specific.fertility)
+    
+    ggplot(df,aes(x=year,y=value,color=age)) + geom_line() + xlim(2000,2030)
+    
+}
+
 return.births.by.hiv.status = function(sim,
                                        years,
                                        hiv.status){

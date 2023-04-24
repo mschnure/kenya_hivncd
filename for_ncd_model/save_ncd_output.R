@@ -3,7 +3,7 @@ source("for_ncd_model/extract_ncd_output.R")
 
 ## Choose MCMC run 
 load("mcmcruns/mcmc_v19_2023-03-06.Rdata")
-mcmc=mcmc.19
+mcmc=mcmc.29
 
 # 100 sims for now 
 simset.for.ncd = extract.simset(mcmc,
