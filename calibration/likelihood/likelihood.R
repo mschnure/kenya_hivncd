@@ -150,8 +150,14 @@ create.likelihood = function(data.manager=DATA.MANAGER,
     awareness.trend.lik = create.likelihood.for.trend(data.type = "awareness",
                                                       year.1=2025,
                                                       year.2=2030,
-                                                      probability.of.decrease=.001,
+                                                      probability.of.decrease=.05,
                                                       use.strata=F)
+    
+    # awareness.stratum.trend.lik = create.likelihood.for.trend(data.type = "awareness",
+    #                                                   year.1=2025,
+    #                                                   year.2=2030,
+    #                                                   probability.of.decrease=.1,
+    #                                                   use.strata=T)
     
     components = list(incidence=incidence.lik,
                       prevalence=prevalence.lik,
@@ -216,11 +222,25 @@ compute.trend.likelihood = function(sim,
                            data.type=data.type,
                            keep.dimensions = keep.dimensions,
                            years=year.1)
-    
+
     value.2 = extract.data(sim=sim,
                            data.type=data.type,
                            keep.dimensions = keep.dimensions,
                            years=year.2)
+    
+    if(data.type=="awareness"){
+        denominator.1 = extract.data(sim=sim,
+                                     data.type="prevalence",
+                                     keep.dimensions = keep.dimensions,
+                                     years=year.1)
+        value.1 = value.1/denominator.1
+        
+        denominator.2 = extract.data(sim=sim,
+                                     data.type="prevalence",
+                                     keep.dimensions = keep.dimensions,
+                                     years=year.2)
+        value.2 = value.2/denominator.2
+    }
     
     y = as.numeric(value.2<value.1) # decreasing
     
