@@ -166,7 +166,7 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                       suppression=suppression.lik,
                       population=population.lik,
                       hiv.mortality=hiv.mortality.lik,
-                      awareness.trend=awareness.trend.lik)
+                      awareness.trend=awareness.stratum.trend.lik) # CHANGE THIS IF SWITCHING ABOVE 
     
     rv = function(sim){ 
         
