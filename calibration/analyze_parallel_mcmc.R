@@ -1,45 +1,23 @@
 source("model/run_systematic.R")
 
-# load("mcmcruns/mcmc_v12_2023-01-26.Rdata")
-# load("mcmcruns/mcmc_v13_2023-01-30.Rdata")
+simset.31= extract.simset(mcmc.31,
+                           additional.burn=500,
+                           additional.thin=20) # for paper, cut to 1000 sims
 
-# mcmc=mcmc.23
-simset.28 = extract.simset(mcmc.28,
-                           additional.burn=100,  
-                           additional.thin=7) 
-simset.27 = extract.simset(mcmc.27,
-                           additional.burn=500,  
-                           additional.thin=17) 
 
-# set cascade improvement year to 2035
-simset.no.int.28.2035 = run.intervention.on.simset(simset.28,
-                                                   end.year = 2040,
-                                                   intervention = NO.INTERVENTION)
+simset.31.sampled = add.parameters(simset.31,
+                                   parameters = runif(simset.31@n.sim,2030,2040),
+                                   parameter.names = "cascade.improvement.end.year",
+                                   parameter.lower.bounds = 2030,
+                                   parameter.upper.bounds = 2040)
 
-# set cascade improvement year to 2030 
-simset.no.int.28.2030 = run.intervention.on.simset(simset.28,
-                                                   end.year = 2040,
-                                                   intervention = NO.INTERVENTION)
-
-# set cascade improvement year to 2040 
-simset.no.int.28.2040 = run.intervention.on.simset(simset.28,
-                                                   end.year = 2040,
-                                                   intervention = NO.INTERVENTION)
-
-# set cascade improvement year to 2030 
-simset.no.int.27.2030 = run.intervention.on.simset(simset.27,
-                                                   end.year = 2040,
-                                                   intervention = NO.INTERVENTION)
-
-# set cascade improvement year to 2040 
-simset.no.int.27.2040 = run.intervention.on.simset(simset.27,
-                                                   end.year = 2040,
-                                                   intervention = NO.INTERVENTION)
-
+simset.31.sampled = run.intervention.on.simset(simset.31.sampled,
+                                               end.year = 2040,
+                                               intervention = NO.INTERVENTION)
 
 
 ## FIRST, LOOK AT OVERALL FIT (don't look at other plots until I look at mixing/MCMC properties)
-simplot(simset.no.int.28.2040,  years = 2000:2040, show.individual.sims = F)
+simplot(simset.31.sampled,  years = 2000:2040, show.individual.sims = F)
 
 ## MCMC PROPERTIES ##
 
@@ -84,23 +62,23 @@ trace.plot(mcmc, "proportion.trate.change.by.3.5")
 get.rhats(mcmc)
 
 ## NOW BACK TO OTHER PLOTS/FITS
-simplot(simset.no.int.28.2030, simset.no.int.28.2035, years=2000:2040, facet.by='age', data.types='incidence', show.individual.sims = F)
+simplot(simset.no.int.28.sampled, years=2000:2040, facet.by='age', data.types='incidence', show.individual.sims = F)
 simplot(simset.no.int.28.2030, years=2000:2040, facet.by='age', data.types='incidence', show.individual.sims = F)
 simplot(simset.no.int.28.2030, years=1980:2040, data.types='prevalence')
-simplot(simset.no.int.28.2030, years=2000:2040, facet.by='age', data.types='prevalence', show.individual.sims = F)
+simplot(simset.no.int.28.sampled, sub.simset, years=2000:2040, facet.by='age', data.types='prevalence', show.individual.sims = F)
 simplot(simset.no.int.25, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='prevalence')
-simplot(simset.no.int.25, years=1980:2020, facet.by=c('age',"sex"), ages = "15+", data.types='incidence')
-simplot(simset, years=1980:2020, facet.by='age', data.types='hiv.mortality',proportion = T)
-simplot(simset.no.int.26.test, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T, show.individual.sims = F)
-simplot(simset.no.int.28.2030, years=2010:2040, data.types=c('awareness',"engagement","suppression"), facet.by=c('age','sex'), proportion=T, show.individual.sims = F)
-simplot(simset.no.int.28.2030, years=1980:2040, data.types='awareness', proportion=T)
-simplot(simset.no.int.28.2030, years=1980:2040, facet.by=c('age','sex'), data.types='awareness', proportion=T)
-simplot(simset.no.int.27.2040, simset.no.int.26.test, years=1980:2040, facet.by=c('age','sex'), data.types='awareness', proportion=T, show.individual.sims = F)
+simplot(simset.no.int.28.sampled, sub.simset, years=1980:2040, facet.by=c('age',"sex"), ages = "15+", data.types='incidence', show.individual.sims = F)
+simplot(simset.no.int.28.sampled, sub.simset, years=1980:2020, facet.by='age', data.types='hiv.mortality',proportion = T, show.individual.sims = F)
+simplot(simset.29.sampled, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T, show.individual.sims = F)
+simplot(simset.no.int.28.sampled, sub.simset, years=2010:2040, data.types=c('awareness',"engagement","suppression"), facet.by=c('age','sex'), proportion=T, show.individual.sims = F)
+simplot(simset.30.sampled, years=1980:2040, data.types='awareness', proportion=T)
+simplot(simset.29.sampled, years=1980:2040, facet.by=c('age','sex'), data.types='awareness', proportion=T)
+simplot(simset.29.sampled, years=1980:2040, facet.by=c('age','sex'), data.types='awareness', proportion=T, show.individual.sims = F)
 
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='engagement', proportion=T)
 simplot(simset, years=1980:2020, facet.by=c('age','sex'), data.types='suppression', proportion=T)
 
-simplot(simset.no.int.25, years=1980:2040, facet.by='age', data.types='population', show.individual.sims = F)
+simplot(simset.no.int.28.sampled, sub.simset, years=1980:2040, facet.by='age', data.types='population', show.individual.sims = F)
 simplot(simset.no.int.23, years=1980:2030, facet.by='age', data.types='population', 
         ages = c("60-64","65-69","70-74","75-79","80 and over"), show.individual.sims = F)
 
@@ -117,15 +95,63 @@ simplot(sim.test,years=2000:2040, facet.by='age', data.types='prevalence')
 
 
 # Check likelihood 
-lik = create.likelihood(parameters=sim$parameters) 
+lik = create.likelihood(parameters=sim.test$parameters) 
 lik.components = attr(lik,"components")
-round(sapply(lik.components,function(sub.lik){exp(sub.lik(sim.level) - sub.lik(sim.decreasing))}),2) 
+round(sapply(lik.components,function(sub.lik){exp(sub.lik(sim.better) - sub.lik(sim.worse))}),2) 
 round(exp(lik(sim.level) - lik(sim.decreasing)),2) 
 print(lik.components$hiv.mortality(sim.11,debug = T))
+
+inc = sapply(simset.29.sampled@simulations, extract.incidence, years = 2040)
+
+awareness.2025 = sapply(simset.29.sampled@simulations,extract.total.aware,years=2025)
+awareness.2030 = sapply(simset.29.sampled@simulations,extract.total.aware,years=2030)
+prevalence.2025 = sapply(simset.29.sampled@simulations,extract.prevalence,years=2025)
+prevalence.2030 = sapply(simset.29.sampled@simulations,extract.prevalence,years=2030)
+prop.aware.2025 = awareness.2025/prevalence.2025
+prop.aware.2030 = awareness.2030/prevalence.2030
+
+# only those with incidence not taking off and no decreasing awareness 
+mask.1 = !is.na(inc) & !is.na(prop.aware.2025) & !is.na(prop.aware.2030) & inc<60000 & prop.aware.2025<prop.aware.2030
+
+# only those with no decreasing awareness 
+mask.2 = !is.na(prop.aware.2025) & !is.na(prop.aware.2030) & prop.aware.2025<prop.aware.2030
+
+
+sum(!is.na(inc) & !is.na(prop.aware.2025) & !is.na(prop.aware.2030)
+    & inc>60000  & prop.aware.2025>prop.aware.2030)/sum(!is.na(inc) & inc>60000)
+
+sum(!is.na(prop.aware.2025) & !is.na(prop.aware.2030) & !is.na(inc) & prop.aware.2025>prop.aware.2030 & inc>60000) # mask 1
+sum(!is.na(prop.aware.2025) & !is.na(prop.aware.2030) & prop.aware.2025>prop.aware.2030) # mask 2
+sum(!is.na(inc) & inc>60000)
+
+sub.simset.no.decreasing = subset.simset(simset.29.sampled,mask.2)
+simplot(sub.simset.no.decreasing,  years = 2000:2040, show.individual.sims = F)
+
+sub.simset.no.decreasing.no.high.incidence = subset.simset(simset.29.sampled,mask.1)
+simplot(sub.simset.no.decreasing.no.high.incidence,  years = 2000:2040, show.individual.sims = F)
+simplot(sub.simset.no.decreasing, sub.simset.no.decreasing.no.high.incidence,  years = 2000:2040, show.individual.sims = F)
+
+
+
+
 
 
 # OLD COMPARISONS 
 if(1==2){
+    
+    simset.28.for.paper = extract.simset(mcmc.28,
+                                         additional.burn=500,  
+                                         additional.thin=2) # for paper, cut to 1000 sims
+    
+    # this was the shorter version 
+    simset.28 = extract.simset(mcmc.28.short,
+                               additional.burn=100,  
+                               additional.thin=7) 
+    
+    
+    simset.27 = extract.simset(mcmc.27,
+                               additional.burn=500,  
+                               additional.thin=17) 
     
     simset.26 = extract.simset(mcmc.26.long,
                                additional.burn=500,  
@@ -154,6 +180,48 @@ if(1==2){
     simset.19 = extract.simset(mcmc.19,
                                additional.burn=500,  
                                additional.thin=20) 
+    
+    simset.no.int.28.long.2035 = run.intervention.on.simset(simset.28.for.paper,
+                                                            end.year = 2040,
+                                                            intervention = NO.INTERVENTION)
+    
+    # Code to sample cascade.improvement.end.year
+    simset.28.for.paper.sampled = add.parameters(simset.28.for.paper,
+                                                 parameters = runif(simset.28.for.paper@n.sim,2030,2040),
+                                                 parameter.names = "cascade.improvement.end.year",
+                                                 parameter.lower.bounds = 2030,
+                                                 parameter.upper.bounds = 2040)
+    
+    # with sampled cascade improvement end year
+    simset.no.int.28.sampled = run.intervention.on.simset(simset.28.for.paper.sampled,
+                                                          end.year = 2040,
+                                                          intervention = NO.INTERVENTION)
+    
+    # set cascade improvement year to 2035
+    simset.no.int.28.2035 = run.intervention.on.simset(simset.28,
+                                                       end.year = 2040,
+                                                       intervention = NO.INTERVENTION)
+    
+    # set cascade improvement year to 2030 
+    simset.no.int.28.2030 = run.intervention.on.simset(simset.28,
+                                                       end.year = 2040,
+                                                       intervention = NO.INTERVENTION)
+    
+    # set cascade improvement year to 2040 
+    simset.no.int.28.2040 = run.intervention.on.simset(simset.28,
+                                                       end.year = 2040,
+                                                       intervention = NO.INTERVENTION)
+    
+    # set cascade improvement year to 2030 
+    simset.no.int.27.2030 = run.intervention.on.simset(simset.27,
+                                                       end.year = 2040,
+                                                       intervention = NO.INTERVENTION)
+    
+    # set cascade improvement year to 2040 
+    simset.no.int.27.2040 = run.intervention.on.simset(simset.27,
+                                                       end.year = 2040,
+                                                       intervention = NO.INTERVENTION)
+    
     
     
     # set cascade improvement year to 2030 
@@ -235,7 +303,7 @@ if(1==2){
     
     
     
-    params.first = simset.no.int.21@parameters[1,]
+    params.first = simset.29@parameters[1,]
     sim.first = simset.no.int.21@simulations[[1]]
     
     simplot(sim.last, sim.last.run, years=2010:2040, data.types=c('awareness',"engagement","suppression"), proportion=T)
@@ -249,7 +317,7 @@ if(1==2){
     params.last.new.trate.4 = params.last
     params.last.new.trate.4["trate.4"] = 0.5
     
-    sim.last.end.2040 = run.model.for.parameters(params.last.end.2040, end.year = 2040)
+    sim.last.end.2040 = run.model.for.parameters(params.first, end.year = 2040)
     sim.last.new.trate.4 = run.model.for.parameters(params.last.new.trate.4, end.year = 2040)
     
     simplot(sim.last.end.2040, sim.last.new.trate.4, years=2000:2040, facet.by='age', data.types='incidence')

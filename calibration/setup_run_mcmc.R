@@ -51,7 +51,10 @@ set.seed(1234)
 # mcmc.25 (4/03 - simultaneous with v24) - median trate.4.to.3 up to 1.25; trate.4 to trate.3 SD narrowed back to log(2)/2
 # mcmc.26 (4/06) - weights after 2018 increased to 4 (fixed data point weighting); put median 4.to.3 back to 1; tightened prop change by 3.5 even more 
 # mcmc.27 (4/10) - penalty for decreasing awareness (.05, no strata yet)
-# mcmc.28 (4/11) - greater penalty for decreasing awareness (.01) - USED IN DRAFT V6
+# mcmc.28 (4/11) - greater penalty for decreasing awareness (.01) - SHORT VERSION USED IN DRAFT V6
+# mcmc.29 (4/24) - even greater penalty for decreasing awareness (.001) 
+# mcmc.30 - fixed awareness issue (wasn't using proportion); set it back to 0.05 
+# mcmc.31 - switched to stratum-specific, used 0.3 penalty
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
