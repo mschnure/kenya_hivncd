@@ -147,17 +147,17 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                                                         use.age=T,
                                                         use.age.sex=F)
     
-    # awareness.trend.lik = create.likelihood.for.trend(data.type = "awareness",
-    #                                                   year.1=2025,
-    #                                                   year.2=2030,
-    #                                                   probability.of.decrease=.05,
-    #                                                   use.strata=F)
-    
-    awareness.stratum.trend.lik = create.likelihood.for.trend(data.type = "awareness",
+    awareness.trend.lik = create.likelihood.for.trend(data.type = "awareness",
                                                       year.1=2025,
                                                       year.2=2030,
-                                                      probability.of.decrease=.3,
-                                                      use.strata=T)
+                                                      probability.of.decrease=.1,
+                                                      use.strata=F)
+    
+    # awareness.stratum.trend.lik = create.likelihood.for.trend(data.type = "awareness",
+    #                                                   year.1=2025,
+    #                                                   year.2=2030,
+    #                                                   probability.of.decrease=.3,
+    #                                                   use.strata=T)
     
     components = list(incidence=incidence.lik,
                       prevalence=prevalence.lik,
@@ -166,7 +166,7 @@ create.likelihood = function(data.manager=DATA.MANAGER,
                       suppression=suppression.lik,
                       population=population.lik,
                       hiv.mortality=hiv.mortality.lik,
-                      awareness.trend=awareness.stratum.trend.lik) # CHANGE THIS IF SWITCHING ABOVE 
+                      awareness.trend=awareness.trend.lik) # CHANGE THIS IF SWITCHING ABOVE 
     
     rv = function(sim){ 
         
