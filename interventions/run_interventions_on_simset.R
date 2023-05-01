@@ -1,49 +1,53 @@
 #####################################################
-# Description: Code to run interventions on simset.28 
+# Description: Code to run interventions on simset.29 
 #####################################################
 
 source("model/run_systematic.R")
 source("interventions/extract_intervention_results.R")
-print("loading mcmc.28")
-load("mcmcruns/mcmc_v28_2023-04-11.Rdata") 
+print("loading mcmc.29")
+load("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/kenya_hivncd/mcmcruns/mcmc_v29_2023-04-21.Rdata")
 
-mcmc=mcmc.28
+mcmc=mcmc.29
 simset = suppressWarnings(extract.simset(mcmc,
-                                         additional.burn=100, 
-                                         additional.thin=7)) 
+                                         additional.burn=500, 
+                                         additional.thin=20)) 
 # mcmc.28: thin=7 --> 102 sims (burn to 100 instead of 500)
 # mcmc.27: thin=8 --> 212 sims
 # mcmc.19: thin=3 --> 400 sims
 # mcmc.17:  thin=3 --> 486 sims; thin=14 --> 105 sims; thin=100 --> 12 sims
 
 RUN.SIMULATIONS.TO.YEAR = 2040
-print("running no.int on mcmc.28")
+print("running no.int on mcmc.29")
 simset.no.int = run.intervention.on.simset(simset,
                                            end.year = RUN.SIMULATIONS.TO.YEAR,
                                            intervention = NO.INTERVENTION)
 
-print("running all interventions, intermediate level on mcmc.28")
-simset.all.intermediate = run.intervention.on.simset(simset,
-                                                     end.year = RUN.SIMULATIONS.TO.YEAR,
-                                                     intervention = all.intermediate)
-
-print("running engagement/retention only, max level on mcmc.28")
-simset.engagement.retention = run.intervention.on.simset(simset,
+if(1==2){
+    print("running all interventions, intermediate level on mcmc.29")
+    simset.all.intermediate = run.intervention.on.simset(simset,
                                                          end.year = RUN.SIMULATIONS.TO.YEAR,
-                                                         intervention = engagement.retention)
-
-print("running all interventions, max level on mcmc.28")
-simset.all.max = run.intervention.on.simset(simset,
-                                            end.year = RUN.SIMULATIONS.TO.YEAR,
-                                            intervention = all.max)
-
-simset.list.full = list(no.int = simset.no.int,
-                        all.intermediate = simset.all.intermediate,
-                        engagement.retention = simset.engagement.retention,
-                        all.max = simset.all.max)
-
-simset.list.base.max = list(no.int = simset.no.int,
+                                                         intervention = all.intermediate)
+    
+    print("running engagement/retention only, max level on mcmc.29")
+    simset.engagement.retention = run.intervention.on.simset(simset,
+                                                             end.year = RUN.SIMULATIONS.TO.YEAR,
+                                                             intervention = engagement.retention)
+    
+    print("running all interventions, max level on mcmc.29")
+    simset.all.max = run.intervention.on.simset(simset,
+                                                end.year = RUN.SIMULATIONS.TO.YEAR,
+                                                intervention = all.max)
+    
+    simset.list.full = list(no.int = simset.no.int,
+                            all.intermediate = simset.all.intermediate,
+                            engagement.retention = simset.engagement.retention,
                             all.max = simset.all.max)
+    
+    simset.list.base.max = list(no.int = simset.no.int,
+                                all.max = simset.all.max)
+}
+simset.list.full = list(no.int = simset.no.int)
+
 
 print("generating full.results.array")
 full.results.array = generate.full.results.array(simset.list = simset.list.full)
@@ -148,51 +152,51 @@ save(simset.list.full,
 
 # individual interventions
 if(1==2){
-    print("running testing.50 on mcmc.28")
+    print("running testing.50 on mcmc.29")
     simset.testing.50 = run.intervention.on.simset(simset,
                                                    end.year = RUN.SIMULATIONS.TO.YEAR,
                                                    intervention = testing.50)
-    print("running testing.75 on mcmc.28")
+    print("running testing.75 on mcmc.29")
     simset.testing.75 = run.intervention.on.simset(simset,
                                                    end.year = RUN.SIMULATIONS.TO.YEAR,
                                                    intervention = testing.75)
-    print("running engagement.80 on mcmc.28")
+    print("running engagement.80 on mcmc.29")
     simset.engagement.80 = run.intervention.on.simset(simset,
                                                       end.year = RUN.SIMULATIONS.TO.YEAR,
                                                       intervention = engagement.80)
-    print("running engagement.90 on mcmc.28")
+    print("running engagement.90 on mcmc.29")
     simset.engagement.90 = run.intervention.on.simset(simset,
                                                       end.year = RUN.SIMULATIONS.TO.YEAR,
                                                       intervention = engagement.90)
-    print("running gain.suppression.80 on mcmc.28")
+    print("running gain.suppression.80 on mcmc.29")
     simset.gain.suppression.80 = run.intervention.on.simset(simset,
                                                             end.year = RUN.SIMULATIONS.TO.YEAR,
                                                             intervention = gain.suppression.80)
-    print("running gain.suppression.90 on mcmc.28")
+    print("running gain.suppression.90 on mcmc.29")
     simset.gain.suppression.90 = run.intervention.on.simset(simset,
                                                             end.year = RUN.SIMULATIONS.TO.YEAR,
                                                             intervention = gain.suppression.90)
-    print("running lose.suppression.10 on mcmc.28")
+    print("running lose.suppression.10 on mcmc.29")
     simset.gain.suppression.10 = run.intervention.on.simset(simset,
                                                             end.year = RUN.SIMULATIONS.TO.YEAR,
                                                             intervention = gain.suppression.10)
-    print("running lose.suppression.05 on mcmc.28")
+    print("running lose.suppression.05 on mcmc.29")
     simset.gain.suppression.05 = run.intervention.on.simset(simset,
                                                             end.year = RUN.SIMULATIONS.TO.YEAR,
                                                             intervention = gain.suppression.05)
-    print("running disengagement.unsuppressed.15 on mcmc.28")
+    print("running disengagement.unsuppressed.15 on mcmc.29")
     simset.disengagement.unsuppressed.15 = run.intervention.on.simset(simset,
                                                                       end.year = RUN.SIMULATIONS.TO.YEAR,
                                                                       intervention = disengagement.unsuppressed.15)
-    print("running disengagement.unsuppressed.10 on mcmc.28")
+    print("running disengagement.unsuppressed.10 on mcmc.29")
     simset.disengagement.unsuppressed.10 = run.intervention.on.simset(simset,
                                                                       end.year = RUN.SIMULATIONS.TO.YEAR,
                                                                       intervention = disengagement.unsuppressed.10)
-    print("running disengagement.suppressed.15 on mcmc.28")
+    print("running disengagement.suppressed.15 on mcmc.29")
     simset.disengagement.suppressed.15 = run.intervention.on.simset(simset,
                                                                     end.year = RUN.SIMULATIONS.TO.YEAR,
                                                                     intervention = disengagement.suppressed.15)
-    print("running disengagement.suppressed.10 on mcmc.28")
+    print("running disengagement.suppressed.10 on mcmc.29")
     simset.disengagement.suppressed.10 = run.intervention.on.simset(simset,
                                                                     end.year = RUN.SIMULATIONS.TO.YEAR,
                                                                     intervention = disengagement.suppressed.10)
