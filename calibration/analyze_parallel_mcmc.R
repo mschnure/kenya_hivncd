@@ -1,23 +1,23 @@
 source("model/run_systematic.R")
 
-simset.31= extract.simset(mcmc.31,
-                           additional.burn=500,
-                           additional.thin=20) # for paper, cut to 1000 sims
+simset.29 = extract.simset(mcmc.29,
+                          additional.burn=500,
+                          additional.thin=20) # for paper, cut to 1000 sims
 
 
-simset.31.sampled = add.parameters(simset.31,
-                                   parameters = runif(simset.31@n.sim,2030,2040),
+simset.29.sampled = add.parameters(simset.29,
+                                   parameters = runif(simset.29@n.sim,2030,2040),
                                    parameter.names = "cascade.improvement.end.year",
                                    parameter.lower.bounds = 2030,
                                    parameter.upper.bounds = 2040)
 
-simset.31.sampled = run.intervention.on.simset(simset.31.sampled,
+simset.29.sampled = run.intervention.on.simset(simset.29.sampled,
                                                end.year = 2040,
                                                intervention = NO.INTERVENTION)
 
 
 ## FIRST, LOOK AT OVERALL FIT (don't look at other plots until I look at mixing/MCMC properties)
-simplot(simset.31.sampled,  years = 2000:2040, show.individual.sims = F)
+simplot(simset.29.sampled,  years = 2000:2040, show.individual.sims = F)
 
 ## MCMC PROPERTIES ##
 
