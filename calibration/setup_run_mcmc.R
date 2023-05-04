@@ -55,6 +55,8 @@ set.seed(1234)
 # mcmc.29 (4/24) - even greater penalty for decreasing awareness (.001) 
 # mcmc.30 - fixed awareness issue (wasn't using proportion); set it back to 0.05 
 # mcmc.31 - switched to stratum-specific, used 0.3 penalty
+# mcmc.32 - back to total penalty, set to 0.1
+# FINAL VERSION - USING MCMC.29 WITH RESAMPLING METHOD 
 
 # run.mcmc.from.cache() - to resume running if I stop (need the cache directory)
 
