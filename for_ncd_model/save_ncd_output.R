@@ -1,33 +1,80 @@
 source("model/run_systematic.R")
 source("for_ncd_model/extract_ncd_output.R")
+source("interventions/extract_intervention_results.R")
 
-## Choose MCMC run 
+print("loading mcmc.29")
 load("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/kenya_hivncd/mcmcruns/mcmc_v29_2023-04-21.Rdata")
+
 mcmc=mcmc.29
+simset = suppressWarnings(extract.simset(mcmc,
+                                         additional.burn=504, 
+                                         additional.thin=4)) 
 
-# 100 sims for now 
-simset.for.ncd = extract.simset(mcmc,
-                                additional.burn=500, # throw away first 500
-                                additional.thin=20) # thin by 20, 100 remaining
+simset = add.parameters(simset,
+                        parameters = runif(simset@n.sim,2030,2040),
+                        parameter.names = "cascade.improvement.end.year",
+                        parameter.lower.bounds = 2030,
+                        parameter.upper.bounds = 2040)
 
-# mcmc output only has years through 2021; need to rerun through 2040
-simset.for.ncd = run.intervention.on.simset(simset.for.ncd,
-                                            end.year = 2040,
-                                            intervention = NO.INTERVENTION)
+RUN.SIMULATIONS.TO.YEAR = 2040
+print("running no.int on mcmc.29")
+simset.no.int = run.intervention.on.simset(simset,
+                                           end.year = RUN.SIMULATIONS.TO.YEAR,
+                                           intervention = NO.INTERVENTION)
 
-# simset.for.ncd.all.max = run.intervention.on.simset(simset.for.ncd,
-#                                                     end.year = 2040,
-#                                                     intervention = all.max)
+print("running retention/suppression on mcmc.29")
+simset.retention.suppression = run.intervention.on.simset(simset,
+                                                          end.year = RUN.SIMULATIONS.TO.YEAR,
+                                                          intervention = retention.suppression)
+
+print("running testing/engagement on mcmc.29")
+simset.testing.engagement = run.intervention.on.simset(simset,
+                                                       end.year = RUN.SIMULATIONS.TO.YEAR,
+                                                       intervention = testing.engagement)
+
+print("running all interventions on mcmc.29")
+simset.all = run.intervention.on.simset(simset,
+                                        end.year = RUN.SIMULATIONS.TO.YEAR,
+                                        intervention = all.max)
 
 # SAVE NEW OUTPUT
-khm = extract.simset.output(simset.for.ncd,
-                            intervention.id="no.int")
+khm.no.int.1 = extract.simset.output(simset.no.int,
+                                     intervention.id="1")
 
-# khm.all.max.interventions = extract.simset.output(simset.for.ncd.all.max,
-#                                                   intervention.id="all.max.int")
+khm.no.int.2 = extract.simset.output(simset.no.int,
+                                     intervention.id="2")
 
+khm.retention.suppression = extract.simset.output(simset.retention.suppression,
+                                                  intervention.id="3")
 
-save(khm,
-     file=paste0("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_simset_",Sys.Date(),".RData"))
-# save(khm.all.max.interventions,
-#      file=paste0("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_simset_intervention_",Sys.Date(),".RData"))
+khm.testing.engagement = extract.simset.output(simset.testing.engagement,
+                                                  intervention.id="4")
+
+khm.all = extract.simset.output(simset.all,
+                                intervention.id="5")
+
+# need to rename everything to khm.full for NCD side to work - save these in sequence 
+# Scenario 0
+khm.full = khm.no.int.1
+save(khm.full,
+     file=paste0("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_simset_scenario1.RData"))
+
+# Scenario 1
+khm.full = khm.no.int.2
+save(khm.full,
+     file=paste0("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_simset_scenario2.RData"))
+
+# Scenario 2
+khm.full = khm.retention.suppression
+save(khm.full,
+     file=paste0("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_simset_scenario3.RData"))
+
+# Scenario 3
+khm.full = khm.testing.engagement
+save(khm.full,
+     file=paste0("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_simset_scenario4.RData"))
+
+# Scenario 3
+khm.full = khm.all
+save(khm.full,
+     file=paste0("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/rHivNcd/data/hiv_simset_scenario5.RData"))
