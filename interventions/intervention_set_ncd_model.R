@@ -3,6 +3,7 @@
 #########################################################################
 
 source("interventions/create_interventions.R")
+START.TIME = 2023
 
 ##------------------------##
 ##-- INTERVENTION UNITS --##
@@ -10,42 +11,42 @@ source("interventions/create_interventions.R")
 # (just units; assemble these below into actual interventions; no target populations specified yet)
 testing.unit.75 = create.intervention.unit(parameter = "TESTING.RATES", 
                                            scale = "proportion",
-                                           start.time = 2025,
+                                           start.time = START.TIME,
                                            effect.time = 2030,
                                            effect.value = .75,
                                            allow.lower.than.baseline = F)
 
 engagement.unit.90 = create.intervention.unit(parameter = "ENGAGEMENT.RATES",
                                               scale = "proportion",
-                                              start.time = 2025,
+                                              start.time = START.TIME,
                                               effect.time = 2030,
                                               effect.value = 0.90,
                                               allow.lower.than.baseline = F)
 
 gain.suppression.unit.90 = create.intervention.unit(parameter = "SUPPRESSION.RATES",
                                                     scale = "proportion",
-                                                    start.time = 2025,
+                                                    start.time = START.TIME,
                                                     effect.time = 2030,
                                                     effect.value = .90,
                                                     allow.lower.than.baseline = F)
 
 lose.suppression.unit.10 = create.intervention.unit(parameter = "UNSUPPRESSION.RATES",
                                                     scale = "proportion",
-                                                    start.time = 2025,
+                                                    start.time = START.TIME,
                                                     effect.time = 2030,
                                                     effect.value = .10,
                                                     allow.higher.than.baseline = F)
 
 disengagement.unsuppressed.unit.10 = create.intervention.unit(parameter = "UNSUPPRESSED.DISENGAGEMENT.RATES",
                                                               scale = "proportion",
-                                                              start.time = 2025,
+                                                              start.time = START.TIME,
                                                               effect.time = 2030,
                                                               effect.value = .10,
                                                               allow.higher.than.baseline = F)
 
 disengagement.suppressed.unit.10 = create.intervention.unit(parameter = "SUPPRESSED.DISENGAGEMENT.RATES",
                                                             scale = "proportion",
-                                                            start.time = 2025,
+                                                            start.time = START.TIME,
                                                             effect.time = 2030,
                                                             effect.value = .10,
                                                             allow.higher.than.baseline = F)
