@@ -29,7 +29,7 @@ generate.full.results.array = function(simset.list,
                                            # MORTALITY: 
                                            "hiv.mortality","non.hiv.mortality"
                                        )){
-    sims = paste0("sim",c(1:simset@n.sim))
+    sims = paste0("sim",c(1:simset.list[[1]]@n.sim))
     simset.list = simset.list
     if(is.null(names(simset.list)))
         stop("simset list must be named by intervention")
@@ -133,6 +133,7 @@ generate.age.distribution = function(results.array,
         
         return(tab.1)
     } else if(display=="figure"){
+        
         age.summary = c(age.summary.1,age.summary.2,age.summary.3)
         dim.names = list(stat = c("lower","median","upper"),
                          age=dimnames(age.counts.1)[[1]],
@@ -154,17 +155,17 @@ generate.age.distribution = function(results.array,
                 theme(panel.background = element_blank(), legend.position = "bottom"
                       # panel.border = element_blank(), axis.line = element_line(color="gray")
                       ) + 
-                xlab("Age") + ylab(NULL)
+                xlab("Age") 
         } else {
             ggplot(data = df,aes(x=age,y=value,fill=intervention)) + 
                 geom_bar(stat="identity",position = "dodge") + 
                 labs(title = paste0(outcome),
                      subtitle = paste0(sexes ,collapse=", "))+
-                scale_y_continuous(labels = function(x){format(x,big.mark=",")},name = NULL,limits=plot.limits) + 
+                scale_y_continuous(labels = function(x){format(x,big.mark=",")},limits=plot.limits) + 
                 theme(panel.background = element_blank(), legend.position = "bottom"
                       # panel.border = element_blank(), axis.line = element_line(color="gray")
                 ) + 
-                xlab("Age") + ylab(NULL) 
+                xlab("Age") 
         }
             
         
@@ -240,7 +241,7 @@ generate.age.distribution.2.column = function(results.array,
             theme(panel.background = element_blank(), legend.position = "bottom"
                   # panel.border = element_blank(), axis.line = element_line(color="gray")
             ) + 
-            xlab("Age") + ylab(NULL) 
+            xlab("Age")
     }
     
 }
