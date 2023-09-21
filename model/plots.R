@@ -253,7 +253,7 @@ simplot = function(...,
                     theme_bw() +
                     theme(legend.position = "bottom") + # move legend to the bottom
                     # theme(legend.position = "none") + # remove legend 
-                    scale_fill_discrete(labels=c("1" = "No intervention","2" = "Combined interventions"), 
+                    scale_fill_discrete(labels=c("1" = "No intervention","2" = "Full intervention"), 
                                         name=NULL) + 
                     xlab("Year") # x axis label 
             } else {
@@ -264,7 +264,7 @@ simplot = function(...,
                     facet_wrap(facet_formula, scales = "free_y") + 
                     scale_y_continuous(labels = scales::percent,name = NULL, limits = c(0,NA)) + 
                     theme(panel.background = element_blank(), legend.position = "bottom") + # move legend to the bottom
-                    scale_fill_discrete(labels=c("1" = "No intervention","2" = "Combined interventions"), 
+                    scale_fill_discrete(labels=c("1" = "No intervention","2" = "Full intervention"), 
                                         name=NULL) + 
                     xlab("Year") # x axis label 
             }
@@ -281,15 +281,16 @@ simplot = function(...,
             if(show.calibration.data==T){
                 plot = ggplot() + 
                     geom_ribbon(data = df.sim, aes(x = year, ymin = lower, ymax = upper, fill = sim.id),alpha = 0.3) + 
-                    geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id), show.legend = F) +
-                    geom_point(data = df.truth, aes(x = year, y = value, color = sim.id, group = group.id, shape = split), show.legend = F) +
+                    geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id), lwd=1.25,show.legend = F) +
+                    geom_point(data = df.truth, aes(x = year, y = value, color = sim.id, group = group.id, shape = split), 
+                               size=2,alpha = 0.75,show.legend = F) +
                     facet_wrap(facet_formula, scales = "free_y", ncol=ncol) + 
                     scale_y_continuous(labels = function(x){format(x,big.mark=",")},name = NULL, limits = c(0,NA)) + 
                     theme_bw() +
                     theme(legend.position = "bottom") + # move legend to the bottom
                     # theme(legend.position = "none") + # remove legend
                     # theme(strip.text = element_blank()) + 
-                    scale_fill_discrete(labels=c("1" = "No intervention","2" = "Combined interventions"), 
+                    scale_fill_discrete(labels=c("1" = "Status quo","2" = "Full intervention"), 
                                         name=NULL) + 
                     xlab("Year") # x axis label 
             } else {
@@ -300,7 +301,7 @@ simplot = function(...,
                     facet_wrap(facet_formula, scales = "free_y") + 
                     scale_y_continuous(labels = function(x){format(x,big.mark=",")},name = NULL, limits = c(0,NA)) + 
                     theme(panel.background = element_blank(), legend.position = "bottom") + # move legend to the bottom
-                    scale_fill_discrete(labels=c("1" = "No intervention","2" = "Combined interventions"), 
+                    scale_fill_discrete(labels=c("1" = "No intervention","2" = "Full intervention"), 
                                         name=NULL) + 
                     xlab("Year") # x axis label 
             }
