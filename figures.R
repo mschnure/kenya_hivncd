@@ -1,7 +1,7 @@
-#########################################################################
-# Description: Generate results/figures from interventions run on mcmc.17 
-#########################################################################
-install.packages("RColorBrewer")
+##############################################################################
+# Description: Generate results/figures from interventions run on simset.final 
+##############################################################################
+# install.packages("RColorBrewer")
 library("RColorBrewer")
 library("scales")
 library("ggsci")
@@ -17,7 +17,7 @@ library("ggsci")
 # load these results if I already ran the interventions 
 source("model/run_systematic.R")
 source("interventions/extract_intervention_results.R")
-load("cached/all.results_2023-04-12.Rdata")
+load("cached/all.results_2023-05-06.Rdata")
 simset.no.int = simset.list.full$no.int    
 simset.all.max = simset.list.full$all.max
 simset.engagement.retention = simset.list.full$engagement.retention
@@ -42,15 +42,46 @@ alpha = 0.8
 
 
 ## Figure 1
-jpeg(file=paste0("results/Figure1.jpeg"), width = 3000,height = 2000,res=200)
+# jpeg(file=paste0("results/Figure1.jpeg"), width = 3000,height = 2000,res=200)
+# simplot(simset.no.int, simset.all.max,
+#         # data.types = "incidence",
+#         ages = c("All ages","0-14","15-49","50 and over"),
+#         facet.by = "age",
+#         years=intervention.plot.years, 
+#         show.individual.sims = F,
+#         for.paper = T,
+#         ncol=4) 
+# dev.off() 
+
+## Figure 1 - new
+jpeg(file=paste0("results/Figure1.top.jpeg"), width = 3000,height = 1000,res=200)
 simplot(simset.no.int, simset.all.max,
-        # data.types = "incidence",
+        data.types = "incidence",
         ages = c("All ages","0-14","15-49","50 and over"),
         facet.by = "age",
         years=intervention.plot.years, 
         show.individual.sims = F,
         for.paper = T,
-        ncol=4) 
+        ncol=4) +
+    theme(strip.text.x = element_blank(),
+          text = element_text(size = 20),
+          legend.position = "none")+
+    scale_y_continuous(labels = function(x){format(x,big.mark=",",scientific = FALSE)},name = NULL, limits = c(0,NA))
+dev.off() 
+
+jpeg(file=paste0("results/Figure1.jpeg"), width = 3000,height = 2000,res=200)
+simplot(simset.no.int, simset.all.max,
+        #data.types = "prevalence",
+        ages = c("All ages","0-14","15-49","50 and over"),
+        facet.by = "age",
+        years=intervention.plot.years, 
+        show.individual.sims = F,
+        for.paper = T,
+        ncol=4) +
+    theme(strip.text.x = element_blank(),
+          text = element_text(size = 20))+
+    scale_y_continuous(labels = function(x){format(x,big.mark=",",scientific = FALSE)},name = NULL, limits = c(0,NA))+
+    geom_vline(xintercept = 2025, linetype="dashed",alpha=0.5) 
 dev.off() 
 
 ## Figure 2
@@ -69,7 +100,10 @@ generate.age.distribution(full.results.array,
                       values=alpha(c("no.int/2025" = pal[1],
                                "no.int/2040" = pal[2],
                                "all.max/2040" = pal[3]),alpha), # change legend and color scheme  
-                      name=NULL) 
+                      name=NULL) +
+    theme(text = element_text(size = 20))+
+    labs(title = NULL,subtitle = NULL) +
+    guides(x =  guide_axis(angle = 45))
 dev.off()
 
 
@@ -292,7 +326,7 @@ generate.age.distribution(full.results.array,
                           intervention.3 = "all.max",year.3="2040",
                           percent=T,
                           sexes = c("female","male"),
-                          plot.limits = c(0,0.275)) + 
+                          plot.limits = c(0,0.31)) + 
     scale_fill_manual(labels = c("no.int/2025" = "2025",
                                  "no.int/2040" = "No intervention, 2040",
                                  "all.max/2040" = "Full intervention, 2040"), 
@@ -310,7 +344,7 @@ generate.age.distribution(full.results.array,
                           intervention.3 = "all.max",year.3="2040",
                           percent=T,
                           sexes = c("female"),
-                          plot.limits = c(0,0.275)) + 
+                          plot.limits = c(0,0.31)) + 
     scale_fill_manual(labels = c("no.int/2025" = "2025",
                                  "no.int/2040" = "No intervention, 2040",
                                  "all.max/2040" = "Full intervention, 2040"), 
@@ -328,7 +362,7 @@ generate.age.distribution(full.results.array,
                           intervention.3 = "all.max",year.3="2040",
                           percent=T,
                           sexes = c("male"),
-                          plot.limits = c(0,0.275)) + 
+                          plot.limits = c(0,0.31)) + 
     scale_fill_manual(labels = c("no.int/2025" = "2025",
                                  "no.int/2040" = "No intervention, 2040",
                                  "all.max/2040" = "Full intervention, 2040"), 
@@ -347,7 +381,7 @@ generate.age.distribution(full.results.array,
                           intervention.3 = "no.int",year.3="2020",
                           percent=F,
                           sexes = c("female","male"),
-                          plot.limits=c(0,300000)) + 
+                          plot.limits=c(0,315000)) + 
     scale_fill_manual(labels = c("no.int/2000" = "2000",
                                  "no.int/2010" = "2010",
                                  "no.int/2020" = "2020"), 
@@ -439,28 +473,52 @@ quantile(apply(full.results.array["2040",,,"prevalence",,"no.int"],c("sim"),sum)
 quantile(apply(full.results.array["2040",,,"incidence",,"all.max"],c("sim"),sum), probs = c(.025,.5,.975), na.rm=T) 
 quantile(apply(full.results.array["2040",,,"prevalence",,"all.max"],c("sim"),sum), probs = c(.025,.5,.975), na.rm=T) 
 
+# NEW - CI around delta (per simulation)
+quantile((apply(full.results.array["2025",,,"prevalence",,"no.int"],c("sim"),sum) - 
+        apply(full.results.array["2040",,,"prevalence",,"no.int"],c("sim"),sum)), 
+    probs = c(.025,.5,.975), na.rm=T)
+qplot(apply(full.results.array["2025",,,"prevalence",,"no.int"],c("sim"),sum) - 
+          apply(full.results.array["2040",,,"prevalence",,"no.int"],c("sim"),sum))
+table((apply(full.results.array["2025",,,"prevalence",,"no.int"],c("sim"),sum) - 
+           apply(full.results.array["2040",,,"prevalence",,"no.int"],c("sim"),sum))>0)/1000 
+# 74.9% are greater than 0 (i.e., reduction in prevalence)
+
+quantile((apply(full.results.array["2025",,,"incidence",,"no.int"],c("sim"),sum) - 
+              apply(full.results.array["2040",,,"incidence",,"no.int"],c("sim"),sum)), 
+         probs = c(.025,.5,.975), na.rm=T)
+qplot(apply(full.results.array["2025",,,"incidence",,"no.int"],c("sim"),sum) - 
+          apply(full.results.array["2040",,,"incidence",,"no.int"],c("sim"),sum)) 
+table((apply(full.results.array["2025",,,"incidence",,"no.int"],c("sim"),sum) - 
+           apply(full.results.array["2040",,,"incidence",,"no.int"],c("sim"),sum))>0)/1000 
+# 73.7% are greater than 0 (i.e., reduction in incidence)
 
 
 # more supplemental plots 
 jpeg(file=paste0("results/calibration/1_incidence.jpeg"), width = 2000,height = 1500,res=200)
-simplot(simset.no.int, data.types='incidence', years=1990:2040, facet.by='age', show.individual.sims = F, for.paper = T)
+simplot(simset.no.int, data.types='incidence', years=1990:2040, facet.by='age', show.individual.sims = F, for.paper = T) + 
+    theme(legend.position = "none")
 dev.off()
 
 jpeg(file=paste0("results/calibration/2_prevalence.jpeg"), width = 2000,height = 1500,res=200)
-simplot(simset.no.int, data.types='prevalence', years=1990:2040, facet.by='age', show.individual.sims = F, for.paper = T)
+simplot(simset.no.int, data.types='prevalence', years=1990:2040, facet.by='age', show.individual.sims = F, for.paper = T) + 
+    theme(legend.position = "none")
 dev.off()
 
 jpeg(file=paste0("results/calibration/3_cascade.jpeg"), width = 1000,height = 1500,res=200)
 simplot(simset.no.int, data.types=c('awareness',"engagement","suppression"), facet.by = c("age","sex"),
-        years=2010:2040, proportion=T, show.individual.sims = F, for.paper = T, ncol=2)
+        years=2010:2040, proportion=T, show.individual.sims = F, for.paper = T, ncol=2) + 
+    theme(legend.position = "none")
 dev.off()
 
 jpeg(file=paste0("results/calibration/4_hiv.mortality.jpeg"), width = 2000,height = 1500,res=200)
-simplot(simset.no.int, data.types='hiv.mortality', years=1990:2040, facet.by='age', proportion = F, show.individual.sims = F, for.paper = T)
+simplot(simset.no.int, data.types='hiv.mortality', years=1990:2040, facet.by='age', proportion = F, 
+        show.individual.sims = F, for.paper = T) + 
+    theme(legend.position = "none")
 dev.off()
 
 jpeg(file=paste0("results/calibration/5_population.jpeg"), width = 2000,height = 1500,res=200)
-simplot(simset.no.int, data.types='population', years=1990:2030, facet.by='age', show.individual.sims = F, for.paper = T)
+simplot(simset.no.int, data.types='population', years=1990:2030, facet.by='age', show.individual.sims = F, for.paper = T) + 
+    theme(legend.position = "none")
 dev.off()
 
 
