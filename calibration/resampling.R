@@ -6,6 +6,7 @@ load("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/kenya_hivncd/mcmcru
 simset.29.large = extract.simset(mcmc.29,
                                  additional.burn=500)
 
+print("creating new likelihood to use for sampling")
 likelihood = create.likelihood.for.trend(data.type = "awareness",
                                                   year.1=2025,
                                                   year.2=2030,
@@ -22,7 +23,7 @@ set.seed(12345)
 indices = sample(1:simset.29.large@n.sim,1000,replace = F,prob=exp(likelihood.values))
 simset.final = subset.simset(simset.29.large,indices)
 
-print("running simset.final to 2040")
+print(paste0("running simset.final to 2040, with ",simset.final@n.sim," sims"))
 simset.final = add.parameters(simset.final,
                               parameters = runif(simset.final@n.sim,2030,2040), 
                               parameter.names = "cascade.improvement.end.year",
