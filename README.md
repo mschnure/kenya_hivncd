@@ -17,7 +17,7 @@ The following documentation describes the files available here for running the m
 #### Folders: 
 * Main folders 
     + model 
-    + calibration 
+        ++ calibration 
     + interventions 
     + for_ncd_model 
 * Other folders 
