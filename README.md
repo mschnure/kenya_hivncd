@@ -5,7 +5,7 @@ Published in AIDS in March 2024: https://pubmed.ncbi.nlm.nih.gov/38537051/
 
 ---
 
-![](/results/model_figure.png)
+![Model figure](/results/model_figure.png)
 
 ---
 
