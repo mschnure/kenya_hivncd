@@ -446,7 +446,7 @@ dev.off()
 }
 
 full.export = rbind(both.sexes.export,female.export,male.export)
-write.csv(full.export, file = "results/full.export.csv")
+write.csv(full.export, file = paste0("results/full.export_",Sys.Date(),".csv"))
 
 calculate.outcome.reduction(full.results.array,target.year="2040",
                             data.type="incidence",
@@ -464,14 +464,17 @@ calculate.outcome.reduction(full.results.array,target.year="2040",
 
 
 # base.2025
-quantile(apply(full.results.array["2025",,,"incidence",,"no.int"],c("sim"),sum), probs = c(.025,.5,.975), na.rm=T)
-quantile(apply(full.results.array["2025",,,"prevalence",,"no.int"],c("sim"),sum), probs = c(.025,.5,.975), na.rm=T)
+inc.2025 = round(quantile(apply(full.results.array["2025",,,"incidence",,"no.int"],c("sim"),sum), probs = c(.025,.5,.975), na.rm=T),-3)
+prev.2025 = round(quantile(apply(full.results.array["2025",,,"prevalence",,"no.int"],c("sim"),sum), probs = c(.025,.5,.975), na.rm=T),-4)
 # base.2040
-quantile(apply(full.results.array["2040",,,"incidence",,"no.int"],c("sim"),sum), probs = c(.025,.5,.975), na.rm=T) 
-quantile(apply(full.results.array["2040",,,"prevalence",,"no.int"],c("sim"),sum), probs = c(.025,.5,.975), na.rm=T) 
+inc.2040.no.int = round(quantile(apply(full.results.array["2040",,,"incidence",,"no.int"],c("sim"),sum), probs = c(.025,.5,.975), na.rm=T),-3) 
+prev.2040.no.int = round(quantile(apply(full.results.array["2040",,,"prevalence",,"no.int"],c("sim"),sum), probs = c(.025,.5,.975), na.rm=T),-4) 
 # intervention.2040
-quantile(apply(full.results.array["2040",,,"incidence",,"all.max"],c("sim"),sum), probs = c(.025,.5,.975), na.rm=T) 
-quantile(apply(full.results.array["2040",,,"prevalence",,"all.max"],c("sim"),sum), probs = c(.025,.5,.975), na.rm=T) 
+inc.2040.full.int = round(quantile(apply(full.results.array["2040",,,"incidence",,"all.max"],c("sim"),sum), probs = c(.025,.5,.975), na.rm=T),-3) 
+prev.2040.full.int = round(quantile(apply(full.results.array["2040",,,"prevalence",,"all.max"],c("sim"),sum), probs = c(.025,.5,.975), na.rm=T),-4) 
+
+inc.prev.results = rbind(inc.2025,inc.2040.no.int,inc.2040.full.int,
+                         prev.2025,prev.2040.no.int,prev.2040.full.int)
 
 # NEW - CI around delta (per simulation)
 quantile((apply(full.results.array["2025",,,"prevalence",,"no.int"],c("sim"),sum) - 

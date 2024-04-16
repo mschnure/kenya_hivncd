@@ -325,6 +325,36 @@ calculate.percent.over.age.for.sim = function(sim,
     
 }
 
+# calculates the number of people who are above a certain age threshold (e.g., XXX of PLHIV are over age 50)
+calculate.number.over.age.for.sim = function(sim,
+                                              age.point,
+                                              data.type,
+                                              years,
+                                              sexes){
+    
+    counts.by.age.bracket = extract.data(sim = sim,
+                                         data.type = data.type,
+                                         years = years,
+                                         sexes = sexes,
+                                         keep.dimensions = c("year","age"))
+    
+    counts.by.age.bracket = colSums(counts.by.age.bracket) # sum over years
+    
+    counts.by.age = unlist(sapply(1:length(counts.by.age.bracket), function(age.bracket.index){
+        
+        num.ages.in.bracket = sim$parameters$AGE.SPANS[age.bracket.index]
+        if(is.infinite(num.ages.in.bracket)) # upper age bracket 
+            num.ages.in.bracket=1 # median is never going to be in the highest age bracket so this is fine 
+        rv = rep(counts.by.age.bracket[age.bracket.index]/num.ages.in.bracket,num.ages.in.bracket)
+        names(rv) = as.character(sim$parameters$AGE.LOWERS[age.bracket.index]+0:(num.ages.in.bracket-1))
+        
+        rv
+        
+    }))
+    
+    sum(counts.by.age[as.numeric(names(counts.by.age))>=age.point])
+    
+}
 
 # applies calculate.median.age.for.sim over a simset
 calculate.median.age.for.simset = function(simset,
@@ -353,6 +383,27 @@ calculate.percent.over.age.for.simset = function(simset,
     
     rv = sapply(simset@simulations, function(sim){
         calculate.percent.over.age.for.sim(sim, 
+                                           age.point = age.point,
+                                           data.type = data.type,
+                                           years = years,
+                                           sexes = sexes)
+    })
+    
+    rv = quantile(rv,probs=c(.025,.5,.975), na.rm=T)
+    
+    rv
+    
+}
+
+# applies calculate.number.over.age.for.sim over a simset
+calculate.number.over.age.for.simset = function(simset,
+                                                 age.point,
+                                                 data.type,
+                                                 years,
+                                                 sexes){
+    
+    rv = sapply(simset@simulations, function(sim){
+        calculate.number.over.age.for.sim(sim, 
                                            age.point = age.point,
                                            data.type = data.type,
                                            years = years,
@@ -430,6 +481,45 @@ generate.percent.over.age.table = function(simset.list,
                                                                        data.type = d,
                                                                        years = y,
                                                                        sexes = sexes)[3]),"]")
+            })
+        })
+    })
+    
+    dim(rv) = sapply(dim.names,length)
+    dimnames(rv) = dim.names
+    
+    rv
+}
+
+generate.number.over.age.table = function(simset.list,
+                                           age.point,
+                                           data.types,
+                                           years,
+                                           sexes = c("female","male")){
+    
+    dim.names = list(intervention = names(simset.list),
+                     year = years,
+                     data.type = data.types)
+    
+    rv = sapply(data.types, function(d){
+        sapply(years, function(y){
+            sapply(simset.list, function(simset){
+                
+                paste0(comma(round(calculate.number.over.age.for.simset(simset=simset,
+                                                                       age.point=age.point,
+                                                                       data.type = d,
+                                                                       years = y,
+                                                                       sexes = sexes)[2]))," [",
+                       comma(round(calculate.number.over.age.for.simset(simset=simset,
+                                                                       age.point=age.point,
+                                                                       data.type = d,
+                                                                       years = y,
+                                                                       sexes = sexes)[1])),"-",
+                       comma(round(calculate.number.over.age.for.simset(simset=simset,
+                                                                       age.point=age.point,
+                                                                       data.type = d,
+                                                                       years = y,
+                                                                       sexes = sexes)[3])),"]")
             })
         })
     })

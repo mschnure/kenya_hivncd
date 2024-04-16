@@ -24,7 +24,7 @@ calculate.prcc = function(covariates, # assuming covariates is a named matrix wi
     
     dimnames(df)[[2]]=c(covariate.names, "outcome")
     
-  #  tryCatch({    # if this code triggers an error, it will evaluate to NA 
+  tryCatch({    # if this code triggers an error, it will evaluate to NA 
         prccs = epi.prcc(df)
         
         if(return.ci){
@@ -38,7 +38,7 @@ calculate.prcc = function(covariates, # assuming covariates is a named matrix wi
 
         
         rv
- #   }, error=function(e){NA})
+    }, error=function(e){NA})
     
     
     
@@ -63,8 +63,8 @@ calculate.low.high.quantiles = function(parameters,
                                         n=250){
     
     o=order(parameters[,parameter.name])
-    low = quantile(outcome[o[1:n]],probs)
-    high = quantile(outcome[o[(length(outcome)+1)-1:n]],probs)
+    low = quantile(outcome[o[1:n]],probs,na.rm=T)
+    high = quantile(outcome[o[(length(outcome)+1)-1:n]],probs,na.rm=T)
     
     return(c(low,high))
     
@@ -118,26 +118,33 @@ plot.low.high(low.high = low.high,parameters.to.plot = parameters.to.plot)
 parameters.to.plot = dimnames(prccs)[[1]][1:12] # picking the top 10 based on PRCC value (multivariate)
 parameters.to.plot = parameters.to.plot[c(-3,-4)] # only picking the mortality slopes, not intercepts 
 
-parameter.names.for.labels = c("Age 45-65 all-cause \nmortality (-0.80)","Age 65+ all-cause \nmortality (-0.68)",
-                             "Transmission rate \nafter 2030 (-0.32)","Age 40-49 transmission, \n2018 (0.22)",
-                             "Age 0-14 HIV mortality, \n2008 (0.22)","Age 20-29 transmission, \n2018 (-0.21)",
-                             "Rate of disengagement, \nsuppressed (-0.16)","Age 15-24 HIV mortality, \n2008 (0.15)",
-                             "Age 50+ transmission, \n2018 (0.14)","Maternal transmission \nrisk, 2020 (-0.14)")
+# parameter.names.for.labels must be in the same order as parameters.to.plot
+parameter.names.for.labels = c("Age 45-65 all-cause \nmortality (-0.83)","Age 65+ all-cause \nmortality (-0.71)",
+                             "Transmission rate \nafter 2030 (-0.41)","Age 40-49 transmission, \n2018 (0.18)",
+                             "Age 20-29 transmission, \n2018 (-0.28)","Age 0-14 HIV mortality, \n2008 (0.15)",
+                             "Age 50+ transmission, \n2018 (0.11)","Age 15-24 HIV mortality, \n2008 (0.08)",
+                             "Rate of disengagement, \nsuppressed (-0.21)",
+                             "Maternal transmission \nrisk, 2020 (-0.19)")
 
 library(scales)
 cols = hue_pal()(2)
 
-jpeg(file=paste0("results/Figure3.jpeg"), width = 1500,height = 1000,res=200)
-plot.low.high(low.high = low.high,parameters.to.plot = parameters.to.plot, 
-              parameter.names.for.labels=parameter.names.for.labels) + 
-    geom_vline(xintercept = 0.41, linetype="dashed") + 
+jpeg(file=paste0("results/new_for_manuscript/Figure4.jpeg"), width = 1500,height = 1000,res=200)
+plot.low.high(low.high = low.high,parameters.to.plot = parameters.to.plot,
+              parameter.names.for.labels=parameter.names.for.labels) +
+    geom_vline(xintercept = 0.40, linetype="dashed") +
     theme(panel.background = element_blank(),
           legend.position = "bottom",
-          legend.justification = "right",
-          axis.title.y = element_blank(),
+          legend.justification = "center",
+          legend.direction = "vertical",
+          legend.text = element_text(size = 10),
           axis.ticks.y = element_blank(),
-          axis.text.y = element_text(margin = margin(r = -20))) +
-    labs(x = "Proportion of PLWH over age 50, 2040") + 
+          axis.text.y = element_text(margin=margin(r=-10),size = 10),
+          axis.text.x = element_text(size = 10),
+          axis.title.y = element_text(margin=margin(r=10),size=12),
+          axis.title.x = element_text(margin=margin(b=-10))) +
+    labs(x = "Percent of PWH over age 50, 2040",
+         y="") +
     scale_fill_manual(name = element_blank(),
                       labels = c("low" = "Simulations with the lowest 25% of parameter values",
                                  "high" = "Simulations with the highest 25% of parameter values"),

@@ -224,7 +224,7 @@ plot.low.high(low.high = low.high,parameters.to.plot = parameters.to.plot,
                       labels = c("low" = "Simulations with the lowest 25% of parameter values",
                                  "high" = "Simulations with the highest 25% of parameter values"),
                       values = cols[1:2]) + 
-    labs(x="\nChange in proportion of PLWH over 50, 2025-2040",
+    labs(x="\nChange in percent of PWH over 50, 2025-2040",
          y="")# Change in parameter value (2025-2040)"
 # 0.0817984 if using no intervention scenario
 # 0.1486322 if using intervention scenario
