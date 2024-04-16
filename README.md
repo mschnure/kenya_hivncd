@@ -1,11 +1,11 @@
 # Kenya HIV-NCD model 
-A compartmental model used to provide accurate forecasts of the age distribution of people living with HIV (PWH) in Kenya from 2025 to 2040. Calibrated to historical estimates of HIV epidemiology in Kenya using Bayesian methods.
+A compartmental model used to provide accurate forecasts of the age distribution of people living with HIV in Kenya from 2025 to 2040. Calibrated to historical estimates of HIV epidemiology in Kenya using Bayesian methods.
 
 Published in AIDS in March 2024: https://pubmed.ncbi.nlm.nih.gov/38537051/
 
 ---
 
-![](/Users/melissaschnure/Library/CloudStorage/Dropbox/Documents_local/Hopkins/SOM_Job/Manuscripts/Dissertation chapters/Aim 2/AIDS_review_1/submission docs/Figures and tables/Figure1.png)
+![](/results/model_figure.png)
 
 ---
 
